@@ -3502,9 +3502,21 @@ const endCurrentCourtSession = () => {
 // ==========================================================================
 // 1️⃣ المودال الأول: منصة عرض السيناريو وملف الجريمة العام للغرفة
 // ==========================================================================
+// ==========================================================================
+// 1️⃣ المودال الأول: منصة عرض السيناريو وملف الجريمة العام للغرفة (حجم مكبر فخم)
+// ==========================================================================
 function openCaseStoryFirstModal(roleCard, activeCase) {
     const modal = document.getElementById("custom-alert-modal");
     if (!modal) return;
+
+    // لقط وتوسيع الحاوية الداخلية للمودال برمجياً لراحة العين ومنع الضغط
+    const modalBox = modal.querySelector("div") || modal;
+    if (modalBox) {
+        modalBox.style.setProperty("width", "92%", "important");
+        modalBox.style.setProperty("max-width", "540px", "important"); // تكبير العرض الأفقي
+        modalBox.style.setProperty("min-height", "400px", "important"); // منح حد أدنى ممتاز للارتفاع
+        modalBox.style.setProperty("padding", "25px 20px", "important"); // توزيع المساحة الداخلية
+    }
 
     const globalCloseBtn = document.getElementById("btn-modal-close");
     if (globalCloseBtn) {
@@ -3513,11 +3525,12 @@ function openCaseStoryFirstModal(roleCard, activeCase) {
 
     document.getElementById("modal-alert-title").textContent = `ملف القضية: ${activeCase.title}`;
 
+    // الالتزام بنصوصك وتعديلاتك وأحجام خطوطك بدقة 100% مع زيادة الحد الأقصى للتمرير لـ 260px لضمان عدم الاختناق
     let modalHTML = `
         <div style="text-align: right; font-family: 'Alexandria', sans-serif; direction: rtl;">
             <span style="color: #52ff7d; font-weight: bold; font-size: 0.85rem; letter-spacing: 0.5px;">تفاصيل ومجريات القصة:</span>
 
-            <p style="background: rgba(5, 10, 18, 0.6); padding: 15px; border-radius: 8px; color: #fff; font-family: 'Harmattan'; font-size: 1.2rem; line-height: 1.6; margin-top: 8px; margin-bottom: 20px; border-right: 4px solid #52ff7d; max-height: 220px; overflow-y: auto !important; box-shadow: inset 0 0 10px rgba(0,0,0,0.5);">
+            <p style="background: rgba(5, 10, 18, 0.6); padding: 15px; border-radius: 8px; color: #fff; font-family: 'Harmattan'; font-size: 1.2rem; line-height: 1.6; margin-top: 8px; margin-bottom: 20px; border-right: 4px solid #52ff7d; max-height: 260px; overflow-y: auto !important; box-shadow: inset 0 0 10px rgba(0,0,0,0.5);">
                 ${activeCase.description}
             </p>
 
@@ -3543,25 +3556,43 @@ function openCaseStoryFirstModal(roleCard, activeCase) {
 }
 
 // ==========================================================================
-// 2️⃣ المودال الثاني: منصة فض الأظرف وكشف الهويات والمصالح السرية
+// 2️⃣ المودال الثاني: منصة فض الأظرف وكشف الهويات والمصالح السرية (حجم مكبر فخم)
 // ==========================================================================
 function openSecretRoleSecondModal(roleCard) {
     const modal = document.getElementById("custom-alert-modal");
     if (!modal) return;
 
+    // الحفاظ على الأبعاد الفخمة والمكبرة للمودال في الخطوة الثانية أيضاً
+    const modalBox = modal.querySelector("div") || modal;
+    if (modalBox) {
+        modalBox.style.setProperty("width", "92%", "important");
+        modalBox.style.setProperty("max-width", "540px", "important");
+        modalBox.style.setProperty("min-height", "400px", "important");
+        modalBox.style.setProperty("padding", "25px 20px", "important");
+    }
+
     const globalCloseBtn = document.getElementById("btn-modal-close");
     if (globalCloseBtn) {
         globalCloseBtn.style.setProperty("display", "block", "important");
-        globalCloseBtn.textContent = "دخول قاعة المحاكمة الحية";
+        globalCloseBtn.textContent = "دخول القاعة";
 
         globalCloseBtn.onclick = function () {
             modal.style.setProperty("display", "none", "important");
             modal.className = "modal-overlay-hidden";
+
+            // تنظيف وإعادة تعيين أبعاد المودال الافتراضية عند الإغلاق تماماً حتى لا تؤثر على بقية اللعبة
+            if (modalBox) {
+                modalBox.style.width = "";
+                modalBox.style.maxWidth = "";
+                modalBox.style.minHeight = "";
+                modalBox.style.padding = "";
+            }
         };
     }
 
     document.getElementById("modal-alert-title").textContent = roleCard.role_name;
 
+    // الالتزام بنصوصك وتعديلاتك وأحجام خطوطك المقترحة (1rem و 0.85rem و 0.7rem) بدقة 100%
     let modalHTML = `
         <div style="text-align: right; font-family: 'Alexandria', sans-serif; direction: rtl;">
             <span style="color: var(--gold-glow); font-weight: bold; font-size: 0.85rem;">روايتك العلنية أمام الحضور:</span>
@@ -3580,8 +3611,8 @@ function openSecretRoleSecondModal(roleCard) {
     } else {
         modalHTML += `
             <div style="background: rgba(213, 167, 92, 0.1); padding: 14px; border-radius: 6px; border: 1px solid var(--gold-glow); color: var(--gold-glow); text-align: center; font-size: 0.85rem; font-weight: 700; margin-top: 10px; box-shadow: inset 0 0 10px rgba(213, 167, 92, 0.15); line-height: 1.4;">
-                🛡️ مرسوم السيادة القضائية النزيهة:<br>
-                <span style="font-weight:500; font-size:0.7rem; color:#aaa;">أنت مبرأ تماماً من أي تهمة أو مصلحة سرية خبيثة في هذه الجلسة. مصلحتك هي نصرة ميزان العدالة.</span>
+                مرسوم السيادة القضائية النزيهة:<br>
+                <span style="font-weight:500; font-size:0.7rem; color:#aaa;">أنت مبرأ تماماً من أي تهمة أو مصلحة سرية خبيثة in هذه الجلسة. مصلحتك هي نصرة ميزان العدالة.</span>
             </div>
         `;
     }
