@@ -2691,8 +2691,8 @@ function injectLawyerActionControls(
 
         evidenceHolder.style.cssText =
             myRoleCard.role_type === "judge"
-                ? "position: fixed; top: 70px; left: 4%; z-index: 99999 !important; pointer-events: none !important;"
-                : "position: fixed; top: 65px; left: 4%; z-index: 99999 !important; pointer-events: none !important;";
+                ? "position: fixed; top: 70px; left: 4%; z-index: 9999999 !important; pointer-events: none !important;"
+                : "position: fixed; top: 65px; left: 4%; z-index: 9999999 !important; pointer-events: none !important;";
 
         const btnEvidence = document.createElement("button");
         btnEvidence.className = "btn-evidence-bag-custom-node";
@@ -2701,8 +2701,8 @@ function injectLawyerActionControls(
         btnEvidence.style.cssText = `all: unset !important; background: linear-gradient(135deg, #161c26 0%, #423423 100%) !important; border: 2px solid var(--gold-glow, #d5a75c) !important; color: var(--gold-glow, #d5a75c) !important; font-family: 'Alexandria', sans-serif !important; font-weight: 700 !important; font-size: 0.69rem !important; padding: 10px 14px !important; border-radius: 8px !important; cursor: pointer !important; display: flex !important; align-items: center !important; justify-content: center !important; gap: 6px !important; box-shadow: 0 4px 15px rgba(213, 167, 92, 0.25) !important; box-sizing: border-box !important; text-align: center !important; transition: all 0.2s ease-in-out !important; pointer-events: auto !important; -webkit-tap-highlight-color: transparent !important; touch-action: manipulation !important;`;
         btnEvidence.textContent = "حقيبة الأدلة";
 
-        // دالة فتح الحقيبة الموحدة لضمان عملها باللمس أو الكليك
-        function openEvidenceBagHandler(e) {
+        // [حل JSHint الحاسم]: تحويل دالة فتح الحقيبة الموحدة لتعبير سهمي محمي لمنع خطأ W082 نهائياً وضمان عملها باللمس أو الكليك
+        const openEvidenceBagHandler = (e) => {
             if (e) {
                 e.preventDefault();
                 e.stopPropagation();
@@ -2752,7 +2752,7 @@ function injectLawyerActionControls(
                     modal.className = "modal-overlay-active";
                 })
                 .catch((err) => console.error("حدث خطأ في تحميل الأدلة:", err));
-        }
+        };
 
         // [إصلاح ذهبي]: الربط المزدوج بحدث اللمس الفوري للموبايل والكليك العادي للكمبيوتر لمنع السقوط
         btnEvidence.addEventListener("touchstart", openEvidenceBagHandler, { passive: false });
