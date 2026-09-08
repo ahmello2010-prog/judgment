@@ -3532,7 +3532,7 @@ function openCaseStoryFirstModal(roleCard, activeCase) {
             </p>
 
             <div style="margin-bottom: 15px; background: rgba(213, 167, 92, 0.1); padding: 8px 12px; border-radius: 6px; border: 1px solid rgba(213, 167, 92, 0.2); font-size: 0.7rem; color: var(--gold-glow); text-align: center; font-weight: 600;">
-                ⚠️ تنبيه قضائي: اقرأ تفاصيل الموقع جيداً!
+                ⚠️ تنبيه قضائي: اقرأ تفاصيل القضية جيداً!
             </div>
 
             <button id="btn-next-to-secret-role" style="width: 100%; padding: 13px 0; background: linear-gradient(135deg, var(--gold-glow, #d5a75c) 0%, #b89149 100%); color: #050a18; font-family: 'Alexandria'; font-weight: 800; font-size: 0.8rem; border: none; border-radius: 8px; cursor: pointer; box-shadow: 0 4px 15px rgba(213, 167, 92, 0.3); transition: all 0.2s ease; text-align: center; -webkit-tap-highlight-color: transparent;">
