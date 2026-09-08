@@ -3509,6 +3509,15 @@ function openCaseStoryFirstModal(roleCard, activeCase) {
     const modal = document.getElementById("custom-alert-modal");
     if (!modal) return;
 
+    // لقط وتوسيع الحاوية الداخلية للمودال برمجياً لراحة العين ومنع الضغط
+    const modalBox = modal.querySelector("div") || modal;
+    if (modalBox) {
+        modalBox.style.setProperty("width", "92%", "important");
+        modalBox.style.setProperty("max-width", "540px", "important"); // تكبير العرض الأفقي
+        modalBox.style.setProperty("min-height", "400px", "important"); // منح حد أدنى ممتاز للارتفاع
+        modalBox.style.setProperty("padding", "25px 20px", "important"); // توزيع المساحة الداخلية
+    }
+
     const globalCloseBtn = document.getElementById("btn-modal-close");
     if (globalCloseBtn) {
         globalCloseBtn.style.setProperty("display", "none", "important");
@@ -3552,6 +3561,15 @@ function openCaseStoryFirstModal(roleCard, activeCase) {
 function openSecretRoleSecondModal(roleCard) {
     const modal = document.getElementById("custom-alert-modal");
     if (!modal) return;
+
+    // الحفاظ على الأبعاد الفخمة والمكبرة للمودال في الخطوة الثانية أيضاً
+    const modalBox = modal.querySelector("div") || modal;
+    if (modalBox) {
+        modalBox.style.setProperty("width", "92%", "important");
+        modalBox.style.setProperty("max-width", "540px", "important");
+        modalBox.style.setProperty("min-height", "400px", "important");
+        modalBox.style.setProperty("padding", "25px 20px", "important");
+    }
 
     const globalCloseBtn = document.getElementById("btn-modal-close");
     if (globalCloseBtn) {
