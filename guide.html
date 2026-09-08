@@ -1,0 +1,166 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>محكمة الأدوار - دليل المستخدم</title>
+        <link rel="stylesheet" href="css/style.css" />
+        <link rel="icon" type="image/png" href="/favicon-96x96.png" sizes="96x96" />
+        <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+        <link rel="shortcut icon" href="/favicon.ico" />
+        <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
+        <meta name="apple-mobile-web-app-title" content="المحكمة" />
+        <link rel="manifest" href="/site.webmanifest" />
+    </head>
+    <body class="body2">
+        <!-- تطبيق فئة الخلفية التدرجية الموحدة للوجو تلقائياً -->
+
+        <!-- زر الهمبرجر (الثلاث أسطر) الثابت علوياً يساراً -->
+        <button id="btn-hamburger" class="hamburger-menu">
+            <span class="bar"></span>
+            <span class="bar"></span>
+            <span class="bar"></span>
+        </button>
+
+        <!-- القائمة الجانبية المنزلقة الموحدة للصفحات -->
+        <div id="sidebar-drawer" class="sidebar-drawer-hidden">
+            <div class="sidebar-content">
+                <h3 id="sidebar-title">القائمة الجانبية</h3>
+                <button id="btn-lang-toggle" class="btn-lang">EN</button>
+                <a href="rooms.html" class="sidebar-link">الشاشة الرئيسية</a>
+            </div>
+        </div>
+
+        <!-- الحاوية الرئيسية لدليل المستخدم - Mobile First -->
+        <div class="guide-container">
+            <h1 id="guide-main-title" class="welcome-title">دليل المحاكمة</h1>
+            <p id="guide-main-subtitle" class="rooms-subtitle">
+                اضغط على أي سؤال لقراءة القوانين والميكانيكيات التفصيلية وكيفية اللعب
+            </p>
+
+            <!-- حاوية الأسئلة والأجوبة القابلة للتمدد (Accordion Box) -->
+            <div class="accordion-wrapper">
+                <!-- المربع 1: فكرة اللعبة الأساسية والحد الأدنى -->
+                <div class="accordion-item">
+                    <button class="accordion-trigger">
+                        <span>ما هي فكرة لعبة "محكمة الأدوار" وكيف تبدأ؟</span>
+                        <span class="arrow"></span>
+                    </button>
+                    <div class="accordion-panel">
+                        <p class="guide-text">
+                            اللعبة تعتمد على التحقيق واستنباط الأسرار النفسية وتضارب المصالح. تبدأ الجولة بتجميع
+                            اللاعبين في غرفة جولة أونلاين بكود دخول غرفة صديقك. الحد الأدنى البرمجي لبدء أي قضية هو 3
+                            لاعبين، وتدعم اللعبة حتى 10 لاعبين كحد أقصى في الغرفة الواحدة لضمان مواجهات تفاعلية متوازنة.
+                        </p>
+                    </div>
+                </div>
+
+                <!-- المربع 2: توزيع الأدوار والبطاقات السرية -->
+                <div class="accordion-item">
+                    <button class="accordion-trigger">
+                        <span>كيف يتم توزيع الأدوار والبطاقات على اللاعبين؟</span>
+                        <span class="arrow"></span>
+                    </button>
+                    <div class="accordion-panel">
+                        <p class="guide-text">
+                            عند الضغط على بدء اللعبة، يقوم المحرك البرمجي بخلط الأدوار وتوزيع الكروت سرياً. ينقسم
+                            اللاعبون إلى: قاضٍ محقق (يدير الجلسة ويستجوب)، ومحامين، ومتهمين يحمي كل منهم "سراً مصلحياً"
+                            يخفيه عن البقية. يتم إجبار القاضي والمحامين تلقائياً على أن يكونوا أبرياء تماماً من الجريمة
+                            لضمان نزاهة المحاكمة الشرعية.
+                        </p>
+                    </div>
+                </div>
+
+                <!-- المربع 3: ميكانيكية القطع المفقودة وتضارب المصالح -->
+                <div class="accordion-item">
+                    <button class="accordion-trigger">
+                        <span>ما هي ميكانيكية "القطع المفقودة وتضارب المصالح"؟</span>
+                        <span class="arrow"></span>
+                    </button>
+                    <div class="accordion-panel">
+                        <p class="guide-text">
+                            كل لاعب يحصل على قصة علنية يشهد بها أمام المحكمة، ولكن لديه "مصلحة سرية" أو جريمة جانبية
+                            يخفيها (مثل تزوير، رشوة، أو سرقة مستندات). اللعبة لا تعتمد على البحث الجنائي الميداني، بل
+                            على استجواب اللاعبين لبعضهم البعض لكشف التناقضات ومحاولة تلفيق أو إثبات التهمة بناءً على
+                            تضارب الأسرار.
+                        </p>
+                    </div>
+                </div>
+                <!-- المربع 4: نظام النقاط وخطر الحكم المبكر -->
+                <div class="accordion-item">
+                    <button class="accordion-trigger">
+                        <span>كيف يعمل نظام حساب النقاط وخطر "الحكم المبكر"؟</span>
+                        <span class="arrow"></span>
+                    </button>
+                    <div class="accordion-panel">
+                        <p class="guide-text">
+                            يتفعل زر "الحكم المبكر" للقاضي تلقائياً بعد أول 4 محادثات أو استجوابات في الغرفة. إذا استخدم
+                            القاضي زر الحكم المبكر وأصاب في فراسته وعرف الجاني الحقيقي, يحصل على بونص إضافي ضخم (+15
+                            نقطة). ولكن إذا تسرع وأخطأ، يتم تطبيق عقوبة قاسية جداً بخصم النقاط منه ونقلها بالكامل إلى
+                            رصيد الجاني الفائز الذي نجح في تضليله!
+                        </p>
+                    </div>
+                </div>
+
+                <!-- المربع 5: القضايا الـ 11 المعتمدة ومكانة القضية الأولى -->
+                <div class="accordion-item">
+                    <button class="accordion-trigger">
+                        <span>كم عدد القضايا المتاحة وما هي القضية المثبتة في الأعلى؟</span>
+                        <span class="arrow"></span>
+                    </button>
+                    <div class="accordion-panel">
+                        <p class="guide-text">
+                            الموسوعة تحتوي على 11 قضية محبوكة بدقة (مثل سرقة الخاتم، اختراق الخادم، الخطف في سوق الجمعة،
+                            واختطاف المليونير من البرج). تم نقل قضية "القاتل المتسلسل وفوضى تجميع 6 لاعبين" (ظلال الصياد
+                            والرمز المفقود) لتكون القضية رقم 1 المثبتة إجبارياً في أعلى الواجهة كطعم تشويقي (Hook) لحث
+                            اللاعبين على دعوة أصدقائهم لتجميع العدد.
+                        </p>
+                    </div>
+                </div>
+
+                <!-- المربع 6: ميكانيكية الكشف والاعتراف النهائي وعلاقته بالخطف -->
+                <div class="accordion-item">
+                    <button class="accordion-trigger">
+                        <span>كيف تنتهي اللعبة وما هي ميكانيكية "الاعتراف النهائي وسرد القصة"؟</span>
+                        <span class="arrow"></span>
+                    </button>
+                    <div class="accordion-panel">
+                        <p class="guide-text">
+                            بعد صدور الحكم، يتم تشغيل دالة الكشف (Reveal). إذا كُشف الجاني، يظهر أمامه نص إجباري يقرأه
+                            بصوت عالٍ يعترف فيه بجريمته ويكشف ديناميكياً عن مكان إخفاء الضحية (مثل مكان الطفلة المخطوفة
+                            في سوق الجمعة، أو مكان المليونير صالح). وإذا أفلت الجاني وخسر القاضي، يظهر النص الذهبي
+                            للجاني ليفضح ذكائه ويسخر من المحكمة ويكشف أين خبأ الضحية بعد أن أصبح في أمان تماماً!
+                        </p>
+                    </div>
+                </div>
+
+                <div class="accordion-item">
+                    <button class="accordion-trigger">
+                        <span>من هو مطور اللعبة و اخر اعماله</span>
+                        <span class="arrow"></span>
+                    </button>
+                    <div class="accordion-panel">
+                        <p class="guide-text">
+                            اعرفكم بنفسي انا مطور المواقع Ahmed|Web و قررت انشاء هذه اللعبة كاملا لتنال اعجابكوا كفكرة و
+                            كتصميم و اعمل اصلا في مجال برمجة المواقع و لكني اخترت ان اصمم اللعبة حتى تستمتع باحدث
+                            الأفكار و متعة الغموض و الاثارة اما ان كنت تريد فهذا موقع يعرض جميع اعمالي
+                        </p>
+                        <footer>
+                            <!-- أضفنا id="btn-visit-portfolio" عشان السكريبت يشوفه ويترجمه -->
+                            <a
+                                href="https://ahmello-web.vercel.app/"
+                                target="_blank"
+                                id="btn-visit-portfolio"
+                                style="font-size: 1.2rem; color: aliceblue; text-decoration: none"
+                                >زر موقعي</a
+                            >
+                        </footer>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- استدعاء ملف الجافا سكريبت الموحد والمخلوط بالكامل -->
+        <script type="module" src="js/app.js"></script>
+    </body>
+</html>

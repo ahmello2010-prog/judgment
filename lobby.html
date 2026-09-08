@@ -1,0 +1,444 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>قاعة المحاكمة - محكمة الأدوار</title>
+        <!-- استدعاء الخطوط المعتمدة بمشروعك لتنسيق النصوص -->
+        <link rel="preconnect" href="https://googleapis.com" />
+        <link rel="preconnect" href="https://gstatic.com" crossorigin />
+        <link
+            href="https://googleapis.com/css2?family=Alexandria:wght@400;700;800&family=Harmattan:wght@500;600;700&display=swap"
+            rel="stylesheet" />
+        <link rel="stylesheet" href="css/style.css" />
+        <link rel="icon" type="image/png" href="/favicon-96x96.png" sizes="96x96" />
+        <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+        <link rel="shortcut icon" href="/favicon.ico" />
+        <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
+        <meta name="apple-mobile-web-app-title" content="المحكمة" />
+        <link rel="manifest" href="/site.webmanifest" />
+        <style>
+            /* ==========================================================================
+   تنسيقات شاشة تحميل اللوبي السينمائية (Lobby Glass Loading UI)
+   ========================================================================== */
+            .modern-loading-overlay {
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100vw;
+                height: 100vh;
+                background-color: #050a12;
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                z-index: 999999 !important; /* قفل الصدارة فوق الأزرار والكراسي والمودال */
+                overflow: hidden;
+            }
+
+            .loading-blurred-backdrop {
+                position: absolute;
+                width: 160%;
+                height: 160%;
+                background: radial-gradient(
+                    circle,
+                    rgba(66, 52, 35, 0.45) 0%,
+                    rgba(13, 25, 43, 0.3) 60%,
+                    transparent 100%
+                );
+                animation: rotateLobbyBackdrop 25s linear infinite;
+                filter: blur(40px);
+                z-index: 1;
+            }
+
+            .loading-card-content {
+                position: relative;
+                z-index: 2;
+                width: 88%;
+                max-width: 380px;
+                background: rgba(13, 25, 43, 0.8);
+                backdrop-filter: blur(15px);
+                -webkit-backdrop-filter: blur(15px);
+                border: 1px solid rgba(213, 167, 92, 0.25);
+                border-radius: 24px;
+                padding: 40px 25px;
+                text-align: center;
+                box-shadow: 0 20px 45px rgba(0, 0, 0, 0.6);
+            }
+
+            .gavel-glow-animation {
+                width: 85px;
+                height: 85px;
+                background: rgba(66, 52, 35, 0.6);
+                border: 2px solid var(--gold-glow);
+                border-radius: 50%;
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                margin: 0 auto 25px auto;
+                box-shadow: 0 0 20px rgba(213, 167, 92, 0.3);
+                animation: pulseLobbyGlow 2.5s infinite ease-in-out;
+            }
+
+            .gavel-emoji {
+                font-size: 2.2rem;
+            }
+
+            .loading-main-title {
+                font-family: "Alexandria", sans-serif;
+                font-weight: 900;
+                font-size: 1.8rem;
+                color: var(--gold-glow);
+                margin-bottom: 8px;
+            }
+
+            .loading-subtitle-hint {
+                font-family: "Harmattan", sans-serif;
+                font-weight: 500;
+                font-size: 1.3rem;
+                color: rgba(255, 255, 255, 0.75);
+                margin-bottom: 30px;
+                height: 24px;
+                transition: opacity 0.3s ease;
+            }
+
+            .modern-progress-wrapper {
+                width: 100%;
+                height: 6px;
+                background: rgba(5, 10, 18, 0.6);
+                border-radius: 10px;
+                overflow: hidden;
+                border: 1px solid rgba(213, 167, 92, 0.15);
+                margin-bottom: 12px;
+            }
+
+            .modern-progress-fill {
+                width: 0%;
+                height: 100%;
+                background: linear-gradient(90deg, #b8860b, var(--gold-glow));
+                border-radius: 10px;
+                box-shadow: 0 0 10px var(--gold-glow);
+                transition: width 0.04s linear;
+            }
+
+            .modern-percentage-text {
+                font-family: "Alexandria", sans-serif;
+                font-weight: 700;
+                font-size: 0.95rem;
+                color: var(--gold-glow);
+            }
+
+            @keyframes pulseLobbyGlow {
+                0% {
+                    transform: scale(1);
+                    box-shadow: 0 0 15px rgba(213, 167, 92, 0.3);
+                }
+                50% {
+                    transform: scale(1.04);
+                    box-shadow: 0 0 25px rgba(213, 167, 92, 0.5);
+                }
+                100% {
+                    transform: scale(1);
+                    box-shadow: 0 0 15px rgba(213, 167, 92, 0.3);
+                }
+            }
+
+            @keyframes rotateLobbyBackdrop {
+                0% {
+                    transform: rotate(0deg);
+                }
+                100% {
+                    transform: rotate(360deg);
+                }
+            }
+
+            .court-seat-node:active {
+                transform: scale(0.95);
+            }
+
+            /* تنسيقات نافذة الإنذارات المنبثقة الموحدة المدمجة */
+            .modal-overlay-hidden {
+                display: none;
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                background-color: rgba(5, 10, 18, 0.85);
+                z-index: 1000;
+                justify-content: center;
+                align-items: center;
+            }
+            .modal-overlay-active {
+                display: flex;
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                background-color: rgba(5, 10, 18, 0.85);
+                z-index: 1000;
+                justify-content: center;
+                align-items: center;
+            }
+            .modal-alert-box {
+                background-color: #0f141d;
+                border: 3px solid var(--gold-glow);
+                padding: 25px;
+                border-radius: 14px;
+                box-shadow: 0 0 25px rgba(213, 167, 92, 0.2);
+                text-align: right;
+                width: 90%;
+                max-width: 400px;
+                color: var(--text-white);
+            }
+            .modal-alert-box h2 {
+                font-family: "Alexandria", sans-serif;
+                color: var(--gold-glow);
+                margin-top: 0;
+            }
+            .modal-alert-box p {
+                font-family: "Harmattan", sans-serif;
+                font-size: 1.2rem;
+                line-height: 1.4;
+                margin: 15px 0;
+            }
+
+            .btn-secondary {
+                width: 100%;
+                padding: 10px;
+                margin-top: 15px;
+                font-family: "Alexandria", sans-serif;
+                font-weight: 700;
+                background: var(--gold-glow);
+                border: none;
+                border-radius: 6px;
+                cursor: pointer;
+                color: var(--shadow-black);
+                transition: opacity 0.2s;
+            }
+            .btn-secondary:active {
+                opacity: 0.8;
+            }
+            /* ==========================================================================
+   ستايل زر إنهاء المحكمة السيادي للأدمن (btn-end-trial)
+   ========================================================================== */
+
+            /* تأثير الضغط على الزر (Active) */
+            #btn-end-trial:active {
+                transform: translateY(1px);
+                box-shadow: 0 2px 10px rgba(255, 82, 82, 0.15);
+            }
+
+            /* تأثير التوهج النبضي المستمر لجذب انتباه الأدمن بنعومة */
+            @keyframes adminButtonPulse {
+                0% {
+                    box-shadow:
+                        0 4px 15px rgba(0, 0, 0, 0.5),
+                        inset 0 0 10px rgba(255, 82, 82, 0.1);
+                }
+                50% {
+                    box-shadow:
+                        0 4px 20px rgba(255, 82, 82, 0.15),
+                        inset 0 0 15px rgba(255, 82, 82, 0.2);
+                    border-color: rgba(255, 82, 82, 0.7);
+                }
+                100% {
+                    box-shadow:
+                        0 4px 15px rgba(0, 0, 0, 0.5),
+                        inset 0 0 10px rgba(255, 82, 82, 0.1);
+                }
+            }
+
+            /* ربط الحركة النبضية بالزر */
+            #btn-end-trial {
+                animation: adminButtonPulse 3s infinite ease-in-out;
+            }
+            /* الأنميشن السينمائي لحركة شريط أدلة محامي الدفاع من اليمين لليسار */
+
+            /* ==========================================================================
+   التجاوب مع الشاشات الصغيرة والهواتف (Responsive)
+   ========================================================================== */
+        </style>
+    </head>
+    <body class="body3">
+        <!-- الحاوية العلوية السيادية الموحدة (The Ultimate Top Navbar) -->
+        <nav class="court-sovereign-navbar">
+            <!-- الجهة اليسرى: الأزرار التنفيذية (المايك يمين زر إنهاء المحاكمة ليكون أمامه برمجياً جهة اليسار) -->
+            <div class="court-top-actions-group">
+                <button id="btn-end-trial" style="display: none" class="your-admin-button-style">إنهاء المحكمة</button>
+            </div>
+        </nav>
+        <!-- شاشة التحميل السينمائية لساحة اللعب (مخفية افتراضياً وتظهر عند بدء القضية) -->
+        <div id="lobby-loading-screen" class="modern-loading-overlay" style="display: none">
+            <div class="loading-blurred-backdrop"></div>
+
+            <div class="loading-card-content">
+                <!-- أنيميشن الميزان النابض -->
+                <!-- الهيكل المطور الخالي تماماً من الإطار الأبيض -->
+                <div class="gavel-glow-animation">
+                    <span class="gavel-emoji">
+                        <iframe
+                            src="https://lottie.host/embed/5c8b4548-c18c-407f-9e64-00014c2aa006/UAYSrmYfhz.lottie"
+                            style="border: none; background: transparent; width: 100%; height: 100%"
+                            allowfullscreen>
+                        </iframe>
+                    </span>
+                </div>
+
+                <h1 class="loading-main-title">المحكمة</h1>
+                <p id="loading-dynamic-hint" class="loading-subtitle-hint">جاري سحب الأجهزة وتوزيع الأدوار السرية...</p>
+
+                <!-- شريط العداد الذهبي -->
+                <div class="modern-progress-wrapper">
+                    <div id="progress-bar-fill" class="modern-progress-fill"></div>
+                </div>
+
+                <div id="progress-counter-text" class="modern-percentage-text">0%</div>
+            </div>
+        </div>
+        <!-- لوحة التحكم والسيادة القضائية السرية لمحامي الدفاع -->
+        <div
+            id="defense-lawyer-panel"
+            style="
+                display: none;
+                position: fixed;
+                bottom: 85px;
+                left: 50%;
+                transform: translateX(-50%);
+                width: 92%;
+                max-width: 410px;
+                background-color: rgba(66, 52, 35, 0.96);
+                border: 2px solid var(--gold-glow);
+                border-radius: 12px;
+                padding: 10px 14px;
+                box-shadow: 0 8px 25px var(--shadow-black);
+                z-index: 999999;
+                justify-content: space-between;
+                align-items: center;
+                gap: 12px;
+            ">
+            <!-- زر طلب الكلمة البرجي الجانبي -->
+            <button id="btn-defense-speak">طلب الكلمة</button>
+
+            <!-- عداد كروت الاعتراض المتبقية للدفاع -->
+            <div
+                style="
+                    display: flex;
+                    flex-direction: column;
+                    align-items: center;
+                    font-family: &quot;Alexandria&quot;, sans-serif;
+                    color: var(--text-white);
+                    font-size: 0.7rem;
+                    font-weight: 700;
+                    min-width: 90px;
+                    text-align: center;
+                ">
+                <span>كروت الدفاع</span>
+                <strong
+                    id="defense-objection-counter"
+                    style="
+                        font-size: 1.1rem;
+                        color: var(--gold-glow);
+                        margin-top: 2px;
+                        text-shadow: 0 0 8px rgba(213, 167, 92, 0.4);
+                    "
+                    >2</strong
+                >
+            </div>
+
+            <!-- زر الاعتراض القضائي القسري المسلح للدفاع -->
+            <button
+                id="btn-defense-objection"
+                style="
+                    flex: 1;
+                    padding: 10px 0;
+                    font-family: &quot;Alexandria&quot;, sans-serif;
+                    font-weight: 700;
+                    font-size: 0.85rem;
+                    border-radius: 6px;
+                    cursor: pointer;
+                    text-align: center;
+                    background-color: #ff5252;
+                    border: 2px solid #ff5252;
+                    color: #ffffff;
+                    box-shadow: 0 0 10px rgba(255, 82, 82, 0.2);
+                    transition: all 0.2s;
+                ">
+                اعتراض قسري
+            </button>
+        </div>
+
+        <!-- 🔎 شريط أدلة وتفنيد براءة المتهم الدوار الخاص بمحامي الدفاع فقط -->
+        <div
+            id="defense-evidence-ticker"
+            style="
+                display: none;
+                position: fixed;
+                bottom: 145px;
+                left: 0;
+                width: 100%;
+                height: 32px;
+                background: rgba(13, 25, 43, 0.96);
+                border-top: 1px dashed var(--gold-glow);
+                border-bottom: 1px dashed var(--gold-glow);
+                overflow: hidden;
+                z-index: 99998;
+                box-shadow: 0 -4px 10px rgba(0, 0, 0, 0.5);
+            ">
+            <div style="display: flex; width: max-content; white-space: nowrap">
+                <div
+                    id="defense-marquee-node"
+                    style="display: flex; flex-shrink: 0; animation: defenseTickerScroll 30s linear infinite">
+                    <!-- يتم حقن الأدلة الـ 3 من الـ JSON هنا تلقائياً -->
+                </div>
+            </div>
+        </div>
+
+        <!-- ساحة اللعبة الرئيسية التي تضم الطاولة المحاطة بالكراسي دائرية الشكل -->
+        <div id="court-arena">
+            <div id="court-table">
+                <span id="table-center-text">ميزان<br />العدالة</span>
+            </div>
+            <div id="seats-container"></div>
+        </div>
+
+        <!-- حاوية الـ Canvas الخاصة برسم التدرج اللوني الدائري الافتراضي للوجو في الخلفية -->
+        <canvas id="courtCanvas" width="500" height="500" style="display: none"></canvas>
+        <!-- 🔨 لوحة التحكم والسيادة القضائية المخصصة لحساب القاضي فقط -->
+        <div id="judge-control-panel" class="judge-panel-container" style="display: none !important">
+            <!-- زر الاستجواب الغربي الحركي القابل للتجميد -->
+            <button id="btn-interrogate-toggle" class="btn-judge-action btn-interrogate-style">استجواب لاعب</button>
+
+            <!-- العداد المركزي المشع لحساب الاستجوابات وعقوبات المماطلة -->
+            <div class="judge-counter-display">
+                <span>الاستجوابات</span>
+                <strong id="interrogation-count-number">0</strong>
+            </div>
+
+            <!-- زر إصدار الحكم الشرقي المحكوم بشرط الاستجوابين (2) -->
+            <button
+                id="btn-verdict-trigger"
+                class="btn-judge-action btn-verdict-style"
+                disabled
+                style="opacity: 0.4; cursor: not-allowed">
+                إصدار الحكم
+            </button>
+        </div>
+
+        <!-- [مكون جديد] نافذة الإنذارات المنبثقة الموحدة (مدمج لعرض كروت الأدوار والتنبيهات القضائية) -->
+        <div id="custom-alert-modal" class="modal-overlay-hidden">
+            <div class="modal-alert-box">
+                <!-- عنوان الدور القضائي المكتشف سحابياً -->
+                <h2 id="modal-alert-title">المحكمة</h2>
+
+                <!-- حاوية حقن نصوص الكروت والمصالح السرية ديناميكياً من الجافا سكريبت -->
+                <div id="modal-alert-message">نص الإنذار يظهر هنا برمجياً</div>
+
+                <!-- زر الإغلاق الموحد لإرجاع اللاعب للوبي بنعومة UX -->
+                <button id="btn-modal-close" class="btn-secondary">حسناً</button>
+            </div>
+        </div>
+
+        <script type="module" src="js/app.js"></script>
+    </body>
+</html>

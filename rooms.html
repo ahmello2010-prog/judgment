@@ -1,0 +1,122 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>محكمة الأدوار - إدارة الغرف</title>
+        <!-- الاحتفاظ بملف التنسيق الأصلي الخاص بك تماماً -->
+        <link rel="stylesheet" href="css/style.css" />
+        <link rel="icon" type="image/png" href="/favicon-96x96.png" sizes="96x96" />
+        <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+        <link rel="shortcut icon" href="/favicon.ico" />
+        <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
+        <meta name="apple-mobile-web-app-title" content="المحكمة" />
+        <link rel="manifest" href="/site.webmanifest" />
+    </head>
+    <body class="body2">
+        <!-- 1. القائمة الجانبية الأصلية الخاصة بك بدون تغيير مسمياتها -->
+        <button id="btn-hamburger" class="hamburger-menu">
+            <span class="bar"></span>
+            <span class="bar"></span>
+            <span class="bar"></span>
+        </button>
+
+        <!-- القائمة الجانبية المنزلقة -->
+        <div id="sidebar-drawer" class="sidebar-drawer-hidden">
+            <div class="sidebar-content">
+                <h3 id="sidebar-title">القائمة الجانبية</h3>
+                <button id="btn-lang-toggle" class="btn-lang">EN</button>
+                <a href="guide.html" id="link-user-guide" class="sidebar-link">دليل المستخدم</a>
+                <a href="admin.html" class="sidebar-link" style="color: white; font-weight: bold">سجل الغرف</a>
+            </div>
+        </div>
+        <canvas id="courtCanvas" width="500" height="500" style="display: none"></canvas>
+        <!-- 2. حاوية اللوجو المصغّر في الأعلى -->
+
+        <!-- 3. الحاوية الرئيسية (نفس الكلاس القديم بتاعك تماماً عشان التنسيق ميتوهش) -->
+        <div class="rooms-container">
+            <h2 class="rooms-subtitle">اختر إنشاء جولة جديدة أو انضم لغرفة أصدقائك لبدء المحاكمة</h2>
+
+            <!-- 🔥 شبكة المربعات الثلاثة المطاطية الجديدة مدمجة بداخل حاويتك الأصلية -->
+            <div
+                class="rooms-grid-container"
+                style="
+                    display: grid;
+                    grid-template-columns: repeat(3, 1fr);
+                    gap: 20px;
+                    width: 100%;
+                    max-width: 800px;
+                    margin: 0 auto;
+                    padding: 10px;
+                ">
+                <!-- المربع الأول: إنشاء غرفة -->
+                <div class="room-grid-card" id="card-create-room">
+                    <div class="card-image-holder">
+                        <img src="img/create.png" alt="إنشاء غرفة" />
+                    </div>
+                    <span class="card-caption">إنشاء غرفة</span>
+                </div>
+
+                <!-- المربع الثاني: انضمام لغرفة -->
+                <div class="room-grid-card" id="card-join-room">
+                    <div class="card-image-holder">
+                        <img src="img/join.png" alt="انضمام لغرفة" />
+                    </div>
+                    <span class="card-caption">انضمام لغرفة</span>
+                </div>
+
+                <!-- المربع الثالث: لعب أوف لاين -->
+                <div class="room-grid-card" id="card-offline-play">
+                    <div class="card-image-holder1">
+                        <img src="img/off.png" alt="لعب أوف لاين" />
+                    </div>
+                    <span class="card-caption">لعب أوف لاين</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- 4. نافذة الإنذارات والمودال الموحد (نفس الـ ID المعتمد في السكريبت) -->
+        <div id="custom-alert-modal" class="modal-overlay-hidden">
+            <div class="modal-alert-box">
+                <h3 id="modal-alert-title">تنبيه قضائي</h3>
+                <p id="modal-alert-message">برجاء مراجعة شروط الغرفة والعدد قبل البدء.</p>
+                <button id="btn-modal-close">حسناً</button>
+            </div>
+        </div>
+        <!-- شريط الأخبار السينمائي المتحرك والمثبت أسفل الواجهة -->
+        <div class="cinematic-ticker-container">
+            <div class="ticker-text-wrapper">
+                <div class="ticker-marquee">
+                    <span>اجتمع مع أصدقائك أو أحبابك لتحظى بتجربة لعب مميزة</span>
+                    <span
+                        >نظراً لعدم توفر المايك في الوقت الحالي يمكنك إجراء مكالمة جماعية ويلعب كل لاعب من بيته في الوضع
+                        الأونلاين</span
+                    >
+                    <span>ماذا تنتظر؟ أنشئ غرفة وادعو أصدقائك أو العب مود الأوفلاين</span>
+                    <span>لتعرف المزيد عن اللعبة وكيفية الإستمتاع بها يرجى زيارة صفحة دليل المستخدم</span>
+                    <span
+                        >للتحكم في مساحة التطبيق يرجى زيارة صفحة سجل الغرف ومسح كل الغرف القديمة حتى تحظى بتجربة لعب
+                        مريحة</span
+                    >
+                </div>
+                <!-- تكرار نفس الكتلة بالظبط وراءها مباشرة لملء الفراغ ومنع اختفاء الشريط -->
+                <div class="ticker-marquee">
+                    <span>اجتمع مع أصدقائك أو أحبابك لتحظى بتجربة لعب مميزة</span>
+                    <span
+                        >نظراً لعدم توفر المايك في الوقت الحالي يمكنك إجراء مكالمة جماعية ويلعب كل لاعب من بيته في الوضع
+                        الأونلاين</span
+                    >
+                    <span>ماذا تنتظر؟ أنشئ غرفة وادعو أصدقائك أو العب مود الأوفلاين</span>
+                    <span>لتعرف المزيد عن اللعبة وكيفية الإستمتاع بها يرجى زيارة صفحة دليل المستخدم</span>
+                    <span
+                        >للتحكم في مساحة التطبيق يرجى زيارة صفحة سجل الغرف ومسح كل الغرف القديمة حتى تحظى بتجربة لعب
+                        مريحة</span
+                    >
+                </div>
+            </div>
+        </div>
+
+        <!-- 5. استدعاء ملف الجافا سكريبت الموحد -->
+        <script type="module" src="js/app.js"></script>
+    </body>
+</html>

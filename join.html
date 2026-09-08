@@ -1,0 +1,171 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>محكمة الأدوار - الانضمام للمحاكمة</title>
+        <link rel="icon" type="image/png" href="/favicon-96x96.png" sizes="96x96" />
+        <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+        <link rel="shortcut icon" href="/favicon.ico" />
+        <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
+        <meta name="apple-mobile-web-app-title" content="المحكمة" />
+        <link rel="manifest" href="/site.webmanifest" />
+        <link rel="stylesheet" href="css/style.css" />
+        <style>
+            :root {
+                --gold-glow: rgb(213, 167, 92);
+                --deep-navy: rgb(13, 25, 43);
+                --inner-vintage: rgb(66, 52, 35);
+                --shadow-black: rgb(5, 10, 18);
+                --text-white: rgb(255, 255, 255);
+            }
+            /* الأنماط العامة لصفحة الانضمام الممتزجة مع هوية اللعبة */
+            body {
+                font-family: "Alexandria", system-ui, sans-serif;
+                background: radial-gradient(
+                    circle,
+                    var(--inner-vintage) 0%,
+                    var(--deep-navy) 65%,
+                    var(--shadow-black) 100%
+                );
+                min-height: 100vh;
+                margin: 0;
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                overflow-x: hidden;
+            }
+            .join-wrapper-card {
+                width: 100%;
+                max-width: 420px;
+                padding: 25px;
+                text-align: center;
+            }
+            .input-group-zone {
+                width: 100%;
+                display: flex;
+                flex-direction: column;
+                align-items: flex-start;
+                margin-bottom: 18px;
+            }
+            .input-group-zone input {
+                width: 100%;
+                padding: 12px;
+                font-family: "Alexandria", sans-serif;
+                border: 2px solid var(--gold-glow);
+                border-radius: 8px;
+                background-color: var(--shadow-black);
+                color: var(--text-white);
+                outline: none;
+                text-align: center;
+                font-size: 1rem;
+                box-sizing: border-box;
+                transition: border-color 0.2s ease;
+            }
+            .input-group-zone input:focus {
+                border-color: var(--text-white);
+            }
+        </style>
+    </head>
+    <body>
+        <!-- الحاوية السيادية الموحدة لصفحة الانضمام -->
+        <div class="join-wrapper-card">
+            <div class="join-card-panel">
+                <!-- عنوان الدخول الرئيسي المكتوب بملفك -->
+                <h1
+                    style="
+                        color: var(--gold-glow);
+                        font-family: &quot;Alexandria&quot;;
+                        font-weight: 900;
+                        font-size: 1.8rem;
+                        margin-bottom: 25px;
+                    ">
+                    إبحث عن الغرفة
+                </h1>
+
+                <!-- 1️⃣ باند كود الغرفة: يحتوي على خانة واحدة فريدة لمنع خطأ التكرار (Duplicate ID) -->
+                <div class="input-group-zone">
+                    <label
+                        style="
+                            color: var(--text-white);
+                            font-family: &quot;Harmattan&quot;;
+                            font-size: 1.3rem;
+                            margin-bottom: 6px;
+                            font-weight: 600;
+                        "
+                        >أدخل كود الغرفة المكون من 4 أرقام:</label
+                    >
+                    <input type="text" id="room-code-search" placeholder="مثال: 1234" />
+
+                    <!-- [إضافة ذكية]: سطر التنبيه الأحمر لخانة الكود يظهر بنعومة تحت الباند مباشرة -->
+                    <span
+                        id="error-room-code"
+                        style="
+                            color: #ff4d4d;
+                            font-family: &quot;Alexandria&quot;;
+                            font-size: 0.8rem;
+                            font-weight: 700;
+                            display: none;
+                            margin-top: 5px;
+                            text-align: right;
+                            width: 100%;
+                            animation: smoothPanelReveal 0.2s ease;
+                        "></span>
+                </div>
+
+                <!-- 2️⃣ باند اسم اللاعب: يحتوي على خانة الاسم وتحتها سطر التنبيه المخصص لها -->
+                <div class="input-group-zone">
+                    <label
+                        style="
+                            color: var(--text-white);
+                            font-family: &quot;Harmattan&quot;;
+                            font-size: 1.3rem;
+                            margin-bottom: 6px;
+                            font-weight: 600;
+                        "
+                        >اسمك الحقيقي:</label
+                    >
+                    <input type="text" id="player-name-join" placeholder="اكتب اسمك هنا (اختياري)" />
+
+                    <!-- [إضافة ذكية]: سطر التنبيه الأحمر لخانة الاسم -->
+                    <span
+                        id="error-player-name"
+                        style="
+                            color: #ff4d4d;
+                            font-family: &quot;Alexandria&quot;;
+                            font-size: 0.8rem;
+                            font-weight: 700;
+                            display: none;
+                            margin-top: 5px;
+                            text-align: right;
+                            width: 100%;
+                            animation: smoothPanelReveal 0.2s ease;
+                        "></span>
+                </div>
+
+                <!-- زر البحث والانضمام الأصلي المربوط بالمحرك السحابي للعبة -->
+                <button
+                    id="btn-search-join"
+                    style="
+                        width: 100%;
+                        padding: 14px 0;
+                        font-family: &quot;Alexandria&quot;;
+                        font-weight: 700;
+                        font-size: 1.1rem;
+                        color: var(--shadow-black);
+                        background-color: var(--gold-glow);
+                        border: 2px solid var(--gold-glow);
+                        border-radius: 8px;
+                        cursor: pointer;
+                        box-shadow: 0 4px 15px rgba(213, 167, 92, 0.2);
+                        margin-top: 10px;
+                        transition: all 0.2s ease;
+                    ">
+                    البحث عن الغرفة والانضمام
+                </button>
+            </div>
+        </div>
+
+        <script type="module" src="js/app.js"></script>
+    </body>
+</html>

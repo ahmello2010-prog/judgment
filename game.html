@@ -1,0 +1,560 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>محكمة الأدوار - موسوعة القضايا</title>
+        <link rel="stylesheet" href="css/style.css" />
+        <link rel="icon" type="image/png" href="/favicon-96x96.png" sizes="96x96" />
+        <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+        <link rel="shortcut icon" href="/favicon.ico" />
+        <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
+        <meta name="apple-mobile-web-app-title" content="المحكمة" />
+        <link rel="manifest" href="/site.webmanifest" />
+        <style>
+            #points-guide-modal-overlay div::-webkit-scrollbar {
+                width: 4px;
+            }
+            #points-guide-modal-overlay div::-webkit-scrollbar-track {
+                background: rgba(5, 10, 18, 0.5);
+            }
+            #points-guide-modal-overlay div::-webkit-scrollbar-thumb {
+                background: var(--gold-glow, #d5a75c);
+                border-radius: 2px;
+            }
+        </style>
+        <style>
+            /* ==========================================================================
+   تنسيق نافذة الإنذارات المنبثقة الموحدة (Custom Alert Modal UI)
+   ========================================================================== */
+
+            /* فئة التفعيل - تظهر الشاشة بالكامل فوق قاعة المحاكمة وقاعدة البيانات */
+            .modal-overlay-active {
+                position: fixed !important;
+                top: 0 !important;
+                left: 0 !important;
+                width: 100vw !important;
+                height: 100vh !important;
+                background-color: rgba(5, 10, 18, 0.85) !important; /* خلفية داكنة لطمس محتوى الصفحة */
+                display: flex !important;
+                justify-content: center !important; /* توسيط أفقي صارم */
+                align-items: center !important; /* توسيط عمودي صارم */
+                z-index: 999999 !important; /* الصدارة المطلقة فوق كل القضايا والصور */
+                opacity: 1 !important;
+                pointer-events: auto !important;
+            }
+
+            /* فئة الإخفاء الافتراضية للمودال */
+            .modal-overlay-hidden {
+                display: none !important;
+            }
+
+            /* صندوق التنبيه الزجاجي الفخم الممتزج مع ألوان المحكمة */
+            .modal-alert-box {
+                width: 88%;
+                max-width: 380px;
+                background-color: var(--inner-vintage, #423423); /* البني العتيق من هويتك البصرية */
+                border: 3px solid var(--gold-glow, #d5a75c); /* إطار ذهبي مضيء يحاكي منصة القضاء */
+                border-radius: 16px;
+                padding: 30px 20px;
+                text-align: center;
+                box-shadow:
+                    0 15px 40px rgba(0, 0, 0, 0.7),
+                    0 0 25px rgba(213, 167, 92, 0.1);
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                gap: 15px;
+                animation: modalPopReveal 0.35s cubic-bezier(0.25, 1, 0.5, 1) forwards; /* أنيميشن ظهور مبهج */
+            }
+
+            /* عنوان التنبيه العريض */
+            #modal-alert-title {
+                font-family: "Alexandria", system-ui, sans-serif;
+                font-weight: 800;
+                font-size: 1.35rem;
+                color: var(--gold-glow, #d5a75c);
+                text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+            }
+
+            /* نص التنبيه المقروء والمنسق بالكامل */
+            #modal-alert-message {
+                font-family: "Harmattan", system-ui, sans-serif;
+                font-weight: 500;
+                font-size: 1.35rem;
+                color: var(--text-white, #ffffff);
+                line-height: 1.5;
+            }
+
+            /* زر إغلاق التنبيه التفاعلي الفاخر */
+            #btn-modal-close {
+                background-color: var(--gold-glow, #d5a75c);
+                color: #050a12; /* خط أسود حاد داخل الكتلة الذهبية الفاخرة للتباين */
+                border: none;
+                padding: 10px 28px;
+                font-family: "Alexandria", sans-serif;
+                font-weight: 700;
+                font-size: 0.9rem;
+                border-radius: 8px;
+                cursor: pointer;
+                box-shadow: 0 4px 12px rgba(213, 167, 92, 0.25);
+                transition: all 0.2s ease-in-out;
+            }
+
+            /* تأثير اللمس والضغط الفيزيائي على الهواتف */
+            #btn-modal-close:active {
+                transform: scale(0.96);
+                background-color: var(--text-white, #ffffff);
+                color: #050a12;
+            }
+
+            /* حركة التمدد والظهور الانسيابية للمودال */
+            @keyframes modalPopReveal {
+                from {
+                    opacity: 0;
+                    transform: scale(0.92) translateY(10px);
+                }
+                to {
+                    opacity: 1;
+                    transform: scale(1) translateY(0);
+                }
+            }
+        </style>
+    </head>
+    <body class="body2" style="height: 210vh">
+        <button
+            id="btn-host-destroy-room"
+            style="
+                position: fixed;
+                top: 20px;
+                left: 20px;
+                background-color: #8b0000;
+                color: white;
+                border: 2px solid var(--gold-glow, #d5a75c);
+                padding: 8px 16px;
+                border-radius: 6px;
+                font-family: &quot;Alexandria&quot;, sans-serif;
+                font-size: 0.85rem;
+                font-weight: 700;
+                cursor: pointer;
+                z-index: 500;
+                box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
+                transition: all 0.2s ease;
+            ">
+            الخروج
+        </button>
+
+        <!-- المودال الزجاجي المعزول للشياكة (يتفعل للأدمن فقط لتأكيد إنهاء وتدمير المحاكمة) -->
+        <div id="host-exit-modal" class="host-overlay-hidden">
+            <div class="host-confirm-box">
+                <h2
+                    style="
+                        font-family: &quot;Alexandria&quot;, sans-serif;
+                        color: #ff4d4d;
+                        font-size: 1.35rem;
+                        margin-bottom: 8px;
+                        font-weight: 800;
+                    ">
+                    تأكيد الخروج
+                </h2>
+                <div
+                    style="
+                        font-family: &quot;Harmattan&quot;, sans-serif;
+                        color: #fff;
+                        font-size: 1.35rem;
+                        line-height: 1.5;
+                        text-align: center;
+                        margin-bottom: 20px;
+                    ">
+                    تنبيه:
+                    <span style="color: #ff4d4d; font-weight: bold"
+                        >اذا كان عدد اللاعبين أقل من الحد الأدنى سيتم إلغاء المحكمة</span
+                    >
+                    هل انت متأكد من تسجيل خروجك من الغرفة
+                </div>
+                <div style="display: flex; gap: 12px; width: 100%">
+                    <button
+                        id="btn-host-cancel-exit"
+                        style="
+                            flex: 1;
+                            background: transparent;
+                            color: var(--gold-glow, #d5a75c);
+                            border: 2px solid var(--gold-glow, #d5a75c);
+                            padding: 11px 0;
+                            font-family: &quot;Alexandria&quot;;
+                            font-weight: 700;
+                            border-radius: 88px;
+                            cursor: pointer;
+                            font-size: 0.9rem;
+                        ">
+                        تراجع، البقاء
+                    </button>
+                    <button
+                        id="btn-host-confirm-exit"
+                        style="
+                            flex: 1;
+                            background: #8b0000;
+                            color: white;
+                            border: 2px solid var(--gold-glow, #d5a75c);
+                            padding: 11px 0;
+                            font-family: &quot;Alexandria&quot;;
+                            font-weight: 700;
+                            border-radius: 88px;
+                            cursor: pointer;
+                            font-size: 0.9rem;
+                        ">
+                        نعم، مغادرة
+                    </button>
+                </div>
+            </div>
+        </div>
+        <!-- كارت العداد العام لنقاط اللاعب الطافي بأعلى الشاشة مدمجاً معه العبارة التوضيحية -->
+        <div
+            class="personal-score-card"
+            style="
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                justify-content: center;
+                height: auto;
+                padding: 6px 14px;
+            ">
+            <div style="display: flex; justify-content: space-between; align-items: center; width: 100%">
+                <span>رصيدك:</span>
+                <strong id="personal-current-score-text">0</strong>
+            </div>
+            <!-- العبارة التوضيحية التفاعلية المرتبطة بعداد النقاط العام -->
+            <span
+                id="trigger-points-guide"
+                style="
+                    font-size: 0.5rem;
+                    color: var(--gold-glow);
+                    cursor: pointer;
+                    text-decoration: none;
+                    margin-top: 2px;
+                    display: inline-block;
+                    font-family: &quot;Alexandria&quot;, sans-serif;
+                "
+                >اضغط لتعرف نظام النقاط</span
+            >
+        </div>
+
+        <div class="rooms-container" style="margin-top: 1800px; gap: 20px">
+            <div class="logo-image-box" style="width: 90px; height: 90px; margin-bottom: 10px">
+                <img id="game-logo-img" src="img/logo.jpeg" alt="Roleplay Court Logo" />
+            </div>
+            <h1
+                class="welcome-title"
+                style="font-size: 1.9rem; color: #ffffff; font-family: Alexandria"
+                id="game-main-title">
+                موسوعة القضايا
+            </h1>
+            <p class="rooms-subtitle" id="game-main-subtitle" style="margin-bottom: 20px">
+                اختر حبكة الجريمة لبدء توزيع كروت الأدوار السرية وتحقيق المحكمة
+            </p>
+            <div
+                id="cases-container"
+                style="width: 95%; display: flex; flex-direction: column; gap: 16px; margin-bottom: 40px"></div>
+        </div>
+        <div id="custom-alert-modal" class="modal-overlay-hidden">
+            <div class="modal-alert-box">
+                <h2 id="modal-alert-title">تنبيه قضائي</h2>
+
+                <div id="modal-alert-message">جاري معالجة البيانات...</div>
+
+                <button id="btn-modal-close">حسناً</button>
+            </div>
+        </div>
+
+        <!-- ==========================================================================
+     مودال ميثاق النقاط العام المستقل (Judicial Points Guide Modal)
+     ========================================================================== -->
+        <div
+            id="points-guide-modal-overlay"
+            style="
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100vw;
+                height: 100vh;
+                background-color: rgba(5, 10, 18, 0.94);
+                display: none;
+                justify-content: center;
+                align-items: center;
+                z-index: 99999999;
+                direction: rtl;
+            ">
+            <div
+                style="
+                    width: 90%;
+                    max-width: 400px;
+                    background-color: var(--inner-vintage, #423423);
+                    border: 3px solid var(--gold-glow, #d5a75c);
+                    border-radius: 14px;
+                    padding: 20px 15px;
+                    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.8);
+                    display: flex;
+                    flex-direction: column;
+                    gap: 15px;
+                ">
+                <h2
+                    style="
+                        font-family: &quot;Alexandria&quot;, sans-serif;
+                        font-weight: 700;
+                        font-size: 1.15rem;
+                        color: var(--gold-glow, #d5a75c);
+                        text-align: center;
+                        margin: 0;
+                    ">
+                    دليلك لتتعرف على نظام النقاط
+                </h2>
+
+                <!-- حاوية القوانين المدعومة بالتمرير والانسيابية الفائقة -->
+                <div
+                    style="
+                        max-height: 320px;
+                        overflow-y: auto;
+                        padding-right: 5px;
+                        box-sizing: border-box;
+                        display: flex;
+                        flex-direction: column;
+                        gap: 10px;
+                        border-bottom: 1px solid rgba(213, 167, 92, 0.2);
+                        padding-bottom: 10px;
+                    ">
+                    <!-- مجموعة قوانين القاضي -->
+                    <div
+                        style="
+                            background: rgba(5, 10, 18, 0.4);
+                            padding: 10px;
+                            border-radius: 8px;
+                            border-right: 4px solid var(--gold-glow);
+                        ">
+                        <h4
+                            style="
+                        font-family: 'Alexandria';
+                        font-size: 0.85rem;
+                        color: var(--gold-glow);
+                        margin: 0 margin-bottom: 6px;
+                    ">
+                            ⚖️ ميزان رصيد القاضي المحقق:
+                        </h4>
+                        <p
+                            style="
+                                font-family: &quot;Harmattan&quot;;
+                                font-size: 1.15rem;
+                                color: #fff;
+                                line-height: 1.4;
+                                margin: 0;
+                            ">
+                            • استجوابين (حكم صحيح): <span style="color: #52ff7d; font-weight: 700">+20 نقطة</span><br />
+                            • استجوابين (حكم خاطئ): <span style="color: #ff5252; font-weight: 700">-15 نقطة</span><br />
+                            • 3 استجوابات (حكم صحيح): <span style="color: #52ff7d; font-weight: 700">+17 نقطة</span
+                            ><br />
+                            • 3 استجوابات (حكم خاطئ): <span style="color: #ff5252; font-weight: 700">-12 نقطة</span
+                            ><br />
+                            • المرحلة العامة (إدانة جاني/براءة بريء):
+                            <span style="color: #52ff7d; font-weight: 700">+10 نقاط</span><br />
+                            • المرحلة العامة (خطأ قضائي / تبرئة جاني):
+                            <span style="color: #ff5252; font-weight: 700">-10 نقاط</span><br />
+                            • تخطي الاستجواب 9 ومضاعفاتها:
+                            <span style="color: #ff5252; font-weight: 700">خصم -5 نقاط</span> (عقوبة تشتيت الجلسة)
+                        </p>
+                    </div>
+
+                    <!-- مجموعة قوانين محامي الادعاء -->
+                    <div
+                        style="
+                            background: rgba(5, 10, 18, 0.4);
+                            padding: 10px;
+                            border-radius: 8px;
+                            border-right: 4px solid #cbb747;
+                        ">
+                        <h4
+                            style="
+                                font-family: &quot;Alexandria&quot;;
+                                font-size: 0.85rem;
+                                color: #cbb747;
+                                margin-bottom: 6px;
+                            ">
+                            👔 منصة حسم محامي الادعاء:
+                        </h4>
+                        <p
+                            style="
+                                font-family: &quot;Harmattan&quot;;
+                                font-size: 1.15rem;
+                                color: #fff;
+                                line-height: 1.4;
+                                margin: 0;
+                            ">
+                            • اتهام ذكي صحيح (بالرادار): <span style="color: #52ff7d; font-weight: 700">+15 نقطة</span
+                            ><br />
+                            • اتهام ذكي خاطئ (بالرادار): <span style="color: #ff5252; font-weight: 700">-15 نقطة</span
+                            ><br />
+                            • اتهام مباشر صحيح (دون رادار):
+                            <span style="color: #52ff7d; font-weight: 700">+10 نقاط</span><br />
+                            • اتهام مباشر خاطئ (دون رادار):
+                            <span style="color: #ff5252; font-weight: 700">-10 نقاط</span><br />
+                            • خمول وتخاذل عن أداء الواجب:
+                            <span style="color: #ff5252; font-weight: 700">خصم -10 نقاط</span> (عقوبة إنهاء الجلسة)
+                        </p>
+                    </div>
+
+                    <!-- مجموعة قوانين محامي الدفاع والمتهمين -->
+                    <div
+                        style="
+                            background: rgba(5, 10, 18, 0.4);
+                            padding: 10px;
+                            border-radius: 8px;
+                            border-right: 4px solid #ff5252;
+                        ">
+                        <h4
+                            style="
+                                font-family: &quot;Alexandria&quot;;
+                                font-size: 0.85rem;
+                                color: #ff5252;
+                                margin-bottom: 6px;
+                            ">
+                            👥 الدفاع والاشتباك السحابي:
+                        </h4>
+                        <p
+                            style="
+                                font-family: &quot;Harmattan&quot;;
+                                font-size: 1.15rem;
+                                color: #fff;
+                                line-height: 1.4;
+                                margin: 0;
+                            ">
+                            • إدانة الجاني الحقيقي: <span style="color: #ff5252; font-weight: 700">الجاني -10</span> |
+                            <span style="color: #ff5252; font-weight: 700">محامي الدفاع -5</span><br />
+                            • إدانة المشتبه به (دون رادار):
+                            <span style="color: #52ff7d; font-weight: 700">المشتبه به +10</span> |
+                            <span style="color: #ff5252; font-weight: 700">الدفاع -5</span><br />
+                            • إدانة المشتبه به (بالرادار):
+                            <span style="color: #52ff7d; font-weight: 700">المشتبه به +5</span> |
+                            <span style="color: #ff5252; font-weight: 700">الدفاع -10</span><br />
+                            • إدانة لاعب بريء تماماً: <span style="color: #52ff7d; font-weight: 700">البريء +10</span> |
+                            <span style="color: #ff5252; font-weight: 700">الدفاع -15</span><br />
+                            • تبرئة الجاني الحقيقي: <span style="color: #52ff7d; font-weight: 700">الجاني +10</span> |
+                            <span style="color: #52ff7d; font-weight: 700">الدفاع +20</span> (مكافأة التضليل الكبرى)
+                        </p>
+                    </div>
+
+                    <!-- مجموعة قوانين الحضور والتضليل -->
+                    <div
+                        style="
+                            background: rgba(5, 10, 18, 0.4);
+                            padding: 10px;
+                            border-radius: 8px;
+                            border-right: 4px solid #52ff7d;
+                        ">
+                        <h4
+                            style="
+                                font-family: &quot;Alexandria&quot;;
+                                font-size: 0.85rem;
+                                color: #52ff7d;
+                                margin-bottom: 6px;
+                            ">
+                            🎭 مكافآت الحضور والتضليل:
+                        </h4>
+                        <p
+                            style="
+                                font-family: &quot;Harmattan&quot;;
+                                font-size: 1.15rem;
+                                color: #fff;
+                                line-height: 1.4;
+                                margin: 0;
+                            ">
+                            • تضليل القاضي (إدانة شخص آخر):
+                            <span style="color: #52ff7d; font-weight: 700">الجاني الحقيقي +10 نقاط</span><br />
+                            • الحضور المخفي الحذر:
+                            <span style="color: #52ff7d; font-weight: 700">المشتبه غير المستهدف +5 نقاط</span> (تُمنح
+                            تلقائياً لمن لم يُكشف بالرادار أو يُدان بالجلسة)
+                        </p>
+                    </div>
+                </div>
+
+                <button
+                    id="btn-close-points-guide"
+                    style="
+                        all: unset;
+                        background-color: var(--gold-glow, #d5a75c);
+                        color: var(--shadow-black, #050a18);
+                        font-family: &quot;Alexandria&quot;, sans-serif;
+                        font-weight: 700;
+                        font-size: 1rem;
+                        padding: 12px 0;
+                        border-radius: 8px;
+                        cursor: pointer;
+                        text-align: center;
+                        box-shadow: 0 4px 12px rgba(213, 167, 92, 0.2);
+                        transition: transform 0.1s ease;
+                    ">
+                    إغلاق الدليل
+                </button>
+            </div>
+        </div>
+
+        <div class="cinematic-ticker-container">
+            <div class="ticker-text-wrapper">
+                <div class="ticker-marquee">
+                    <span>اجتمع مع أصدقائك أو أحبابك لتحظى بتجربة لعب مميزة</span>
+                    <span
+                        >نظراً لعدم توفر المايك في الوقت الحالي يمكنك إجراء مكالمة جماعية ويلعب كل لاعب من بيته في الوضع
+                        الأونلاين</span
+                    >
+                    <span>ماذا تنتظر؟ أنشئ غرفة وادعو أصدقائك أو العب مود الأوفلاين</span>
+                    <span>لتعرف المزيد عن اللعبة وكيفية الإستمتاع بها يرجى زيارة صفحة دليل المستخدم</span>
+                    <span
+                        >للتحكم في مساحة التطبيق يرجى زيارة صفحة سجل الغرف ومسح كل الغرف القديمة حتى تحظى بتجربة لعب
+                        مريحة</span
+                    >
+                </div>
+                <!-- تكرار نفس الكتلة بالظبط وراءها مباشرة لملء الفراغ ومنع اختفاء الشريط -->
+                <div class="ticker-marquee">
+                    <span>اجتمع مع أصدقائك أو أحبابك لتحظى بتجربة لعب مميزة</span>
+                    <span
+                        >نظراً لعدم توفر المايك في الوقت الحالي يمكنك إجراء مكالمة جماعية ويلعب كل لاعب من بيته في الوضع
+                        الأونلاين</span
+                    >
+                    <span>ماذا تنتظر؟ أنشئ غرفة وادعو أصدقائك أو العب مود الأوفلاين</span>
+                    <span>لتعرف المزيد عن اللعبة وكيفية الإستمتاع بها يرجى زيارة صفحة دليل المستخدم</span>
+                    <span
+                        >للتحكم في مساحة التطبيق يرجى زيارة صفحة سجل الغرف ومسح كل الغرف القديمة حتى تحظى بتجربة لعب
+                        مريحة</span
+                    >
+                </div>
+            </div>
+        </div>
+        <script>
+            document.addEventListener("DOMContentLoaded", function () {
+                const triggerLabel = document.getElementById("trigger-points-guide");
+                const guideModal = document.getElementById("points-guide-modal-overlay");
+                const btnCloseGuide = document.getElementById("btn-close-points-guide");
+
+                if (triggerLabel && guideModal && btnCloseGuide) {
+                    triggerLabel.addEventListener("click", function (e) {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        guideModal.style.setProperty("display", "flex", "important");
+                    });
+
+                    btnCloseGuide.addEventListener("click", function (e) {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        guideModal.style.setProperty("display", "none", "important");
+                    });
+
+                    btnCloseGuide.addEventListener("touchstart", function () {
+                        this.style.transform = "scale(0.97)";
+                    });
+                    btnCloseGuide.addEventListener("touchend", function () {
+                        this.style.transform = "scale(1)";
+                    });
+                }
+            });
+        </script>
+
+        <script type="module" src="js/app.js"></script>
+    </body>
+</html>

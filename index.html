@@ -1,0 +1,226 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>محكمة الأدوار - شاشة الترحيب</title>
+
+        <!-- استدعاء المكون المباشر لـ Lottie ليعمل فقط أثناء فترة التحميل -->
+        <script src="https://lottie.host/5c8b4548-c18c-407f-9e64-00014c2aa006/UAYSrmYfhz.lottie"></script>
+        <link rel="icon" type="image/png" href="/favicon-96x96.png" sizes="96x96" />
+        <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+        <link rel="shortcut icon" href="/favicon.ico" />
+        <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
+        <meta name="apple-mobile-web-app-title" content="المحكمة" />
+        <link rel="manifest" href="/site.webmanifest" />
+        <link rel="stylesheet" href="css/style.css" />
+        <style>
+            /* ==========================================================================
+   صندوق معلومات الإصدار الأول في شاشة الترحيب (Version Info Box)
+   ========================================================================== */
+            .version-info-box {
+                margin-top: 25px;
+                margin-bottom: 45px; /* إعطاء مساحة قبل شريط الأخبار السفلي */
+                text-align: center;
+                padding: 12px 20px;
+                background: rgba(5, 10, 18, 0.6); /* ممتزج مع الأسود الحالك للعبة */
+                border: 1px dashed rgba(213, 167, 92, 0.3); /* إطار مقطع بلون الذهبي المضيء */
+                border-radius: 8px;
+                max-width: 340px;
+                margin-left: auto;
+                margin-right: auto;
+                direction: rtl;
+                box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4);
+                animation: smoothPanelReveal 0.8s ease-in-out forwards;
+            }
+
+            .version-badge {
+                display: inline-block;
+                font-family: "Alexandria", sans-serif;
+                font-weight: 700;
+                font-size: 0.7rem;
+                color: var(--shadow-black, #050a12);
+                background-color: var(--gold-glow, #d5a75c); /* لون المطرقة الذهبي */
+                padding: 3px 8px;
+                border-radius: 4px;
+                margin-bottom: 8px;
+                box-shadow: 0 2px 8px rgba(213, 167, 92, 0.3);
+            }
+
+            .version-disclaimer {
+                font-family: "Harmattan", sans-serif;
+                font-weight: 490;
+                font-size: 1.1rem; /* خط هرماتان يحتاج حجم أكبر ليكون مقروءاً */
+                color: #cccccc; /* رمادي هادئ لا يشتت الانتباه عن زر البدء */
+                line-height: 1.4;
+                margin: 0;
+                text-shadow: 0 1px 3px rgba(0, 0, 0, 0.8);
+            }
+            .version-info {
+                transform: translateY(220px);
+                position: absolute;
+                text-align: center;
+                font-family: "Alexandria", sans-serif;
+                padding: 15px;
+                width: 90%;
+                background: rgba(255, 255, 255, 0.03);
+                border: 1px solid rgba(213, 167, 92, 0.1); /* لمسة ذهبية خفيفة متناسقة مع كودك */
+                border-radius: 8px;
+                max-width: 320px;
+                margin-left: auto;
+                margin-right: auto;
+            }
+
+            .version-tag {
+                display: inline-block;
+                font-size: 0.8rem;
+                font-weight: 700;
+                color: var(--gold-glow, #d5a75c);
+                background: rgba(213, 167, 92, 0.1);
+                padding: 4px 10px;
+                border-radius: 4px;
+                margin-bottom: 8px;
+            }
+
+            .version-note {
+                font-size: 0.75rem;
+                color: #b3b3b3;
+                line-height: 1.5;
+                margin: 0;
+                direction: rtl;
+            }
+        </style>
+    </head>
+    <body class="body1">
+        <!-- فيديو الخلفية السينمائي الطولي بعد تأمينه وحجب البوستر الافتراضي -->
+        <div class="video-background-container">
+            <video
+                autoplay
+                loop
+                muted
+                playsinline
+                preload="auto"
+                poster="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7"
+                id="bg-cinema-video">
+                <source src="img/vid.mp4" type="video/mp4" />
+            </video>
+            <div class="video-overlay"></div>
+        </div>
+
+        <!-- الحاوية الرئيسية للشاشة الأولى -->
+        <div class="splash-container">
+            <div id="welcome-component" class="fade-active">
+                <h1 class="welcome-title">محكمة الأدوار</h1>
+
+                <!-- تركنا النص فارغاً ليتم كتابته برمجياً حرفاً بحرف -->
+                <p id="dynamic-subtitle" class="welcome-subtitle"></p>
+
+                <!-- الزر مخفي افتراضياً بانتهاء النص وسيهبط سينمائياً -->
+                <a id="btn-start-game-index" class="btn-main btn-hidden" href="rooms.html">ابدأ اللعبة</a>
+            </div>
+            <div class="version-info">
+                <span class="version-tag">النسخة التجريبية الثانية v1.0.2</span>
+                <p class="version-note">
+                    ⚠️ هذا هو الإصدار الثاني من اللعبة، وقد تلاحظ وجود بعض العيوب البرمجية البسيطة. نعمل جاهدين على
+                    تحسينها في التحديثات القادمة!
+                </p>
+            </div>
+        </div>
+
+        <!-- استدعاء ملف الجافا سكريبت الموحد -->
+        <script type="module" src="js/app.js"></script>
+        <script>
+            document.addEventListener("DOMContentLoaded", function () {
+                const textPart1 = "مرحباً بك في محكمة الأدوار";
+                const textPart2 = "حيث عالم التحقيق والاستراتيجية الذهنية";
+                const subtitleElement = document.getElementById("dynamic-subtitle");
+                const startButton = document.getElementById("btn-start-game-index");
+
+                // 🎵 تجهيز ملف الصوت المستمر للكتابة / الفويس
+                const sfxContinuousType = new Audio("img/uh.mp3");
+                sfxContinuousType.volume = 0.95; // صوت متزن ومناسب
+
+                // 🎵 صوت هبوط وارتطام الزر (سيعمل كاملاً بدون أي قص)
+                const sfxButtonDrop = new Audio("img/uh (1).mp3");
+                sfxButtonDrop.volume = 0.8;
+
+                let currentText = "";
+                let charIndex = 0;
+                const typingSpeed = 65;
+
+                // دالة لتشغيل الصوت بأمان
+                function playAudio(audio) {
+                    audio.play().catch(() => console.log("في انتظار لمسة أولى لتفعيل الصوت..."));
+                }
+
+                // دالة لإيقاف الصوت المستمر فوراً
+                function stopAudio(audio) {
+                    audio.pause();
+                }
+
+                // 1️⃣ بدء كتابة الجزء الأول وتشغيل الصوت المستمر
+                function typePart1() {
+                    if (charIndex === 0) {
+                        playAudio(sfxContinuousType);
+                    }
+
+                    if (charIndex < textPart1.length) {
+                        currentText += textPart1.charAt(charIndex);
+                        subtitleElement.textContent = currentText;
+                        charIndex++;
+                        setTimeout(typePart1, typingSpeed);
+                    } else {
+                        currentText += ".. ";
+                        subtitleElement.textContent = currentText;
+
+                        // 🛑 أول ما يخلص الجزء الأول: اقطع صوت الكيبورد فوراً لبدء الوقف التشويقي (ثانيتين صمت)
+                        stopAudio(sfxContinuousType);
+
+                        setTimeout(typePart2Init, 2000);
+                    }
+                }
+
+                function typePart2Init() {
+                    charIndex = 0;
+                    sfxContinuousType.currentTime = 0; // إرجاع مؤشر صوت الكيبورد للبداية للمرحلة الثانية
+                    typePart2();
+                }
+
+                // 2️⃣ بدء كتابة الجزء الثاني وإعادة تشغيل صوت الكيبورد
+                function typePart2() {
+                    if (charIndex === 0) {
+                        playAudio(sfxContinuousType);
+                    }
+
+                    if (charIndex < textPart2.length) {
+                        currentText += textPart2.charAt(charIndex);
+                        subtitleElement.textContent = currentText;
+                        charIndex++;
+                        setTimeout(typePart2, typingSpeed);
+                    } else {
+                        // 🛑 اقطع صوت الكيبورد نهائياً فور نهاية آخر حرف في العبارة الترحيبية
+                        stopAudio(sfxContinuousType);
+
+                        // 🚀 إطلاق شرارة هبوط الزر وتشغيل صوت الارتطام كاملاً
+                        triggerButtonDrop();
+                    }
+                }
+
+                // دالة إطلاق وهبوط الزر السينمائي الارتدادي مع تشغيل المؤثر الصوتي الخاص به كاملاً
+                function triggerButtonDrop() {
+                    if (startButton) {
+                        startButton.classList.remove("btn-hidden");
+                        startButton.classList.add("btn-cinema-drop");
+
+                        // 🌟 تشغيل صوت الارتطام ليأخذ وقته الكامل والمستقل متزامناً مع أنيميشن الهبوط والاستقرار
+                        playAudio(sfxButtonDrop);
+                    }
+                }
+
+                if (subtitleElement) {
+                    typePart1();
+                }
+            });
+        </script>
+    </body>
+</html>

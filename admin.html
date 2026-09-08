@@ -1,0 +1,355 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>محكمة الأدوار - سيادة التحكم</title>
+
+        <link rel="icon" type="image/png" href="/favicon-96x96.png" sizes="96x96" />
+        <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+        <link rel="shortcut icon" href="/favicon.ico" />
+        <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
+        <meta name="apple-mobile-web-app-title" content="المحكمة" />
+        <link rel="manifest" href="/site.webmanifest" />
+        <style>
+            :root {
+                --gold-glow: rgb(213, 167, 92);
+                --deep-navy: rgb(13, 25, 43);
+                --inner-vintage: rgb(66, 52, 35);
+                --shadow-black: rgb(5, 10, 18);
+                --text-white: rgb(255, 255, 255);
+            }
+            body {
+                font-family: "Alexandria", sans-serif;
+                background: radial-gradient(
+                    circle,
+                    var(--inner-vintage) 0%,
+                    var(--deep-navy) 65%,
+                    var(--shadow-black) 100%
+                );
+                min-height: 100vh;
+                margin: 0;
+                padding: 30px 20px;
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                color: var(--text-white);
+                overflow-x: hidden;
+            }
+            .admin-panel-card {
+                width: 100%;
+                max-width: 460px;
+                background: rgba(13, 25, 43, 0.8);
+                backdrop-filter: blur(12px);
+                -webkit-backdrop-filter: blur(12px);
+                border: 2px solid var(--gold-glow);
+                border-radius: 16px;
+                padding: 25px 20px;
+                box-shadow: 0 15px 35px rgba(0, 0, 0, 0.6);
+                text-align: center;
+                z-index: 10;
+            }
+            h1 {
+                color: var(--gold-glow);
+                font-size: 1.6rem;
+                font-weight: 900;
+                margin-bottom: 5px;
+            }
+            p {
+                font-family: "Harmattan", sans-serif;
+                font-size: 1.2rem;
+                color: rgba(255, 255, 255, 0.7);
+                margin-bottom: 20px;
+            }
+
+            .rooms-master-list {
+                list-style: none;
+                padding: 0;
+                margin: 0;
+                display: flex;
+                flex-direction: column;
+                gap: 12px;
+                max-height: 350px;
+                overflow-y: auto;
+            }
+            .room-row-item {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                background: rgba(255, 255, 255, 0.06);
+                border: 1px solid rgba(213, 167, 92, 0.2);
+                padding: 12px 16px;
+                border-radius: 8px;
+                animation: fadeInRow 0.3s ease-in-out forwards;
+            }
+            .room-code-tag {
+                font-weight: 750;
+                font-size: 1.1rem;
+                color: var(--text-white);
+            }
+            .btn-delete-trigger {
+                background-color: #8b0000;
+                color: white;
+                border: 1px solid var(--gold-glow);
+                padding: 6px 14px;
+                font-family: "Alexandria", sans-serif;
+                font-weight: 750;
+                font-size: 0.8rem;
+                border-radius: 6px;
+                cursor: pointer;
+                transition: all 0.2s ease;
+            }
+            .btn-delete-trigger:active {
+                transform: scale(0.94);
+                background-color: var(--shadow-black);
+            }
+            .btn-back {
+                display: inline-block;
+                margin-top: 20px;
+                text-decoration: none;
+                color: var(--gold-glow);
+                border: 2px solid var(--gold-glow);
+                padding: 8px 20px;
+                border-radius: 6px;
+                font-size: 0.85rem;
+                font-weight: 750;
+                transition: all 0.2s ease;
+            }
+            .btn-back:active {
+                background: var(--gold-glow);
+                color: var(--shadow-black);
+            }
+            @keyframes fadeInRow {
+                from {
+                    opacity: 0;
+                    transform: translateY(5px);
+                }
+                to {
+                    opacity: 1;
+                    transform: translateY(0);
+                }
+            }
+
+            /* ستايل مودال إنذار الحذف الزجاجي الفخم */
+            .modal-overlay {
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100vw;
+                height: 100vh;
+                background-color: rgba(5, 10, 18, 0.85);
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                z-index: 99999;
+                opacity: 0;
+                pointer-events: none;
+                transition: opacity 0.3s ease;
+            }
+            .modal-overlay.active {
+                opacity: 1;
+                pointer-events: auto;
+            }
+            .confirm-alert-box {
+                width: 88%;
+                max-width: 380px;
+                background-color: var(--inner-vintage);
+                border: 3px solid var(--gold-glow);
+                border-radius: 16px;
+                padding: 30px 20px;
+                text-align: center;
+                box-shadow: 0 15px 40px rgba(0, 0, 0, 0.7);
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                gap: 15px;
+                transform: scale(0.9);
+                transition: transform 0.3s cubic-bezier(0.25, 1, 0.5, 1);
+            }
+            .modal-overlay.active .confirm-alert-box {
+                transform: scale(1);
+            }
+            .modal-title {
+                color: var(--gold-glow);
+                font-size: 1.35rem;
+                font-weight: 800;
+                margin: 0;
+            }
+            .modal-message {
+                font-family: "Harmattan", sans-serif;
+                font-size: 1.35rem;
+                color: var(--text-white);
+                line-height: 1.5;
+            }
+            .modal-buttons-group {
+                display: flex;
+                gap: 12px;
+                width: 100%;
+                margin-top: 5px;
+            }
+            .btn-modal {
+                flex: 1;
+                padding: 10px 0;
+                font-family: "Alexandria", sans-serif;
+                font-weight: 700;
+                font-size: 0.9rem;
+                border-radius: 8px;
+                cursor: pointer;
+                transition: all 0.2s ease;
+            }
+            .btn-confirm-delete {
+                background-color: #8b0000;
+                color: white;
+                border: 2px solid var(--gold-glow);
+                box-shadow: 0 4px 12px rgba(139, 0, 0, 0.2);
+            }
+            .btn-confirm-delete:active {
+                transform: scale(0.96);
+                background: var(--shadow-black);
+            }
+            .btn-cancel-delete {
+                background-color: transparent;
+                color: var(--gold-glow);
+                border: 2px solid var(--gold-glow);
+            }
+            .btn-cancel-delete:active {
+                transform: scale(0.96);
+                background: rgba(213, 167, 92, 0.1);
+            }
+        </style>
+    </head>
+    <body>
+        <div class="admin-panel-card">
+            <h1 style="font-family: &quot;Harmattan&quot;; font-weight: 800; font-size: 1.6rem">إدارة الغرف</h1>
+            <p>سجلات الغرف النشطة والقديمة المسجلة باسمك في السيرفر</p>
+
+            <ul id="admin-rooms-ul" class="rooms-master-list">
+                <li
+                    style="
+                        text-align: center;
+                        color: rgba(255, 255, 255, 0.5);
+                        font-family: &quot;Harmattan&quot;;
+                        font-size: 1.2rem;
+                    ">
+                    جاري فحص ذاكرة جهازك ...
+                </li>
+            </ul>
+
+            <a href="rooms.html" class="btn-back">عودة للصفحة الرئيسية</a>
+        </div>
+
+        <!-- المودال الزجاجي المنفصل لإنذار تأكيد الحذف -->
+        <div id="delete-confirm-modal" class="modal-overlay">
+            <div class="confirm-alert-box">
+                <h2 class="modal-title">إنذار نهائي</h2>
+                <div id="delete-modal-text" class="modal-message">
+                    هل أنت متأكد من حذف الغرفة رقم
+                    <span id="target-room-span" style="color: var(--gold-glow); font-weight: 900">----</span> نهائياً من
+                    خوادم السيرفر؟
+                </div>
+                <div class="modal-buttons-group">
+                    <button id="btn-modal-cancel" class="btn-modal btn-cancel-delete">تراجع، إغلاق</button>
+                    <button id="btn-modal-confirm" class="btn-modal btn-confirm-delete">نعم، حذف نهائي</button>
+                </div>
+            </div>
+        </div>
+
+        <script type="module">
+            import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+            import {
+                getDatabase,
+                ref,
+                onValue,
+                remove
+            } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+
+            // إعدادات خادم الفايربيس الخاص بمشروعك
+            const firebaseConfig = { databaseURL: "https://great-songs-e334c-default-rtdb.firebaseio.com" };
+            const app = initializeApp(firebaseConfig);
+            const db = getDatabase(app);
+
+            const mySecretUID = localStorage.getItem("court_user_uid");
+            const adminRoomsUl = document.getElementById("admin-rooms-ul");
+
+            // ربط عناصر المودال الزجاجي الجديد
+            const deleteModal = document.getElementById("delete-confirm-modal");
+            const targetRoomSpan = document.getElementById("target-room-span");
+            const btnModalCancel = document.getElementById("btn-modal-cancel");
+            const btnModalConfirm = document.getElementById("btn-modal-confirm");
+
+            let roomCodeToDelete = null; // مخزن مؤقت لكود الغرفة المستهدفة بالنسف
+
+            if (mySecretUID && adminRoomsUl) {
+                // 1. الاستماع الحي والديناميكي لفرع الغرف بالكامل وعرض التابع لك
+                onValue(ref(db, "rooms"), (snapshot) => {
+                    if (snapshot.exists()) {
+                        let listHTML = "";
+                        let hasRooms = false;
+
+                        snapshot.forEach((childSnapshot) => {
+                            const roomData = childSnapshot.val();
+                            const roomCode = childSnapshot.key;
+
+                            if (roomData.hostUID === mySecretUID) {
+                                hasRooms = true;
+                                listHTML += `
+                            <li class="room-row-item">
+                                <span class="room-code-tag">رقم الغرفة: ${roomCode}</span>
+                                <button class="btn-delete-trigger" data-code="${roomCode}">حذف نهائي</button>
+                            </li>
+                        `;
+                            }
+                        });
+
+                        if (hasRooms) {
+                            adminRoomsUl.innerHTML = listHTML;
+                        } else {
+                            adminRoomsUl.innerHTML = `<li style="text-align: center; color: rgba(255,255,255,0.5); font-family: 'Harmattan'; font-size: 1.3rem; padding-top: 15px;">لا يوجد أي غرف معلقة باسمك حالياً في السيرفر.</li>`;
+                        }
+                    } else {
+                        adminRoomsUl.innerHTML = `<li style="text-align: center; color: rgba(255,255,255,0.5); font-family: 'Harmattan'; font-size: 1.3rem; padding-top: 15px;">السيرفر فارغ تماماً من الغرف.</li>`;
+                    }
+                });
+
+                // 2. مستمع النقر لفتح المودال المخصص وتحديد الغرفة رقمياً
+                adminRoomsUl.addEventListener("click", function (event) {
+                    const deleteBtn = event.target.closest(".btn-delete-trigger");
+                    if (deleteBtn) {
+                        roomCodeToDelete = deleteBtn.getAttribute("data-code");
+                        if (targetRoomSpan && deleteModal) {
+                            targetRoomSpan.textContent = roomCodeToDelete;
+                            deleteModal.classList.add("active"); // تفعيل المودال وحقن كلاس الأنميشن
+                        }
+                    }
+                });
+
+                // 3. مستمع زر الإغلاق والتراجع لإخفاء المودال بصمت
+                if (btnModalCancel) {
+                    btnModalCancel.addEventListener("click", function () {
+                        if (deleteModal) {
+                            deleteModal.classList.remove("active");
+                            roomCodeToDelete = null;
+                        }
+                    });
+                }
+
+                // 4. تنفيذ الحذف الفعلي والنهائي من خادم الفايربيس عند الضغط على تأكيد
+                if (btnModalConfirm) {
+                    btnModalConfirm.addEventListener("click", function () {
+                        if (roomCodeToDelete) {
+                            remove(ref(db, "rooms/" + roomCodeToDelete))
+                                .then(() => {
+                                    console.log(`[تطهير سيادي ناجح]: تم نسف الغرفة ${roomCodeToDelete}`);
+                                    if (deleteModal) deleteModal.classList.remove("active");
+                                    roomCodeToDelete = null;
+                                })
+                                .catch((err) => {
+                                    alert("عذراً، حدث خطأ في الشبكة أثناء محاولة مسح الغرفة.");
+                                });
+                        }
+                    });
+                }
+            }
+        </script>
+    </body>
+</html>
