@@ -1182,7 +1182,7 @@ body.body2::-webkit-scrollbar-thumb:hover {
     border: 3px solid var(--gold-glow, #d5a75c) !important;
     /* إطار ذهبي مضيء يعكس هيبة القانون */
     border-radius: 18px !important;
-    padding: 30px 22px !important;
+    padding: 16px 22px 10px 22px !important;
     text-align: center !important;
     box-shadow:
         0 20px 50px rgba(0, 0, 0, 0.8),
@@ -2122,7 +2122,7 @@ body.body3 #btn-verdict-trigger:active:not(:disabled) {
 
     /* 1️⃣ استهداف حاوية المحتوى الداخلية للمودال عند فتحه لـ "حقيبة الأدلة" */
     #custom-alert-modal.modal-overlay-active #modal-alert-message {
-        max-height: 280px !important; /* تحديد أقصى ارتفاع ثابت للمحتوى لمنع التمدد */
+        max-height: 350px !important; /* تحديد أقصى ارتفاع ثابت للمحتوى لمنع التمدد */
         overflow-y: auto !important; /* تفعيل السكرول الرأسي الداخلي لبقية الأدلة */
         overflow-x: hidden !important; /* منع الاهتزاز أو السكرول الأفقي الجانبي */
         padding: 8px 5px !important; /* توزيع مساحات داخلية ناعمة لعدم التزاحم */
