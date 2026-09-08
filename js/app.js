@@ -3499,22 +3499,15 @@ const endCurrentCourtSession = () => {
         window.location.href = "game.html";
     });
 };
-
+// ==========================================================================
+// 1️⃣ المودال الأول: منصة عرض السيناريو وملف الجريمة العام للغرفة
+// ==========================================================================
 // ==========================================================================
 // 1️⃣ المودال الأول: منصة عرض السيناريو وملف الجريمة العام للغرفة (حجم مكبر فخم)
 // ==========================================================================
 function openCaseStoryFirstModal(roleCard, activeCase) {
     const modal = document.getElementById("custom-alert-modal");
     if (!modal) return;
-
-    // لقط وتوسيع الحاوية الداخلية للمودال برمجياً لراحة العين ومنع الضغط
-    const modalBox = modal.querySelector("div") || modal;
-    if (modalBox) {
-        modalBox.style.setProperty("width", "92%", "important");
-        modalBox.style.setProperty("max-width", "540px", "important"); // تكبير العرض الأفقي
-        modalBox.style.setProperty("min-height", "700px", "important"); // منح حد أدنى ممتاز للارتفاع
-        modalBox.style.setProperty("padding", "25px 20px", "important"); // توزيع المساحة الداخلية
-    }
 
     const globalCloseBtn = document.getElementById("btn-modal-close");
     if (globalCloseBtn) {
@@ -3533,7 +3526,7 @@ function openCaseStoryFirstModal(roleCard, activeCase) {
             </p>
 
             <div style="margin-bottom: 15px; background: rgba(213, 167, 92, 0.1); padding: 8px 12px; border-radius: 6px; border: 1px solid rgba(213, 167, 92, 0.2); font-size: 0.7rem; color: var(--gold-glow); text-align: center; font-weight: 600;">
-                ⚠️ تنبيه قضائي: اقرأ تفاصيل القضية جيداً!
+                ⚠️ تنبيه قضائي: اقرأ تفاصيل الموقع جيداً!
             </div>
 
             <button id="btn-next-to-secret-role" style="width: 100%; padding: 13px 0; background: linear-gradient(135deg, var(--gold-glow, #d5a75c) 0%, #b89149 100%); color: #050a18; font-family: 'Alexandria'; font-weight: 800; font-size: 0.8rem; border: none; border-radius: 8px; cursor: pointer; box-shadow: 0 4px 15px rgba(213, 167, 92, 0.3); transition: all 0.2s ease; text-align: center; -webkit-tap-highlight-color: transparent;">
@@ -3560,19 +3553,10 @@ function openSecretRoleSecondModal(roleCard) {
     const modal = document.getElementById("custom-alert-modal");
     if (!modal) return;
 
-    // الحفاظ على الأبعاد الفخمة والمكبرة للمودال في الخطوة الثانية أيضاً
-    const modalBox = modal.querySelector("div") || modal;
-    if (modalBox) {
-        modalBox.style.setProperty("width", "92%", "important");
-        modalBox.style.setProperty("max-width", "540px", "important");
-        modalBox.style.setProperty("min-height", "400px", "important");
-        modalBox.style.setProperty("padding", "25px 20px", "important");
-    }
-
     const globalCloseBtn = document.getElementById("btn-modal-close");
     if (globalCloseBtn) {
         globalCloseBtn.style.setProperty("display", "block", "important");
-        globalCloseBtn.textContent = "إغلاق";
+        globalCloseBtn.textContent = "دخول القاعة";
 
         globalCloseBtn.onclick = function () {
             modal.style.setProperty("display", "none", "important");
