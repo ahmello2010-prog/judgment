@@ -1233,12 +1233,29 @@ function renderCircularSeats(playersList, assignments) {
                 }
 
                 seatBox.innerHTML = seatHTML;
-
+                // ==========================================================================
+                // [تحديث حاسم]: مراقب إطلاق شرارة المودال السينمائي المتتالي للاعب عند دخول اللوبي
+                // ==========================================================================
                 if (player.id === mySecretUID && roleCard && initialModalOpened === "false") {
                     sessionStorage.setItem("lobby_initial_card_opened", "true");
-                    setTimeout(() => {
-                        openSecretCardInModal(roleCard);
-                    }, 600);
+
+                    fetch("cases.json")
+                        .then((res) => {
+                            if (!res.ok) throw new Error("فشل في تحميل ملف القضايا");
+                            return res.json();
+                        })
+                        .then((allCases) => {
+                            const activeCase = allCases.find((c) => c.id == gameState.caseId);
+                            if (activeCase) {
+                                setTimeout(() => {
+                                    // إطلاق المودال الأول (ملخص الجريمة العامة)
+                                    openCaseStoryFirstModal(roleCard, activeCase);
+                                }, 600);
+                            } else {
+                                console.log("⚠️ لم يتم العثور على تفاصيل القضية رقم: " + gameState.caseId);
+                            }
+                        })
+                        .catch((err) => console.error("عطل في تهيئة المودال المتتالي:", err));
                 }
 
                 container.appendChild(seatBox);
@@ -3482,3 +3499,96 @@ const endCurrentCourtSession = () => {
         window.location.href = "game.html";
     });
 };
+// ==========================================================================
+// 1️⃣ المودال الأول: منصة عرض السيناريو وملف الجريمة العام للغرفة
+// ==========================================================================
+function openCaseStoryFirstModal(roleCard, activeCase) {
+    const modal = document.getElementById("custom-alert-modal");
+    if (!modal) return;
+
+    const globalCloseBtn = document.getElementById("btn-modal-close");
+    if (globalCloseBtn) {
+        globalCloseBtn.style.setProperty("display", "none", "important");
+    }
+
+    document.getElementById("modal-alert-title").textContent = `🎬 ملف قضية: ${activeCase.title}`;
+
+    let modalHTML = `
+        <div style="text-align: right; font-family: 'Alexandria', sans-serif; direction: rtl;">
+            <span style="color: #52ff7d; font-weight: bold; font-size: 0.85rem; letter-spacing: 0.5px;">📜 تفاصيل ومجريات الحادثة:</span>
+
+            <p style="background: rgba(5, 10, 18, 0.6); padding: 15px; border-radius: 8px; color: #fff; font-family: 'Harmattan'; font-size: 1.35rem; line-height: 1.6; margin-top: 8px; margin-bottom: 20px; border-right: 4px solid #52ff7d; max-height: 220px; overflow-y: auto !important; box-shadow: inset 0 0 10px rgba(0,0,0,0.5);">
+                ${activeCase.description}
+            </p>
+
+            <div style="margin-bottom: 15px; background: rgba(213, 167, 92, 0.1); padding: 8px 12px; border-radius: 6px; border: 1px solid rgba(213, 167, 92, 0.2); font-size: 0.75rem; color: var(--gold-glow); text-align: center; font-weight: 600;">
+                ⚠️ تنبيه قضائي: اقرأ تفاصيل الموقع جيداً، فقد تحتوي على أدلة خفية لحقيبتك!
+            </div>
+
+            <button id="btn-next-to-secret-role" style="width: 100%; padding: 13px 0; background: linear-gradient(135deg, var(--gold-glow, #d5a75c) 0%, #b89149 100%); color: #050a18; font-family: 'Alexandria'; font-weight: 800; font-size: 0.9rem; border: none; border-radius: 8px; cursor: pointer; box-shadow: 0 4px 15px rgba(213, 167, 92, 0.3); transition: all 0.2s ease; text-align: center; -webkit-tap-highlight-color: transparent;">
+                فهمت الحادثة.. إكشف دوري السري ⚖️
+            </button>
+        </div>
+    `;
+
+    document.getElementById("modal-alert-message").innerHTML = modalHTML;
+    modal.style.setProperty("display", "flex", "important");
+    modal.className = "modal-overlay-active";
+
+    document.getElementById("btn-next-to-secret-role").addEventListener("click", function (e) {
+        e.preventDefault();
+        e.stopPropagation();
+        openSecretRoleSecondModal(roleCard);
+    });
+}
+
+// ==========================================================================
+// 2️⃣ المودال الثاني: منصة فض الأظرف وكشف الهويات والمصالح السرية
+// ==========================================================================
+function openSecretRoleSecondModal(roleCard) {
+    const modal = document.getElementById("custom-alert-modal");
+    if (!modal) return;
+
+    const globalCloseBtn = document.getElementById("btn-modal-close");
+    if (globalCloseBtn) {
+        globalCloseBtn.style.setProperty("display", "block", "important");
+        globalCloseBtn.textContent = "دخول قاعة المحاكمة الحية 🔨";
+
+        globalCloseBtn.onclick = function () {
+            modal.style.setProperty("display", "none", "important");
+            modal.className = "modal-overlay-hidden";
+        };
+    }
+
+    document.getElementById("modal-alert-title").textContent = roleCard.role_name;
+
+    let modalHTML = `
+        <div style="text-align: right; font-family: 'Alexandria', sans-serif; direction: rtl;">
+            <span style="color: var(--gold-glow); font-weight: bold; font-size: 0.85rem;">👤 روايتك العلنية المقبولة أمام الحضور:</span>
+            <p style="background: #161c26; padding: 12px; border-radius: 6px; color: #fff; font-family: 'Harmattan'; font-size: 1.25rem; line-height: 1.5; margin-top: 6px; margin-bottom: 18px; border: 1px solid rgba(213, 167, 92, 0.15);">
+                ${roleCard.public_story}
+            </p>
+    `;
+
+    if (roleCard.role_type !== "judge" && roleCard.role_type !== "lawyer") {
+        modalHTML += `
+            <span style="color: #ff5252; font-weight: bold; font-size: 0.85rem;">🤫 دافعك وجريمتك الجانبية المخفية:</span>
+            <p style="background: #1e1315; padding: 12px; border-radius: 6px; border: 1px dashed #ff5252; color: #fff; font-family: 'Harmattan'; font-size: 1.25rem; line-height: 1.5; margin-top: 6px; box-shadow: inset 0 0 8px rgba(255,82,82,0.05);">
+                ${roleCard.secret_interest}
+            </p>
+        `;
+    } else {
+        modalHTML += `
+            <div style="background: rgba(213, 167, 92, 0.1); padding: 14px; border-radius: 6px; border: 1px solid var(--gold-glow); color: var(--gold-glow); text-align: center; font-size: 0.85rem; font-weight: 700; margin-top: 10px; box-shadow: inset 0 0 10px rgba(213, 167, 92, 0.15); line-height: 1.4;">
+                🛡️ مرسوم السيادة القضائية النزيهة:<br>
+                <span style="font-weight:500; font-size:0.75rem; color:#aaa;">أنت مبرأ تماماً من أي تهمة أو مصلحة سرية خبيثة في هذه الجلسة. مصلحتك هي نصرة ميزان العدالة.</span>
+            </div>
+        `;
+    }
+
+    modalHTML += `</div>`;
+
+    document.getElementById("modal-alert-message").innerHTML = modalHTML;
+    modal.style.setProperty("display", "flex", "important");
+    modal.className = "modal-overlay-active";
+}
