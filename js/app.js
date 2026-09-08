@@ -2691,8 +2691,8 @@ function injectLawyerActionControls(
 
         evidenceHolder.style.cssText =
             myRoleCard.role_type === "judge"
-                ? "position: fixed; top: 70px; left: 4%; z-index: 9999999 !important; pointer-events: none !important;"
-                : "position: fixed; top: 65px; left: 4%; z-index: 9999999 !important; pointer-events: none !important;";
+                ? "position: fixed; top: 70px; left: 4%; z-index: 99999 !important; pointer-events: none !important;"
+                : "position: fixed; top: 65px; left: 4%; z-index: 99999 !important; pointer-events: none !important;";
 
         const btnEvidence = document.createElement("button");
         btnEvidence.className = "btn-evidence-bag-custom-node";
