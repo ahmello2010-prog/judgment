@@ -877,7 +877,7 @@ body.body2::-webkit-scrollbar-thumb:hover {
     /* توسيط المودال أفقياً */
     align-items: center !important;
     /* توسيط المودال عمودياً */
-    z-index: 999999 !important;
+    z-index: 99999999999999999 !important;
     /* رفعه فوق أي عنصر أو قائمة جانبية */
     opacity: 1 !important;
     pointer-events: auto !important;
@@ -927,7 +927,7 @@ body.body2::-webkit-scrollbar-thumb:hover {
 /* إجبار زر الإغلاق على الصدارة واستقبال الضغط بنسبة 100% */
 #btn-modal-close {
     position: relative !important;
-    z-index: 9999999 !important;
+    z-index: 29909999888999999 !important;
     /* رفعه فوق صندوق التنبيه نفسه */
     pointer-events: auto !important;
     /* إجباره على استقبال الكليكات */
@@ -1160,7 +1160,7 @@ body.body2::-webkit-scrollbar-thumb:hover {
     /* توسيط أفقي حاد */
     align-items: center !important;
     /* توسيط عمودي حاد */
-    z-index: 9999999 !important;
+    z-index: 999999999999999999 !important;
     /* الصدارة المطلقة فوق اللوجو ومستطيلات القضايا للكل */
     opacity: 1 !important;
     pointer-events: auto !important;
