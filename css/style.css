@@ -935,7 +935,7 @@ body.body2::-webkit-scrollbar-thumb:hover {
     /* تحويل المؤشر ليد للتأكد من القابلية للتفاعل */
 }
 
-/* تنسيق المربعات ليصبح كخلفية مغطاة بالكامل */
+/* 🌟 [إصلاح التشوه المطاطي]: فصل ميكانيكي تام بين منطقة الصورة العلوية الثابتة ومنطقة النص السفلية */
 .room-grid-card {
     position: relative;
     background-color: var(--inner-vintage, #1c2430);
@@ -946,10 +946,9 @@ body.body2::-webkit-scrollbar-thumb:hover {
     /* طول مناسب جداً للمربع العريض */
     display: flex;
     flex-direction: column;
-    align-items: center;
-    justify-content: flex-end;
-    /* إنزال النص والعبارة لأسفل الكارت */
-    padding: 15px;
+    align-items: stretch;
+    justify-content: flex-start;
+    padding: 0;
     overflow: hidden;
     /* إجبار الصورة على الانقياع لحواف المربع المائل */
     box-shadow:
@@ -966,41 +965,32 @@ body.body2::-webkit-scrollbar-thumb:hover {
     box-shadow: 0 0 25px var(--gold-glow, #d5a75c);
 }
 
-/* 🌟 السحر هنا: إجبار حاوية الصورة والصورة على التمدد والامتداد لتغطية المربع 100% */
-.card-image-holder {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100% !important;
-    height: 100% !important;
+/* 🌟 [هندسة نظيفة]: منطقة الصورة العلوية محددة وثابتة الارتفاع، مستقلة تماماً عن منطقة النص السفلية */
+.card-image-holder,
+.card-image-holder1 {
+    position: relative;
+    width: 100%;
+    height: 110px;
+    flex-shrink: 0;
+    overflow: hidden;
     z-index: 1;
-    /* جعل الصورة أرضية خلفية */
 }
 
-.card-image-holder img {
-    width: 90% !important;
-    height: 180% !important;
-    transform: translateX(0) translateY(2px);
-    object-fit: cover !important;
-    /* 🌟 قفل التغطية الشاملة والمطاطية بدون مط أو تشويه */
-    opacity: 1;
-    /* تقليل الشفافية طفيفاً لكي تبرز الكلمات الذهبية فوقها */
-    transition: scale 0.3s ease;
-}
-
+.card-image-holder img,
 .card-image-holder1 img {
-    width: 150% !important;
-    height: 125% !important;
-    transform: translateX(30px) translateY(-38px);
-    object-fit: cover !important;
-    /* 🌟 قفل التغطية الشاملة والمطاطية بدون مط أو تشويه */
-    opacity: 0.75;
-    /* تقليل الشفافية طفيفاً لكي تبرز الكلمات الذهبية فوقها */
-    transition: scale 0.3s ease;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    /* 🌟 تفريد الصورة داخل المستطيل دون أي تشويه أو مط، بغض النظر عن عرض الكارت (حتى لو امتد لعمودين) */
+    object-position: center;
+    transform: none;
+    opacity: 1;
+    transition: transform 0.3s ease;
 }
 
-.room-grid-card:hover .card-image-holder img {
-    scale: 1.04;
+.room-grid-card:hover .card-image-holder img,
+.room-grid-card:hover .card-image-holder1 img {
+    transform: scale(1.04);
     /* انيميشن زووم خفيف ومبهر عند التمرير */
 }
 /* ==========================================================================
@@ -1045,10 +1035,14 @@ body.body2::-webkit-scrollbar-thumb:hover {
     box-sizing: border-box !important;
 }
 
-/* العبارات والنصوص لتطفو بفخامة فوق الصورة في الصدارة */
+/* 🌟 [منطقة سفلية مستقلة تماماً]: العبارات والنصوص تستقر في مستطيلها الخاص أسفل الصورة دون تراكب */
 .card-caption {
     position: relative;
     z-index: 2;
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
     /* رفع النص فوق الصورة */
     font-family: "Alexandria", sans-serif;
     font-weight: 700;
@@ -1589,14 +1583,6 @@ body.body2::-webkit-scrollbar-thumb:hover {
     justify-self: center !important;
     width: calc(50% - 7.5px) !important;
     min-width: 140px !important;
-}
-
-.card-image-holder {
-    height: 65px !important;
-}
-
-.card-caption {
-    font-size: 0.85rem !important;
 }
 /* ==========================================================================
    0. الكلاس السيادي الجديد الخاص بصفحة اللوبي حصرياً (Body3 Core Layout)

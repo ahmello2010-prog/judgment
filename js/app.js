@@ -232,16 +232,23 @@ if (currentRoomCode && document.getElementById("room-code-number")) {
         }
     });
 
-    // تحديث الاسم الذكي بحدث change لمنع حفظ الحروف المقطوعة أونلاين
+    // 🌟 [تأمين تزامن تحديث الأسماء]: حدث input فوري لحظي مع كبح زمني (Debounce) 300ms لمنع سبام السيرفر
     const nameInput = document.getElementById("admin-name-input");
     if (nameInput) {
-        nameInput.addEventListener("change", function () {
+        let nameUpdateDebounceTimer = null;
+        nameInput.addEventListener("input", function () {
             const updatedName = nameInput.value.trim() || "إسم اللاعب";
-            if (myPlayerKey) {
-                const specificPlayerRef = ref(db, "rooms/" + currentRoomCode + "/players/" + myPlayerKey);
-                update(specificPlayerRef, { name: updatedName });
-                console.log("تحديث سحابي آمن للاسم الكامل فقط:", updatedName);
-            }
+
+            // إلغاء أي مؤقت سابق معلق قبل جدولة التحديث الجديد لمنع الإرسال المتكرر
+            if (nameUpdateDebounceTimer) clearTimeout(nameUpdateDebounceTimer);
+
+            nameUpdateDebounceTimer = setTimeout(() => {
+                if (myPlayerKey) {
+                    const specificPlayerRef = ref(db, "rooms/" + currentRoomCode + "/players/" + myPlayerKey);
+                    update(specificPlayerRef, { name: updatedName });
+                    console.log("تحديث سحابي لحظي مكبوح زمنياً للاسم:", updatedName);
+                }
+            }, 300);
         });
     }
     // 🌟 المراقب العام المشرف على التحويل الفوري المتزامن لصفحة القضايا
@@ -2490,7 +2497,8 @@ function injectLawyerActionControls(
     // ==========================================================================
     // الجزء الثاني: محرك تشغيل وربط أحداث أزرار اتخاذ القرار المباشرة للقاضي
     // ==========================================================================
-    function bindJudgeDecisionEvents(actionData, assignments, gameState, modal, globalCloseBtn) {
+    // 🌟 [حل JSHint الحاسم]: تعبير سهمي ثابت ومحمي بدلاً من إعلان دالة متداخل لنسف تحذير W082
+    const bindJudgeDecisionEvents = (actionData, assignments, gameState, modal, globalCloseBtn) => {
         // 🌟 أ. تفعيل زر موافقة واعتماد الحكم الصادر من محامي الادعاء
         const btnApprove = document.getElementById("btn-judge-approve-lawyer");
         if (btnApprove) {
@@ -2580,7 +2588,7 @@ function injectLawyerActionControls(
                 console.log("⚖️ تم رفض طلب محامي الادعاء بنجاح واستئناف التحقيقات العامة.");
             });
         }
-    }
+    };
 
     // دالة مساعدة داخلية لتحديث الأرصدة التراكمية بسلاسة دون تصفير
     const updateScore = (scoreRef, points) => {
@@ -2701,7 +2709,77 @@ function injectLawyerActionControls(
         btnEvidence.style.cssText = `all: unset !important; background: linear-gradient(135deg, #161c26 0%, #423423 100%) !important; border: 2px solid var(--gold-glow, #d5a75c) !important; color: var(--gold-glow, #d5a75c) !important; font-family: 'Alexandria', sans-serif !important; font-weight: 700 !important; font-size: 0.69rem !important; padding: 10px 14px !important; border-radius: 8px !important; cursor: pointer !important; display: flex !important; align-items: center !important; justify-content: center !important; gap: 6px !important; box-shadow: 0 4px 15px rgba(213, 167, 92, 0.25) !important; box-sizing: border-box !important; text-align: center !important; transition: all 0.2s ease-in-out !important; pointer-events: auto !important; -webkit-tap-highlight-color: transparent !important; touch-action: manipulation !important;`;
         btnEvidence.textContent = "حقيبة الأدلة";
 
-        // [حل JSHint الحاسم]: تحويل دالة فتح الحقيبة الموحدة لتعبير سهمي محمي لمنع خطأ W082 نهائياً وضمان عملها باللمس أو الكليك
+        // 🌟 [تحديث ميكانيكية الاستهداف]: إلغاء "الأدلة العامة" نهائياً - يجب اختيار لاعب مستهدف أولاً قبل عرض أي دليل
+        const resolveEvidenceItemMatch = (item, playerCard) => resolveEvidenceItemMatchGlobal(item, playerCard);
+
+        const renderTargetedEvidenceList = (activeCase, latestPlayersData, latestAssignments) => {
+            const modal = document.getElementById("custom-alert-modal");
+            if (!modal) return;
+            const specificPool =
+                (activeCase.lawyers_evidence_pool && activeCase.lawyers_evidence_pool[myLawyerType]) || [];
+
+            document.getElementById("modal-alert-title").textContent = "💼 حقيبة الأدلة الجنائية";
+
+            // 1️⃣ [خطوة الاستهداف]: بناء قائمة اختيار اللاعب المتهم المستهدف أولاً - إلزامية قبل عرض أي دليل
+            let pickerHTML = `
+                <div style="text-align: right; font-family: 'Alexandria', sans-serif; direction: rtl;">
+                    <label style="color: var(--gold-glow); font-size: 0.8rem; font-weight: 700; display: block; margin-bottom: 8px;">اختر المتهم المستهدف لعرض الأدلة الخاصة به تحديداً:</label>
+                    <select id="evidence-target-player" style="width: 100%; padding: 10px; background: #161c26; color: #fff; border: 1px solid var(--gold-glow); border-radius: 6px; font-family: 'Alexandria'; font-size: 0.85rem; outline: none; margin-bottom: 15px;">
+                        <option value="">-- اختر لاعباً --</option>
+            `;
+
+            Object.keys(latestPlayersData).forEach((key) => {
+                const p = latestPlayersData[key];
+                const card = latestAssignments[p.uid] || {};
+                if (card.role_type !== "judge" && card.role_type !== "lawyer") {
+                    pickerHTML += `<option value="${p.uid}">${p.name} (${card.role_name || "متهم"})</option>`;
+                }
+            });
+
+            pickerHTML += `
+                    </select>
+                    <div id="evidence-results-area" class="custom-modal-scroll-area" style="display: flex; flex-direction: column; gap: 12px; max-height: 240px; overflow-y: auto !important; padding: 4px 5px;">
+                        <p style="color: #cfd8e3; font-size: 0.85rem; text-align: center;">بانتظار اختيار المتهم المستهدف لعرض أدلته الخاصة...</p>
+                    </div>
+                </div>
+            `;
+
+            document.getElementById("modal-alert-message").innerHTML = pickerHTML;
+
+            const targetSelect = document.getElementById("evidence-target-player");
+            const resultsArea = document.getElementById("evidence-results-area");
+
+            targetSelect.addEventListener("change", function () {
+                const targetUID = targetSelect.value;
+                if (!targetUID) {
+                    resultsArea.innerHTML = `<p style="color: #cfd8e3; font-size: 0.85rem; text-align: center;">بانتظار اختيار المتهم المستهدف لعرض أدلته الخاصة...</p>`;
+                    return;
+                }
+                const targetCard = latestAssignments[targetUID] || {};
+
+                // 2️⃣ فلترة مسبح الأدلة بالكامل بناءً على معرّف اللاعب المستهدف تحديداً (لا شيء عام إطلاقاً)
+                const matchedItems = specificPool.filter((item) => resolveEvidenceItemMatch(item, targetCard));
+
+                if (matchedItems.length === 0) {
+                    resultsArea.innerHTML = `<p style="color: #ffb34d; font-size: 0.85rem; text-align: center;">🔍 لا توجد أدلة مسجلة خاصة بهذا المتهم تحديداً في ملفات القضية الحالية.</p>`;
+                    return;
+                }
+
+                const isTargetInterrogated = targetUID === activeSpeakerUID && activeSpeakerUID !== "none";
+                let itemsHTML = "";
+                matchedItems.forEach((item) => {
+                    const glowClass = isTargetInterrogated
+                        ? "evidence-modal-item active-evidence-glow"
+                        : "evidence-modal-item";
+                    itemsHTML += `<p class="${glowClass}">${item.text}</p>`;
+                });
+                resultsArea.innerHTML = itemsHTML;
+            });
+
+            modal.style.setProperty("display", "flex", "important");
+            modal.className = "modal-overlay-active";
+        };
+
         const openEvidenceBagHandler = (e) => {
             if (e) {
                 e.preventDefault();
@@ -2710,48 +2788,25 @@ function injectLawyerActionControls(
 
             console.log("💼 [لمس حاسم]: تم تفجير فتح حقيبة الأدلة الجنائية على الهاتف.");
 
-            fetch("cases.json")
-                .then((response) => {
-                    if (!response.ok) throw new Error("فشل في تحميل ملف القضايا");
-                    return response.json();
-                })
-                .then((allCases) => {
-                    const activeCase = allCases.find((c) => c.id == gameState.caseId);
-                    if (!activeCase || !activeCase.lawyers_evidence_pool) return;
-                    const specificPool = activeCase.lawyers_evidence_pool[myLawyerType] || [];
-                    const modal = document.getElementById("custom-alert-modal");
-                    if (!modal) return;
+            get(ref(db, "rooms/" + currentRoomCode)).then((roomSnapshot) => {
+                if (!roomSnapshot.exists()) return;
+                const roomData = roomSnapshot.val();
+                const latestPlayersData = roomData.players || {};
+                const latestGameState = roomData.game_state || {};
+                const latestAssignments = latestGameState.assignments || {};
 
-                    document.getElementById("modal-alert-title").textContent = "💼 حقيبة الأدلة الجنائية";
-                    let modalHTML = `<div class="custom-modal-scroll-area" style="text-align: right; font-family: 'Harmattan', sans-serif; font-size: 1.25rem; display: flex; flex-direction: column; gap: 12px; max-height: 280px; overflow-y: auto !important; padding: 4px 5px;">`;
-
-                    specificPool.forEach((item) => {
-                        let targetUID = "none";
-                        Object.keys(assignments).forEach((uid) => {
-                            const playerCard = assignments[uid] || {};
-                            const roleNameInRoom = playerCard.role_name || "";
-                            if (item.target_role.includes("الجاني الحقيقي") && playerCard.is_guilty === true)
-                                targetUID = uid;
-                            else if (
-                                roleNameInRoom &&
-                                item.target_role &&
-                                (item.target_role.includes(roleNameInRoom) || roleNameInRoom.includes(item.target_role))
-                            )
-                                targetUID = uid;
-                        });
-                        const isTargetInterrogated = targetUID === activeSpeakerUID && activeSpeakerUID !== "none";
-                        const glowClass = isTargetInterrogated
-                            ? "evidence-modal-item active-evidence-glow"
-                            : "evidence-modal-item";
-                        modalHTML += `<p class="${glowClass}">${item.text}</p>`;
-                    });
-                    modalHTML += `</div>`;
-
-                    document.getElementById("modal-alert-message").innerHTML = modalHTML;
-                    modal.style.setProperty("display", "flex", "important");
-                    modal.className = "modal-overlay-active";
-                })
-                .catch((err) => console.error("حدث خطأ في تحميل الأدلة:", err));
+                fetch("cases.json")
+                    .then((response) => {
+                        if (!response.ok) throw new Error("فشل في تحميل ملف القضايا");
+                        return response.json();
+                    })
+                    .then((allCases) => {
+                        const activeCase = allCases.find((c) => c.id == gameState.caseId);
+                        if (!activeCase || !activeCase.lawyers_evidence_pool) return;
+                        renderTargetedEvidenceList(activeCase, latestPlayersData, latestAssignments);
+                    })
+                    .catch((err) => console.error("حدث خطأ في تحميل الأدلة:", err));
+            });
         };
 
         // [إصلاح ذهبي]: الربط المزدوج بحدث اللمس الفوري للموبايل والكليك العادي للكمبيوتر لمنع السقوط
@@ -2821,7 +2876,8 @@ function injectLawyerActionControls(
         btnRadar.textContent = "اكتشف الشبهة";
 
         // دالة فتح الرادار الموحدة بالفحص الفوري السحابي
-        function openLawyerRadarHandler(e) {
+        // 🌟 [حل JSHint الحاسم]: تعبير سهمي ثابت ومحمي بدلاً من إعلان دالة متداخل لنسف تحذير W082
+        const openLawyerRadarHandler = (e) => {
             if (e) {
                 e.preventDefault();
                 e.stopPropagation();
@@ -2867,7 +2923,7 @@ function injectLawyerActionControls(
                     }
                 }, 100);
             });
-        }
+        };
 
         // [إصلاح ذهبي]: الربط الثنائي لضمان عمل الرادار على المتصفحات الميتة في الآيفون والأندرويد
         btnRadar.addEventListener("touchstart", openLawyerRadarHandler, { passive: false });
@@ -2964,6 +3020,20 @@ function triggerKillFeedAlert(alertText, isJudgeReveal = false) {
 // ==========================================================================
 // دالة فتح وإدارة مودال "رادار الشبهات" الموحد (نسخة الأمان المطلق)
 // ==========================================================================
+// ==========================================================================
+// دالة مطابقة موحدة عامة: هل الدليل ينطبق على بطاقة دور لاعب مستهدف معين؟
+// (تُستخدم في حقيبة الأدلة الموجهة ورادار الشبهات معاً لضمان اتساق منطق الاستهداف بالمعرّف)
+// ==========================================================================
+function resolveEvidenceItemMatchGlobal(item, playerCard) {
+    if (!item || !item.target_role || !playerCard) return false;
+    if (item.target_role.includes("الجاني الحقيقي") && playerCard.is_guilty === true) return true;
+    const roleNameInRoom = playerCard.role_name || "";
+    return !!(
+        roleNameInRoom &&
+        (item.target_role.includes(roleNameInRoom) || roleNameInRoom.includes(item.target_role))
+    );
+}
+
 function openJudgeRadarModal(playersList, assignments, gameStateRef) {
     const modal = document.getElementById("custom-alert-modal");
     if (!modal) return;
@@ -2996,6 +3066,25 @@ function openJudgeRadarModal(playersList, assignments, gameStateRef) {
                     }
                 });
 
+                // 🌟 [استهداف بالمعرّف]: دالة مساعدة لتوليد قائمة أدلة الدليل المطابقة حصرياً للاعب مستهدف معين
+                const buildFilteredEvidenceOptions = (targetUID) => {
+                    const targetCard = assignments[targetUID] || {};
+                    const matched = evidencePool.filter((item) => resolveEvidenceItemMatchGlobal(item, targetCard));
+                    const poolToRender = matched.length > 0 ? matched : evidencePool;
+                    if (poolToRender.length === 0) {
+                        return `<option value="none">لا توجد أدلة مسجلة لهذه القضية حالياً</option>`;
+                    }
+                    return poolToRender
+                        .map((item, index) => `<option value="evidence_${index + 1}">${item.text}</option>`)
+                        .join("");
+                };
+
+                const firstSuspectUID =
+                    playersList.find((p) => {
+                        const c = assignments[p.id] || {};
+                        return c.role_type !== "judge" && c.role_type !== "lawyer";
+                    })?.id || "";
+
                 htmlContent += `
                         </select>
 
@@ -3003,13 +3092,7 @@ function openJudgeRadarModal(playersList, assignments, gameStateRef) {
                         <select id="court-verdict-type" style="width: 100%; padding: 10px; background: #161c26; color: #fff; border: 1px solid var(--gold-glow); border-radius: 6px; font-family: 'Alexandria'; font-size: 0.85rem; outline: none; margin-bottom: 15px;">
                 `;
 
-                if (evidencePool.length > 0) {
-                    evidencePool.forEach((item, index) => {
-                        htmlContent += `<option value="evidence_${index + 1}">${item.text}</option>`;
-                    });
-                } else {
-                    htmlContent += `<option value="none">لا توجد أدلة مسجلة لهذه القضية حالياً</option>`;
-                }
+                htmlContent += buildFilteredEvidenceOptions(firstSuspectUID);
 
                 htmlContent += `
                         </select>
@@ -3042,6 +3125,15 @@ function openJudgeRadarModal(playersList, assignments, gameStateRef) {
                 const statusMsg = document.getElementById("radar-status-message");
                 const btnReveal = document.getElementById("btn-radar-submit-reveal");
                 const btnSurrender = document.getElementById("btn-radar-surrender");
+                const targetPlayerSelect = document.getElementById("court-target-player");
+                const verdictTypeSelect = document.getElementById("court-verdict-type");
+
+                // 🌟 [استهداف حي]: إعادة توليد قائمة الأدلة المطابقة فور تغيير اللاعب المستهدف
+                if (targetPlayerSelect && verdictTypeSelect) {
+                    targetPlayerSelect.addEventListener("change", function () {
+                        verdictTypeSelect.innerHTML = buildFilteredEvidenceOptions(targetPlayerSelect.value);
+                    });
+                }
 
                 if (btnSurrender) {
                     btnSurrender.addEventListener("click", function (event) {
@@ -3299,6 +3391,34 @@ function executeVerdictEndGame(
         !targetRoleCard.secret_interest.includes("إثبات البراءة النزيهة") &&
         !targetRoleCard.secret_interest.includes("تلفيق الأكاذيب والحوارات");
 
+    // 📡 [التحقق السحابي الموحد]: قراءة حالة رادار كل اللاعبين حياً ومباشرة من داتا السيرفر
+    // (منقولة هنا لأعلى النطاق لتكون متاحة لكل من شجرة الحسم المبكر وشجرة الحسم العادي معاً)
+    const radarRevealedPlayers = activeGameState.radar_revealed_players || {};
+    const isRadarUsedAndMatched = radarRevealedPlayers[targetUID] === true;
+
+    // ==========================================================================
+    // 🎁 [دالة مشتركة]: مكافأة بقية الحضور المخبأين (+5 نقاط تلقائية موثقة سحابياً)
+    // يجب تطبيقها عند نهاية الجلسة بغض النظر عن مسار الحكم (مبكر أو عادي) لضمان تحقيق شجرة المعادلات كاملة
+    // ==========================================================================
+    const applyHiddenSurvivorBonus = () => {
+        Object.keys(assignments).forEach((uid) => {
+            const roleCard = assignments[uid] || {};
+            const isRegularPlayer = roleCard.role_type === "suspect";
+            const isNotTargeted = uid !== targetUID;
+
+            // فحص هل اللاعب انكشف بالرادار سحابياً أو محلياً
+            const isRevealedByRadar =
+                radarRevealedPlayers[uid] === true ||
+                localStorage.getItem(`locked_radar_target_${uid}_${currentRoomCode}`) === "true";
+
+            if (isRegularPlayer && isNotTargeted && !isRevealedByRadar) {
+                const regularPlayerScoreRef = ref(db, `rooms/${currentRoomCode}/players_scores/${uid}`);
+                updateScore(regularPlayerScoreRef, 5);
+                console.log(`🎁 تم منح 5 نقاط تلقائية للاعب الحاضر المخبأ بنجاح ذو المعرف: ${uid}`);
+            }
+        });
+    };
+
     // ----------------------------------------------------------------------
     // 📊 قطاع أ: معالجة الاستجوابات المبكرة (الاستجواب الثاني والثالث فقط)
     // ----------------------------------------------------------------------
@@ -3344,6 +3464,8 @@ function executeVerdictEndGame(
                         ? `🔨 حسم سريع وصحيح في الاستجواب (${currentInterrogationsCount})! ربحت +${positivePoints} نقطة كحكم مطلق صارم.`
                         : `⚠️ حكم خاطئ متسرع في الاستجواب (${currentInterrogationsCount})! خسرت -${negativePoints} نقطة كعقوبة مطلقة صارمة.`;
                 alert(msg);
+                // 🎁 تطبيق مكافأة الحضور المخفي أيضاً عند الحسم المبكر لضمان تحقيق شجرة المعادلات كاملة
+                applyHiddenSurvivorBonus();
                 endCurrentCourtSession();
             });
         });
@@ -3353,10 +3475,6 @@ function executeVerdictEndGame(
     // ----------------------------------------------------------------------
     // ⚖️ قطاع ب: مرحلة ما بعد الاستجواب المبكر (الرادار السحابي وشجرة الحسابات)
     // ----------------------------------------------------------------------
-    // 📡 [التحقق السحابي الموحد]: قراءة حالة رادار هذا اللاعب حياً ومباشرة من داتا السيرفر
-    const radarRevealedPlayers = activeGameState.radar_revealed_players || {};
-    const isRadarUsedAndMatched = radarRevealedPlayers[targetUID] === true;
-
     if (isConvictionAction) {
         // 🔴 أولاً: شجرة حالات الإدانة (تُطبق في الـ 3 لاعبين، والـ 4 لاعبين فأكثر عند اختيار القاضي للاعب)
         if (isTargetActuallyGuilty) {
@@ -3441,22 +3559,7 @@ function executeVerdictEndGame(
     // ==========================================================================
     // 🎁 قاعدة مكافأة بقية الحضور المخبأين (+5 نقاط تلقائية موثقة سحابياً)
     // ==========================================================================
-    Object.keys(assignments).forEach((uid) => {
-        const roleCard = assignments[uid] || {};
-        const isRegularPlayer = roleCard.role_type === "suspect";
-        const isNotTargeted = uid !== targetUID;
-
-        // فحص هل اللاعب انكشف بالرادار سحابياً أو محلياً
-        const isRevealedByRadar =
-            radarRevealedPlayers[uid] === true ||
-            localStorage.getItem(`locked_radar_target_${uid}_${currentRoomCode}`) === "true";
-
-        if (isRegularPlayer && isNotTargeted && !isRevealedByRadar) {
-            const regularPlayerScoreRef = ref(db, `rooms/${currentRoomCode}/players_scores/${uid}`);
-            updateScore(regularPlayerScoreRef, 5);
-            console.log(`🎁 تم منح 5 نقاط تلقائية للاعب الحاضر المخبأ بنجاح ذو المعرف: ${uid}`);
-        }
-    });
+    applyHiddenSurvivorBonus();
 
     // استدعاء محرك التطهير الآمن للتحويل الفوري المتزامن لجميع الأجهزة القضائية
     endCurrentCourtSession();
@@ -3485,6 +3588,22 @@ const endCurrentCourtSession = () => {
             sessionStorage.removeItem(key);
         }
     });
+
+    // 1️⃣.٥ [تطهير تدميري ذري]: مسح كافة أقفال الاتهامات والرادارات الفردية من localStorage الجهاز الحالي فوراً
+    // (لا يُعتمد فقط على مستمع onValue(roomRef) لأن هذا الجهاز قد ينتقل لصفحة game.html قبل أن يلتقط الحدث)
+    Object.keys(localStorage).forEach((key) => {
+        if (
+            key.startsWith("locked_target_") ||
+            key.startsWith("locked_accuse_target_") ||
+            key.startsWith("locked_radar_target_")
+        ) {
+            localStorage.removeItem(key);
+        }
+    });
+
+    // 1️⃣.٧٥ تصفير قفل الحماية الاستكشافي محلياً فوراً قبل مغادرة الصفحة (تطهير ذري كامل)
+    window.hasUnifiedCourtyardInjected = false;
+    window.hasJudgeRadarButtonsInjected = false;
 
     // 2️⃣ البث السحابي الذكي: تحديث الـ status فقط لـ game_over مع الإبقاء على الـ assignments حية لتقرأها بقية الأجهزة
     // ويتم قذف جهاز القاضي فوراً إلى صفحة game.html، بينما بقية المشاهدين سيلتقطون الـ game_over من المراقب العام وينتقلون خلفه
