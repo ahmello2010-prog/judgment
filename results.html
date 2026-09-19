@@ -15,6 +15,13 @@
             /* ==========================================================================
                شاشة النتائج الكبرى - على غرار لوحة انتصار الملحمة القضائية الحية
                ========================================================================== */
+
+            /* 🌟 [قفل التمرير الأفقي على مستوى الصفحة كاملة]: منع أي تمرير جانبي طائش خارج حدود الشاشة */
+            html {
+                overflow-x: hidden;
+                width: 100%;
+            }
+
             body.results-body {
                 background: radial-gradient(
                     ellipse at top,
@@ -23,11 +30,15 @@
                     var(--shadow-black) 100%
                 );
                 min-height: 100vh;
+                width: 100%;
                 margin: 0;
-                padding: 30px 16px 100px;
+                padding: 30px 16px 110px;
                 box-sizing: border-box;
                 font-family: "Alexandria", system-ui, sans-serif;
                 color: var(--text-white);
+                /* 🌟 عمودياً: يُسمح بالتمرير الطبيعي للمحتوى الطويل / أفقياً: ممنوع كلياً لضمان عدم خروج أي عنصر عن حواف الشاشة */
+                overflow-x: hidden;
+                overflow-y: auto;
             }
 
             .results-arena {
@@ -37,6 +48,7 @@
                 display: flex;
                 flex-direction: column;
                 gap: 22px;
+                box-sizing: border-box;
                 animation: resultsFadeIn 0.6s ease-out;
             }
 
@@ -51,8 +63,10 @@
                 }
             }
 
+            /* -------------------- الترويسة العلوية -------------------- */
             .results-header {
                 text-align: center;
+                padding: 0 6px;
             }
 
             .results-header h1 {
@@ -60,7 +74,8 @@
                 font-size: 2rem;
                 color: var(--gold-glow);
                 text-shadow: 0 0 18px rgba(213, 167, 92, 0.55);
-                margin: 0 0 6px;
+                margin: 0 0 8px;
+                line-height: 1.3;
             }
 
             .results-header h2 {
@@ -68,8 +83,11 @@
                 color: #cfd8e3;
                 margin: 0;
                 font-weight: 500;
+                line-height: 1.5;
+                word-break: break-word;
             }
 
+            /* -------------------- جدول اللاعبين والنقاط -------------------- */
             .results-table-wrapper {
                 background: rgba(5, 10, 18, 0.55);
                 border: 1px solid var(--gold-glow);
@@ -77,8 +95,22 @@
                 box-shadow:
                     0 0 25px rgba(213, 167, 92, 0.15),
                     inset 0 0 20px rgba(0, 0, 0, 0.5);
+                /* 🌟 التمرير الأفقي محصور داخل حاوية الجدول فقط دون أي تأثير على باقي الصفحة */
                 overflow-x: auto;
+                overflow-y: hidden;
+                -webkit-overflow-scrolling: touch;
                 padding: 4px;
+                max-width: 100%;
+                box-sizing: border-box;
+            }
+
+            .results-table-wrapper::-webkit-scrollbar {
+                height: 5px;
+            }
+
+            .results-table-wrapper::-webkit-scrollbar-thumb {
+                background: var(--gold-glow);
+                border-radius: 10px;
             }
 
             table.results-table {
@@ -97,6 +129,7 @@
                 border-bottom: 2px solid var(--gold-glow);
                 position: sticky;
                 top: 0;
+                white-space: nowrap;
             }
 
             table.results-table tbody td {
@@ -129,12 +162,35 @@
                 font-weight: 700;
             }
 
+            .results-loading-placeholder {
+                text-align: center;
+                color: #cfd8e3;
+                padding: 20px;
+                font-size: 0.85rem;
+            }
+
+            /* -------------------- صندوق السرد القصصي -------------------- */
             .results-narrative-box {
                 background: rgba(66, 52, 35, 0.35);
                 border: 1px solid var(--gold-glow);
                 border-radius: 14px;
                 padding: 20px 18px;
                 box-shadow: inset 0 0 25px rgba(0, 0, 0, 0.45);
+                box-sizing: border-box;
+                max-width: 100%;
+                /* 🌟 حماية إضافية: تمرير رأسي داخلي في حال كانت القصة طويلة جداً على شاشة قصيرة، بدل كسر تخطيط الصفحة */
+                max-height: 55vh;
+                overflow-y: auto;
+                overflow-x: hidden;
+            }
+
+            .results-narrative-box::-webkit-scrollbar {
+                width: 4px;
+            }
+
+            .results-narrative-box::-webkit-scrollbar-thumb {
+                background: var(--gold-glow);
+                border-radius: 10px;
             }
 
             .results-narrative-box h3 {
@@ -150,16 +206,20 @@
                 font-size: 0.92rem;
                 color: #e9ecf1;
                 text-align: justify;
+                word-break: break-word;
+                overflow-wrap: break-word;
             }
 
-            .results-loading-placeholder {
+            /* -------------------- ملاحظة الانتظار وسط الشاشة -------------------- */
+            .results-waiting-note {
                 text-align: center;
-                color: #cfd8e3;
-                padding: 20px;
-                font-size: 0.85rem;
+                color: #9aa5b5;
+                font-size: 0.78rem;
+                margin-top: -6px;
+                padding: 0 10px;
             }
 
-            /* 🌟 الزر العائم لإعادة الجميع للموسوعة - حصري للأدمن فقط */
+            /* -------------------- الزر العائم الحصري للأدمن -------------------- */
             .floating-host-return-btn {
                 display: none;
                 position: fixed;
@@ -179,7 +239,10 @@
                 cursor: pointer;
                 touch-action: manipulation;
                 align-items: center;
+                justify-content: center;
                 gap: 8px;
+                white-space: nowrap;
+                max-width: calc(100% - 32px);
             }
 
             .floating-host-return-btn:active {
@@ -191,11 +254,80 @@
                 cursor: default;
             }
 
-            .results-waiting-note {
-                text-align: center;
-                color: #9aa5b5;
-                font-size: 0.78rem;
-                margin-top: -6px;
+            /* ==========================================================================
+               🌟 استعلام الميديا كويري لشاشات الموبايل الضيقة (Media Query @ 541px)
+               ========================================================================== */
+            @media screen and (max-width: 541px) {
+                /* قفل صارم إضافي على مستوى الجذر لمنع أي تمرير جانبي طائش على الهواتف تحديداً */
+                html,
+                body.results-body {
+                    overflow-x: hidden !important;
+                    max-width: 100vw !important;
+                }
+
+                body.results-body {
+                    padding: 20px 10px 100px !important;
+                }
+
+                .results-arena {
+                    gap: 16px !important;
+                }
+
+                .results-header h1 {
+                    font-size: 1.5rem !important;
+                    margin: 0 0 5px !important;
+                }
+
+                .results-header h2 {
+                    font-size: 0.85rem !important;
+                }
+
+                .results-table-wrapper {
+                    border-radius: 10px !important;
+                    padding: 3px !important;
+                }
+
+                table.results-table {
+                    font-size: 0.75rem !important;
+                    min-width: 420px !important;
+                }
+
+                table.results-table thead th {
+                    padding: 9px 6px !important;
+                    font-size: 0.72rem !important;
+                }
+
+                table.results-table tbody td {
+                    padding: 8px 6px !important;
+                }
+
+                .results-narrative-box {
+                    padding: 15px 13px !important;
+                    border-radius: 10px !important;
+                    max-height: 45vh !important;
+                }
+
+                .results-narrative-box h3 {
+                    font-size: 1rem !important;
+                    margin: 0 0 8px !important;
+                }
+
+                .results-narrative-box p {
+                    font-size: 0.82rem !important;
+                    line-height: 1.75 !important;
+                }
+
+                .results-waiting-note {
+                    font-size: 0.72rem !important;
+                }
+
+                .floating-host-return-btn {
+                    bottom: 14px !important;
+                    padding: 12px 20px !important;
+                    font-size: 0.85rem !important;
+                    width: calc(100% - 32px) !important;
+                    max-width: 320px !important;
+                }
             }
         </style>
     </head>
