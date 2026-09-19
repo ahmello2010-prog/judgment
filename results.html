@@ -1,0 +1,438 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>محكمة الأدوار - شاشة النتائج الكبرى</title>
+        <link rel="stylesheet" href="css/style.css" />
+        <link rel="icon" type="image/png" href="/favicon-96x96.png" sizes="96x96" />
+        <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+        <link rel="shortcut icon" href="/favicon.ico" />
+        <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
+        <meta name="apple-mobile-web-app-title" content="المحكمة" />
+        <link rel="manifest" href="/site.webmanifest" />
+        <style>
+            /* ==========================================================================
+               شاشة النتائج الكبرى - على غرار لوحة انتصار الملحمة القضائية الحية
+               ========================================================================== */
+            body.results-body {
+                background: radial-gradient(
+                    ellipse at top,
+                    var(--inner-vintage) 0%,
+                    var(--deep-navy) 55%,
+                    var(--shadow-black) 100%
+                );
+                min-height: 100vh;
+                margin: 0;
+                padding: 30px 16px 100px;
+                box-sizing: border-box;
+                font-family: "Alexandria", system-ui, sans-serif;
+                color: var(--text-white);
+            }
+
+            .results-arena {
+                width: 100%;
+                max-width: 780px;
+                margin: 0 auto;
+                display: flex;
+                flex-direction: column;
+                gap: 22px;
+                animation: resultsFadeIn 0.6s ease-out;
+            }
+
+            @keyframes resultsFadeIn {
+                from {
+                    opacity: 0;
+                    transform: translateY(18px);
+                }
+                to {
+                    opacity: 1;
+                    transform: translateY(0);
+                }
+            }
+
+            .results-header {
+                text-align: center;
+            }
+
+            .results-header h1 {
+                font-family: "Harmattan", system-ui, sans-serif;
+                font-size: 2rem;
+                color: var(--gold-glow);
+                text-shadow: 0 0 18px rgba(213, 167, 92, 0.55);
+                margin: 0 0 6px;
+            }
+
+            .results-header h2 {
+                font-size: 1rem;
+                color: #cfd8e3;
+                margin: 0;
+                font-weight: 500;
+            }
+
+            .results-table-wrapper {
+                background: rgba(5, 10, 18, 0.55);
+                border: 1px solid var(--gold-glow);
+                border-radius: 14px;
+                box-shadow:
+                    0 0 25px rgba(213, 167, 92, 0.15),
+                    inset 0 0 20px rgba(0, 0, 0, 0.5);
+                overflow-x: auto;
+                padding: 4px;
+            }
+
+            table.results-table {
+                width: 100%;
+                border-collapse: collapse;
+                font-size: 0.85rem;
+                min-width: 480px;
+            }
+
+            table.results-table thead th {
+                background: rgba(213, 167, 92, 0.12);
+                color: var(--gold-glow);
+                font-weight: 700;
+                padding: 12px 10px;
+                text-align: center;
+                border-bottom: 2px solid var(--gold-glow);
+                position: sticky;
+                top: 0;
+            }
+
+            table.results-table tbody td {
+                padding: 11px 10px;
+                text-align: center;
+                border-bottom: 1px solid rgba(213, 167, 92, 0.15);
+                white-space: nowrap;
+            }
+
+            table.results-table tbody tr:last-child td {
+                border-bottom: none;
+            }
+
+            table.results-table tbody tr:hover {
+                background: rgba(213, 167, 92, 0.06);
+            }
+
+            .score-positive {
+                color: #6ee7a0;
+                font-weight: 700;
+            }
+
+            .score-negative {
+                color: #ff8686;
+                font-weight: 700;
+            }
+
+            .score-neutral {
+                color: #cfd8e3;
+                font-weight: 700;
+            }
+
+            .results-narrative-box {
+                background: rgba(66, 52, 35, 0.35);
+                border: 1px solid var(--gold-glow);
+                border-radius: 14px;
+                padding: 20px 18px;
+                box-shadow: inset 0 0 25px rgba(0, 0, 0, 0.45);
+            }
+
+            .results-narrative-box h3 {
+                margin: 0 0 12px;
+                color: var(--gold-glow);
+                font-family: "Harmattan", system-ui, sans-serif;
+                font-size: 1.15rem;
+            }
+
+            .results-narrative-box p {
+                margin: 0;
+                line-height: 1.9;
+                font-size: 0.92rem;
+                color: #e9ecf1;
+                text-align: justify;
+            }
+
+            .results-loading-placeholder {
+                text-align: center;
+                color: #cfd8e3;
+                padding: 20px;
+                font-size: 0.85rem;
+            }
+
+            /* 🌟 الزر العائم لإعادة الجميع للموسوعة - حصري للأدمن فقط */
+            .floating-host-return-btn {
+                display: none;
+                position: fixed;
+                bottom: 22px;
+                left: 50%;
+                transform: translateX(-50%);
+                z-index: 50;
+                background: linear-gradient(135deg, var(--gold-glow), #a9793b);
+                color: #101820;
+                border: none;
+                border-radius: 30px;
+                padding: 14px 26px;
+                font-family: "Alexandria", sans-serif;
+                font-weight: 700;
+                font-size: 0.95rem;
+                box-shadow: 0 6px 20px rgba(213, 167, 92, 0.45);
+                cursor: pointer;
+                touch-action: manipulation;
+                align-items: center;
+                gap: 8px;
+            }
+
+            .floating-host-return-btn:active {
+                transform: translateX(-50%) scale(0.96);
+            }
+
+            .floating-host-return-btn:disabled {
+                opacity: 0.6;
+                cursor: default;
+            }
+
+            .results-waiting-note {
+                text-align: center;
+                color: #9aa5b5;
+                font-size: 0.78rem;
+                margin-top: -6px;
+            }
+        </style>
+    </head>
+    <body class="results-body">
+        <div class="results-arena">
+            <div class="results-header">
+                <h1>⚖️ شاشة النتائج الكبرى</h1>
+                <h2 id="results-case-title">جاري استرجاع أرشيف القضية...</h2>
+            </div>
+
+            <div class="results-table-wrapper">
+                <table class="results-table">
+                    <thead>
+                        <tr>
+                            <th>اللاعب</th>
+                            <th>الدور السري الحقيقي</th>
+                            <th>نقاط هذه الجولة</th>
+                            <th>الرصيد التراكمي</th>
+                        </tr>
+                    </thead>
+                    <tbody id="results-table-body">
+                        <tr>
+                            <td colspan="4" class="results-loading-placeholder">جاري تحميل بيانات اللاعبين...</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="results-narrative-box">
+                <h3>📜 سرد أحداث القضية</h3>
+                <p id="results-narrative-text">جاري كتابة الفصل الأخير من هذه القضية الجنائية...</p>
+            </div>
+
+            <p class="results-waiting-note" id="results-waiting-note">
+                في انتظار الأدمن للعودة بالجميع لموسوعة القضايا...
+            </p>
+        </div>
+
+        <button id="btn-return-to-encyclopedia" class="floating-host-return-btn">🏛️ العودة لموسوعة القضايا</button>
+
+        <script type="module">
+            import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+            import {
+                getDatabase,
+                ref,
+                get,
+                update,
+                onValue
+            } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+
+            // تهيئة الاتصال بنفس قاعدة بيانات المشروع تماماً دون أي تعديل على الإعدادات الأصلية
+            const firebaseConfig = { databaseURL: "https://great-songs-e334c-default-rtdb.firebaseio.com" };
+            const app = initializeApp(firebaseConfig);
+            const db = getDatabase(app);
+
+            // استرجاع كود الغرفة والبصمة الرقمية الثابتة لهذا الجهاز - بنفس مفاتيح التخزين المستخدمة في باقي المشروع
+            const currentRoomCode = sessionStorage.getItem("activeRoomCode");
+            const mySecretUID = localStorage.getItem("court_user_uid");
+
+            if (!currentRoomCode) {
+                window.location.href = "game.html";
+            }
+
+            const roomRef = ref(db, "rooms/" + currentRoomCode);
+            const gameStateRef = ref(db, "rooms/" + currentRoomCode + "/game_state");
+
+            // دالة صغيرة للتحقق من صيغة المؤنث بناءً على نص الدور السري لضمان سلامة الصياغة اللغوية
+            function isFemaleSecret(secret) {
+                return !!(
+                    secret &&
+                    (secret.includes("أنتِ") ||
+                        secret.includes("قمتِ") ||
+                        secret.includes("بريئة") ||
+                        secret.includes("تخشين"))
+                );
+            }
+
+            // ==========================================================================
+            // 🌟 محرك بناء فقرة السرد القصصي للقضية بناءً على نتيجة الحكم الفعلية المخزنة سحابياً
+            // ==========================================================================
+            function buildCaseNarrative(activeCase, assignments, outcome) {
+                if (!activeCase) {
+                    return "تعذر استرجاع أرشيف هذه القضية من موسوعة المحكمة، لكن العدالة - أو غيابها - قد كُتبت بالفعل في سجلات الغرفة.";
+                }
+
+                const caseTitle = activeCase.title || "القضية المجهولة";
+                const realGuiltyInfo =
+                    activeCase.roles_pool && activeCase.roles_pool.real_guilty ? activeCase.roles_pool.real_guilty : {};
+                const realGuiltyRoleName = realGuiltyInfo.role_name || "الجاني الحقيقي";
+                const guiltyStorySnippet = realGuiltyInfo.secret_interest || "";
+
+                if (!outcome || outcome.ended_reason === "forced_no_verdict") {
+                    return (
+                        `انتهت جلسة "${caseTitle}" قسرياً دون أن يصدر القاضي أي حكم نهائي في الوقت المحدد. ` +
+                        `غادر الجميع القاعة وسط تساؤلات معلقة بلا إجابة، بينما ظل ${realGuiltyRoleName} يحمل سره الثقيل دون أن يكتشفه أحد: ${guiltyStorySnippet}`
+                    );
+                }
+
+                let targetInfo = null;
+                if (outcome.target_uid && assignments[outcome.target_uid]) {
+                    targetInfo = assignments[outcome.target_uid];
+                }
+                const targetRoleName = targetInfo ? targetInfo.role_name : "أحد الحاضرين";
+                const actionVerb = outcome.action === "convict" ? "بإدانة" : "بتبرئة";
+
+                if (outcome.judge_won) {
+                    if (outcome.action === "convict") {
+                        return (
+                            `في ختام جلسة "${caseTitle}" المشحونة بالتوتر، أصدر القاضي حكمه ${actionVerb} من كان يتقمص شخصية (${targetRoleName}) - ` +
+                            `وكان هذا الاختيار صحيحاً بامتياز! فقد كشفت التحقيقات أن الحقيقة الكاملة كانت: ${guiltyStorySnippet} ` +
+                            `وهكذا انتصرت العدالة، وسُجّلت هذه القضية في أرشيف المحكمة كواحدة من أنصع الانتصارات القضائية.`
+                        );
+                    }
+                    return (
+                        `أظهر القاضي حنكة استثنائية في جلسة "${caseTitle}"، حين قرر ${actionVerb} (${targetRoleName}) بعد أن تيقن من براءته الكاملة، ` +
+                        `تاركاً القضية مفتوحة أمام المحققين لتعقب الجاني الحقيقي (${realGuiltyRoleName}) الذي لا يزال بيننا يحمل سره الثقيل: ${guiltyStorySnippet}`
+                    );
+                }
+
+                if (outcome.action === "convict") {
+                    return (
+                        `ارتكبت المحكمة خطأً قضائياً فادحاً في جلسة "${caseTitle}"! أصدر القاضي حكمه ${actionVerb} (${targetRoleName}) البريء ظناً منه أنه الفاعل، ` +
+                        `بينما نجا الجاني الحقيقي (${realGuiltyRoleName}) بجريمته الكاملة دون أن يشعر به أحد. والحقيقة المروعة التي غابت عن الجميع: ${guiltyStorySnippet} ` +
+                        `لتُطوى هذه القضية في سجلات المحكمة تحت عنوان "العدالة المُغيَّبة".`
+                    );
+                }
+                return (
+                    `وقعت المحكمة في الفخ الأخطر خلال جلسة "${caseTitle}"! أصدر القاضي حكمه ${actionVerb} الجاني الحقيقي بنفسه دون أن يدري، ` +
+                    `تاركاً الحقيقة مطموسة للأبد: ${guiltyStorySnippet} لينجو الجاني بجريمته وسط تصفيق محاميه المنتصر بمكافأة التضليل الكبرى.`
+                );
+            }
+
+            // ==========================================================================
+            // 🌟 التحميل الأولي: قراءة بيانات الغرفة كاملة وحقن الجدول والسرد القصصي والزر الحصري للأدمن
+            // ==========================================================================
+            get(roomRef).then(async (snapshot) => {
+                if (!snapshot.exists()) {
+                    window.location.href = "game.html";
+                    return;
+                }
+
+                const roomData = snapshot.val();
+                const gameState = roomData.game_state || {};
+                const playersData = roomData.players || {};
+                const assignments = gameState.assignments || {};
+                const currentScores = roomData.players_scores || {};
+                const scoresAtRoundStart = gameState.scores_at_round_start || {};
+                const outcome = gameState.last_verdict_outcome || null;
+                const isHost = roomData.hostUID === mySecretUID;
+
+                let activeCase = null;
+                try {
+                    const res = await fetch("cases.json");
+                    const allCases = await res.json();
+                    activeCase = allCases.find((c) => c.id == gameState.caseId);
+                } catch (err) {
+                    console.error("فشل تحميل أرشيف القضية:", err);
+                }
+
+                const titleEl = document.getElementById("results-case-title");
+                if (titleEl) titleEl.textContent = activeCase ? activeCase.title : "قضية من أرشيف المحكمة المفقود";
+
+                // 1️⃣ بناء جدول اللاعبين والأدوار والنقاط
+                const tbody = document.getElementById("results-table-body");
+                if (tbody) {
+                    tbody.innerHTML = "";
+                    Object.keys(playersData).forEach((key) => {
+                        const p = playersData[key];
+                        const uid = p.uid;
+                        const card = assignments[uid] || {};
+                        const finalScore = currentScores[uid] || 0;
+                        const startScore = scoresAtRoundStart[uid] || 0;
+                        const delta = finalScore - startScore;
+                        const deltaText = delta > 0 ? `+${delta}` : `${delta}`;
+                        const deltaClass =
+                            delta > 0 ? "score-positive" : delta < 0 ? "score-negative" : "score-neutral";
+                        const guiltyMark = card.is_guilty === true || card.is_guilty === "true" ? " 🔴" : "";
+
+                        const row = document.createElement("tr");
+                        const tdName = document.createElement("td");
+                        tdName.textContent = p.name || "لاعب مجهول";
+                        const tdRole = document.createElement("td");
+                        tdRole.textContent = (card.role_name || "—") + guiltyMark;
+                        const tdDelta = document.createElement("td");
+                        tdDelta.className = deltaClass;
+                        tdDelta.textContent = deltaText;
+                        const tdTotal = document.createElement("td");
+                        tdTotal.textContent = String(finalScore);
+
+                        row.appendChild(tdName);
+                        row.appendChild(tdRole);
+                        row.appendChild(tdDelta);
+                        row.appendChild(tdTotal);
+                        tbody.appendChild(row);
+                    });
+                }
+
+                // 2️⃣ حقن فقرة السرد القصصي المولّدة بناءً على نتيجة الحكم الفعلية
+                const narrativeEl = document.getElementById("results-narrative-text");
+                if (narrativeEl) narrativeEl.textContent = buildCaseNarrative(activeCase, assignments, outcome);
+
+                // 3️⃣ إظهار الزر العائم حصرياً للأدمن (Host) فقط، وإخفاؤه كلياً عن بقية الحضور
+                const btnReturn = document.getElementById("btn-return-to-encyclopedia");
+                const waitingNote = document.getElementById("results-waiting-note");
+                if (isHost && btnReturn) {
+                    btnReturn.style.setProperty("display", "flex", "important");
+                    if (waitingNote) waitingNote.style.display = "none";
+
+                    btnReturn.addEventListener("click", () => {
+                        btnReturn.disabled = true;
+                        btnReturn.textContent = "جاري نقل جميع اللاعبين...";
+
+                        // 🌟 [تحويل سحابي جماعي متزامن]: تصفير حالة الغرفة بالكامل وإعادة الجميع لموسوعة القضايا معاً
+                        update(gameStateRef, {
+                            status: "lobby",
+                            caseId: "none",
+                            assignments: {},
+                            last_verdict_outcome: null,
+                            scores_at_round_start: {}
+                        }).catch((err) => {
+                            console.error("فشل بث إعادة التوجيه الجماعي:", err);
+                            btnReturn.disabled = false;
+                            btnReturn.textContent = "🏛️ العودة لموسوعة القضايا";
+                        });
+                    });
+                }
+            });
+
+            // ==========================================================================
+            // 🌟 مستمع مشترك لكل الأجهزة (بما فيها جهاز الأدمن نفسه) لرصد لحظة الضغط والانتقال الجماعي المتزامن
+            // ==========================================================================
+            onValue(gameStateRef, (snapshot) => {
+                const gs = snapshot.val() || {};
+                if (gs.status === "lobby") {
+                    window.location.href = "game.html";
+                }
+            });
+        </script>
+    </body>
+</html>

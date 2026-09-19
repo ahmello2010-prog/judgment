@@ -685,7 +685,9 @@ function activateCasesClickEngine() {
                                 status: "case_selected",
                                 caseId: caseId,
                                 assignments: assignments,
-                                interrogationsCount: 0
+                                interrogationsCount: 0,
+                                // 🌟 [شاشة النتائج الكبرى]: لقطة فورية لأرصدة كل اللاعبين قبل بدء الجولة، لحساب دلتا النقاط المكتسبة فيها فقط لاحقاً
+                                scores_at_round_start: roomData.players_scores || {}
                             }).then(() => {
                                 window.location.href = `lobby.html?id=${caseId}`;
                             });
@@ -803,7 +805,8 @@ function listenToFinalLobby() {
                 window.hasUnifiedCourtyardInjected = false;
                 window.hasJudgeRadarButtonsInjected = false;
 
-                window.location.href = "game.html";
+                // 🌟 [شاشة النتائج الكبرى]: التحويل الجماعي المتزامن لجميع الأجهزة إلى صفحة النتائج بدل القفز المباشر لموسوعة القضايا
+                window.location.href = "results.html";
                 return;
             }
 
@@ -906,10 +909,10 @@ function listenToFinalLobby() {
                     });
 
                     // ابحث عن دالة executeForceEndTrial بداخل كودك وحدث الـ update الأخير لها ليكون هكذا:
+                    // 🌟 [شاشة النتائج الكبرى]: عدم تصفير الـ assignments أو الـ caseId هنا إطلاقاً - يجب أن تبقى حية لتُعرض في شاشة النتائج القادمة
                     update(ref(db, "rooms/" + currentRoomCode + "/game_state"), {
                         status: "game_over",
-                        caseId: "none",
-                        assignments: null,
+                        last_verdict_outcome: { ended_reason: "forced_no_verdict" },
                         court_lawyer_action: null,
                         activeSpeakerUID: "none", // 🌟 تصفير المتحدث عند الإنهاء القسري
                         isInterrogatingMode: false,
@@ -2314,7 +2317,13 @@ function injectLawyerActionControls(
                                     // إعادة تعبئة وتوليد المسبح كاملاً ومستقلاً للمحامي بدون أي نقص
                                     if (!sessionStorage.getItem(playerStorageKey)) {
                                         const rawPool = activeCase.radar_questions_pool || [];
-                                        const questionTexts = rawPool.map((q) => q.text).filter((t) => t);
+                                        // 🌟 [استهداف بالمعرّف]: تصفية الأسئلة لتشمل فقط الأسئلة العامة أو المطابقة تحديداً لهوية هذا اللاعب المستهدف
+                                        const targetCard = assignments[p.uid] || {};
+                                        const targetedPool = rawPool.filter(
+                                            (q) => !q.target_role || resolveEvidenceItemMatchGlobal(q, targetCard)
+                                        );
+                                        const finalPool = targetedPool.length > 0 ? targetedPool : rawPool;
+                                        const questionTexts = finalPool.map((q) => q.text).filter((t) => t);
                                         sessionStorage.setItem(playerStorageKey, JSON.stringify(questionTexts));
                                     }
 
@@ -2637,7 +2646,7 @@ function injectLawyerActionControls(
             }
 
             // 2️⃣ استدعاء دالة التطهير الكبرى لترحيل الجميع بسلاسة أونلاين
-            endCurrentCourtSession();
+            endCurrentCourtSession({ ended_reason: "forced_no_verdict" });
         });
     };
 
@@ -3260,7 +3269,11 @@ function triggerUniqueJudgeQuestion(caseId) {
             // إذا تم مسحها بالسطر السابق، سيقوم السيرفر بسحب المسبح كاملاً وجديداً بنسبة 100% من الجيسون
             if (!sessionStorage.getItem(storageKey)) {
                 const rawPool = activeCase.radar_questions_pool || [];
-                const questionTexts = rawPool.map((q) => q.text).filter((t) => t);
+                // 🌟 [فصل الأوضاع]: هذا الزر عام وغير موجه لأي لاعب بعينه (خلاف الرادار)، فيُقصر على الأسئلة العامة غير المستهدفة
+                // لمنع تسريب أسئلة خاصة بمشتبه أو بالجاني الحقيقي بشكل عشوائي قد يكشف الهوية بالخطأ
+                const genericPool = rawPool.filter((q) => !q.target_role);
+                const finalPool = genericPool.length > 0 ? genericPool : rawPool;
+                const questionTexts = finalPool.map((q) => q.text).filter((t) => t);
                 sessionStorage.setItem(storageKey, JSON.stringify(questionTexts));
             }
 
@@ -3466,7 +3479,14 @@ function executeVerdictEndGame(
                 alert(msg);
                 // 🎁 تطبيق مكافأة الحضور المخفي أيضاً عند الحسم المبكر لضمان تحقيق شجرة المعادلات كاملة
                 applyHiddenSurvivorBonus();
-                endCurrentCourtSession();
+                // 🌟 [شاشة النتائج الكبرى]: توثيق نتيجة الحسم المبكر لبناء السرد القصصي الصحيح في شاشة النتائج القادمة
+                endCurrentCourtSession({
+                    ended_reason: "early_verdict",
+                    action: isConvictionAction ? "convict" : "acquit",
+                    target_uid: targetUID,
+                    target_was_guilty: isTargetActuallyGuilty,
+                    judge_won: finalPoints > 0
+                });
             });
         });
         return;
@@ -3475,6 +3495,9 @@ function executeVerdictEndGame(
     // ----------------------------------------------------------------------
     // ⚖️ قطاع ب: مرحلة ما بعد الاستجواب المبكر (الرادار السحابي وشجرة الحسابات)
     // ----------------------------------------------------------------------
+    // 🌟 [شاشة النتائج الكبرى]: توثيق نتيجة الحكم العادي حياً لبناء السرد القصصي الصحيح في شاشة النتائج القادمة
+    // (إدانة الجاني الفعلي = فوز القاضي، وتبرئة البريء = فوز القاضي أيضاً - والعكس خسارة في كل الحالتين)
+    const judgeWonThisVerdict = isConvictionAction ? isTargetActuallyGuilty : !isTargetActuallyGuilty;
     if (isConvictionAction) {
         // 🔴 أولاً: شجرة حالات الإدانة (تُطبق في الـ 3 لاعبين، والـ 4 لاعبين فأكثر عند اختيار القاضي للاعب)
         if (isTargetActuallyGuilty) {
@@ -3562,7 +3585,14 @@ function executeVerdictEndGame(
     applyHiddenSurvivorBonus();
 
     // استدعاء محرك التطهير الآمن للتحويل الفوري المتزامن لجميع الأجهزة القضائية
-    endCurrentCourtSession();
+    // 🌟 [شاشة النتائج الكبرى]: تمرير ملخص الحكم النهائي لتُبنى عليه القصة السردية في صفحة النتائج القادمة
+    endCurrentCourtSession({
+        ended_reason: "verdict",
+        action: isConvictionAction ? "convict" : "acquit",
+        target_uid: targetUID,
+        target_was_guilty: isTargetActuallyGuilty,
+        judge_won: judgeWonThisVerdict
+    });
 }
 
 // دالة تتبع وتحديث الأرصدة التراكمية بسلاسة دون تصفير
@@ -3575,7 +3605,7 @@ const updateScore = (scoreRef, points) => {
 };
 
 // 💥 دالة التطهير والإنهاء الكبرى لساحة المحكمة (تم تأمين المزامنة لمنع الـ Refresh)
-const endCurrentCourtSession = () => {
+const endCurrentCourtSession = (verdictOutcomeData) => {
     if (!currentRoomCode) return;
     const localGameStateUpdateRef = ref(db, "rooms/" + currentRoomCode + "/game_state");
 
@@ -3590,7 +3620,7 @@ const endCurrentCourtSession = () => {
     });
 
     // 1️⃣.٥ [تطهير تدميري ذري]: مسح كافة أقفال الاتهامات والرادارات الفردية من localStorage الجهاز الحالي فوراً
-    // (لا يُعتمد فقط على مستمع onValue(roomRef) لأن هذا الجهاز قد ينتقل لصفحة game.html قبل أن يلتقط الحدث)
+    // (لا يُعتمد فقط على مستمع onValue(roomRef) لأن هذا الجهاز قد ينتقل لصفحة النتائج قبل أن يلتقط الحدث)
     Object.keys(localStorage).forEach((key) => {
         if (
             key.startsWith("locked_target_") ||
@@ -3605,17 +3635,18 @@ const endCurrentCourtSession = () => {
     window.hasUnifiedCourtyardInjected = false;
     window.hasJudgeRadarButtonsInjected = false;
 
-    // 2️⃣ البث السحابي الذكي: تحديث الـ status فقط لـ game_over مع الإبقاء على الـ assignments حية لتقرأها بقية الأجهزة
-    // ويتم قذف جهاز القاضي فوراً إلى صفحة game.html، بينما بقية المشاهدين سيلتقطون الـ game_over من المراقب العام وينتقلون خلفه
+    // 2️⃣ [شاشة النتائج الكبرى]: البث السحابي الذكي لتحديث الـ status إلى game_over فقط، مع الإبقاء على الـ assignments
+    // وكذلك الـ caseId حيّين تماماً بدون تصفير، لأن شاشة النتائج القادمة تحتاجهما لعرض الأدوار والقصة السردية للقضية.
+    // يتم قذف جهاز القاضي فوراً إلى صفحة results.html، وبقية المشاهدين سيلتقطون الـ game_over من المراقب العام وينتقلون خلفه
     update(localGameStateUpdateRef, {
         status: "game_over",
-        caseId: "none",
+        last_verdict_outcome: verdictOutcomeData || { ended_reason: "forced_no_verdict" },
         court_lawyer_action: null,
         activeSpeakerUID: "none",
         isInterrogatingMode: false,
         interrogationsCount: 0
     }).then(() => {
-        window.location.href = "game.html";
+        window.location.href = "results.html";
     });
 };
 // ==========================================================================
