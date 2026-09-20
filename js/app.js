@@ -681,13 +681,25 @@ function activateCasesClickEngine() {
                                 assignments[player.id] = finalRolesToDistribute[index];
                             });
 
+                            // 🌟 [البند 3]: اختيار موكل عشوائي واحد وثابت لمحامي الدفاع من بين كل المشتبه بهم (شامل الجاني الحقيقي)
+                            // يتم اختياره لمرة واحدة فقط هنا عند بداية الجولة، ويبقى ثابتاً طوال الجلسة بدل إعادة اختياره عشوائياً في كل مرة يُفتح فيها المودال
+                            const allSuspectUIDs = Object.keys(assignments).filter(
+                                (uid) => assignments[uid].role_type === "suspect"
+                            );
+                            const randomClientUID =
+                                allSuspectUIDs.length > 0
+                                    ? allSuspectUIDs[Math.floor(Math.random() * allSuspectUIDs.length)]
+                                    : null;
+
                             update(gameStateRef, {
                                 status: "case_selected",
                                 caseId: caseId,
                                 assignments: assignments,
                                 interrogationsCount: 0,
                                 // 🌟 [شاشة النتائج الكبرى]: لقطة فورية لأرصدة كل اللاعبين قبل بدء الجولة، لحساب دلتا النقاط المكتسبة فيها فقط لاحقاً
-                                scores_at_round_start: roomData.players_scores || {}
+                                scores_at_round_start: roomData.players_scores || {},
+                                // 🌟 [البند 3]: توثيق هوية موكل محامي الدفاع الثابتة لهذه الجولة سحابياً
+                                defense_client_uid: randomClientUID
                             }).then(() => {
                                 window.location.href = `lobby.html?id=${caseId}`;
                             });
@@ -844,6 +856,28 @@ function listenToFinalLobby() {
                     myLawyerType = "court_evidence";
                 }
             }
+
+            // ==========================================================================
+            // 🌟 [صندوق الردود الموقوتة]: رصد بث سؤال جديد موجّه لأي لاعب - Kill-Feed عام للجميع + أزرار الرد الثلاثة حصرياً للمستهدف
+            // ==========================================================================
+            if (
+                gameState.active_question_prompt &&
+                gameState.active_question_prompt.timestamp &&
+                gameState.active_question_prompt.timestamp !== window.lastProcessedQuestionPromptTimestamp
+            ) {
+                window.lastProcessedQuestionPromptTimestamp = gameState.active_question_prompt.timestamp;
+                const promptData = gameState.active_question_prompt;
+
+                triggerKillFeedAlert(
+                    `❓ سؤال موجّه لـ (${promptData.target_name || "أحد الحاضرين"}) من ${promptData.asker_name || "طرف المحكمة"}: ${promptData.question_text}`,
+                    true
+                );
+
+                if (promptData.target_uid === mySecretUID) {
+                    injectAutomatedResponseButtons(promptData);
+                }
+            }
+
             // جدار حماية وتوهج كرسي المحامي المعترض قسرياً عند الجميع - كودك الأصلي
             if (gameState.status === "objection_active" && gameState.activeSpeakerUID) {
                 const objectorUID = gameState.activeSpeakerUID;
@@ -1303,19 +1337,29 @@ function openSecretCardInModal(roleCard) {
                     const gameState = roomData.game_state || {};
                     const currentAssignments = gameState.assignments || {};
 
-                    // 1️⃣ اصطياد اللاعب المذنب أو المشتبه به في الجلسة وجلب اسمه ومسماه الوظيفي
-                    Object.keys(currentAssignments).forEach((uid) => {
-                        const playerRoleCard = currentAssignments[uid] || {};
-                        if (playerRoleCard.is_guilty === true || playerRoleCard.role_type === "suspect") {
-                            suspectJobTitle = playerRoleCard.role_name || "";
-
-                            Object.keys(playersData).forEach((key) => {
-                                if (playersData[key].uid === uid) {
-                                    suspectRealName = playersData[key].name || "المتهم";
-                                }
-                            });
-                        }
-                    });
+                    // 🌟 [البند 3]: قراءة الموكل العشوائي الثابت المحدد مسبقاً لهذه الجولة (وليس آخر عنصر متكرر في حلقة عشوائية)
+                    const clientUID = gameState.defense_client_uid;
+                    if (clientUID && currentAssignments[clientUID]) {
+                        suspectJobTitle = currentAssignments[clientUID].role_name || "";
+                        Object.keys(playersData).forEach((key) => {
+                            if (playersData[key].uid === clientUID) {
+                                suspectRealName = playersData[key].name || "المتهم";
+                            }
+                        });
+                    } else {
+                        // احتياطي أمان فقط في حال عدم توفر الحقل الجديد لأي سبب (جولات قديمة سابقة على هذا التحديث)
+                        Object.keys(currentAssignments).forEach((uid) => {
+                            const playerRoleCard = currentAssignments[uid] || {};
+                            if (playerRoleCard.is_guilty === true || playerRoleCard.role_type === "suspect") {
+                                suspectJobTitle = playerRoleCard.role_name || "";
+                                Object.keys(playersData).forEach((key) => {
+                                    if (playersData[key].uid === uid) {
+                                        suspectRealName = playersData[key].name || "المتهم";
+                                    }
+                                });
+                            }
+                        });
+                    }
 
                     // 2️⃣ الاستبدال الجذعي المرن لنسف فوارق الكلمات الزائدة في الـ JSON
                     if (suspectRealName) {
@@ -2257,140 +2301,12 @@ function injectLawyerActionControls(
                     const actionsGrid = document.createElement("div");
                     actionsGrid.style.cssText = "display: flex; align-items: center; gap: 8px;";
 
-                    // حاوية عمودية فرعية تجمع (زر السؤال والعداد الرقمي المدمج أسفله) لضمان نظافة التموضع
-                    const questionWrapper = document.createElement("div");
-                    questionWrapper.style.cssText =
-                        "display: flex; flex-direction: column; align-items: center; justify-content: center;";
-
-                    // أ. زر كشف الشبهة الفرعي المنسق لكل لاعب على حدة
-                    const btnQuestion = document.createElement("button");
-                    btnQuestion.className = `btn-question-node-${p.uid}`;
-                    btnQuestion.textContent = "سؤال";
-                    btnQuestion.style.cssText =
-                        "padding: 5px 10px; background: var(--inner-vintage, #423423); border: 1px solid var(--gold-glow, #d5a75c); color: var(--text-white, #fff); font-family: 'Alexandria'; font-size: 0.7rem; border-radius: 4px; cursor: pointer; font-weight: 700;";
-                    questionWrapper.appendChild(btnQuestion);
-
-                    // ب. العداد الرقمي المدمج أسفل زر السؤال مباشرة لقراءة داتا هذا اللاعب
-                    const questionCounter = document.createElement("span");
-                    questionCounter.className = `court-questions-counter-${p.uid}`;
-                    questionCounter.style.cssText =
-                        "font-family: 'Alexandria', sans-serif; font-size: 0.55rem; color: var(--gold-glow, #d5a75c); font-weight: 600; margin-top: 3px; direction: rtl;";
-                    questionCounter.textContent = "المتبقي: ..";
-                    questionWrapper.appendChild(questionCounter);
-
-                    // حقن حاوية الأسئلة بالكامل داخل الشبكة أفقياً
-                    actionsGrid.appendChild(questionWrapper);
-                    // ==========================================================================
-                    // [تعديل الجزء الثاني]: محرك مسبح الأسئلة المستقل لكل لاعب + الـ Kill-Feed الخاص
-                    // ==========================================================================
-                    btnQuestion.addEventListener("click", (e) => {
-                        e.preventDefault();
-                        e.stopPropagation();
-
-                        get(gameStateRef).then((gameStateSnapshot) => {
-                            if (!gameStateSnapshot.exists()) return;
-                            const currentGameState = gameStateSnapshot.val();
-                            const activeCaseId = currentGameState.caseId || "none";
-
-                            if (activeCaseId === "none") {
-                                console.log("⚠️ في انتظار استقرار مزامنة كود القضية السحابي...");
-                                return;
-                            }
-
-                            const playerStorageKey = `remaining_prosecutor_questions_case_${activeCaseId}_${p.uid}_${currentRoomCode}`;
-
-                            // 🌟 [تعديل حاسم للمحامي]: نسف ذاكرة التحقيق الفرعية ضد هذا اللاعب المعين فور رصد تحميل الصفحة الجديد
-                            if (!window[`hasLawyerRefreshedQuestions_${p.uid}`]) {
-                                window[`hasLawyerRefreshedQuestions_${p.uid}`] = true; // قفل أمان للجهاز الحالي
-                                sessionStorage.removeItem(playerStorageKey); // قذف وتدمير السجلات المخزنة سابقاً قبل الريفرش
-                            }
-
-                            fetch("cases.json")
-                                .then((res) => {
-                                    if (!res.ok) throw new Error("فشل في تحميل ملف القضايا");
-                                    return res.json();
-                                })
-                                .then((allCases) => {
-                                    const activeCase = allCases.find((c) => c.id == activeCaseId);
-                                    if (!activeCase) return;
-
-                                    // إعادة تعبئة وتوليد المسبح كاملاً ومستقلاً للمحامي بدون أي نقص
-                                    if (!sessionStorage.getItem(playerStorageKey)) {
-                                        const rawPool = activeCase.radar_questions_pool || [];
-                                        // 🌟 [استهداف بالمعرّف]: تصفية الأسئلة لتشمل فقط الأسئلة العامة أو المطابقة تحديداً لهوية هذا اللاعب المستهدف
-                                        const targetCard = assignments[p.uid] || {};
-                                        const targetedPool = rawPool.filter(
-                                            (q) => !q.target_role || resolveEvidenceItemMatchGlobal(q, targetCard)
-                                        );
-                                        const finalPool = targetedPool.length > 0 ? targetedPool : rawPool;
-                                        const questionTexts = finalPool.map((q) => q.text).filter((t) => t);
-                                        sessionStorage.setItem(playerStorageKey, JSON.stringify(questionTexts));
-                                    }
-
-                                    let remainingQuestions = JSON.parse(sessionStorage.getItem(playerStorageKey));
-
-                                    if (remainingQuestions.length === 0) {
-                                        triggerKillFeedAlert(
-                                            `🚨 تنبيه: لقد نفدت جميع الأسئلة المتاحة في حقيبة تحقيقاتك ضد اللاعب: ${p.name}!`,
-                                            true
-                                        );
-                                        questionCounter.textContent = "المتبقي: 0";
-                                        return;
-                                    }
-
-                                    const randomIndex = Math.floor(Math.random() * remainingQuestions.length);
-                                    const selectedQuestion = remainingQuestions[randomIndex];
-
-                                    remainingQuestions.splice(randomIndex, 1);
-                                    sessionStorage.setItem(playerStorageKey, JSON.stringify(remainingQuestions));
-
-                                    questionCounter.textContent = `المتبقي: ${remainingQuestions.length}`;
-                                    triggerKillFeedAlert(`سؤال للادعاء ضد (${p.name}): ${selectedQuestion}`, true);
-                                })
-                                .catch((err) => console.error("عطل في جلب الأسئلة العشوائية الفردية:", err));
-                        });
-                    });
+                    // 🌟 [إصلاح ميكانيكية الأسئلة]: حاوية زر السؤال والعداد الفردي لكل مشتبه أُلغيت نهائياً من هنا،
+                    // وتم استبدالها بزر "🗨️ الأسئلة" الموحد المتاح لكل أفراد المحكمة (قاضٍ/دفاع/ادعاء) عبر مودال اختيار اللاعب المستهدف
 
                     // ==========================================================================
-                    // [إضافة الجزء الثالث]: محرك التحديث التلقائي الفوري لعداد الأسئلة لكل لاعب
-                    // ==========================================================================
-                    get(gameStateRef).then((stateSnapshot) => {
-                        if (!stateSnapshot.exists()) return;
-                        const currentGameState = stateSnapshot.val();
-                        const activeCaseId = currentGameState.caseId || "none";
-
-                        if (activeCaseId !== "none") {
-                            const playerStorageKey = `remaining_prosecutor_questions_case_${activeCaseId}_${p.uid}_${currentRoomCode}`;
-
-                            // 1️⃣ فحص أولى: إذا كان هناك مصفوفة مخزنة مسبقاً لهذا اللاعب في الذاكرة
-                            if (sessionStorage.getItem(playerStorageKey)) {
-                                const remainingQuestions = JSON.parse(sessionStorage.getItem(playerStorageKey));
-                                questionCounter.textContent = `المتبقي: ${remainingQuestions.length}`;
-
-                                // قفل الحماية التلقائي في حال كان المحامي قد استنفد أسئلة هذا اللاعب في جولة سابقة
-                                if (remainingQuestions.length === 0) {
-                                    btnQuestion.disabled = true;
-                                    btnQuestion.style.opacity = "0.4";
-                                    btnQuestion.style.cursor = "not-allowed";
-                                    btnQuestion.textContent = "🔒 نفد";
-                                }
-                            } else {
-                                // 2️⃣ فحص احتياطي: سحب العدد الإجمالي الأصلي من الجيسون مباشرة قبل أي ضغط
-                                fetch("cases.json")
-                                    .then((res) => res.json())
-                                    .then((allCases) => {
-                                        const activeCase = allCases.find((c) => c.id == activeCaseId);
-                                        const totalCount =
-                                            activeCase && activeCase.radar_questions_pool
-                                                ? activeCase.radar_questions_pool.length
-                                                : 0;
-                                        questionCounter.textContent = `المتبقي: ${totalCount}`;
-                                    });
-                            }
-                        }
-                    });
-
                     // ج. زر إرسال طلب اتهام جنائي الأصلي (بجوار حاوية الأسئلة مباشرة)
+                    // ==========================================================================
                     const btnAccuse = document.createElement("button");
                     btnAccuse.textContent = "🔴 اتهام";
                     btnAccuse.style.cssText =
@@ -2826,6 +2742,174 @@ function injectLawyerActionControls(
         appArena.appendChild(evidenceHolder);
     }
 
+    // ==========================================================================
+    // 🌟 [الميكانيكية الموحدة الجديدة]: زر "الأسئلة" لكل أفراد المحكمة (قاضٍ/دفاع/ادعاء)
+    // عند الضغط عليه يظهر مودال باختيار لاعب مستهدف أولاً، ثم عدد الأسئلة المخصصة له تحديداً، ثم زر سحب سؤال عشوائي
+    // ==========================================================================
+    if (
+        (isJudgeMe || myRoleCard.role_type === "lawyer") &&
+        gameState.caseId &&
+        !document.getElementById("btn-unified-questions-trigger-holder")
+    ) {
+        const questionsHolder = document.createElement("div");
+        questionsHolder.id = "btn-unified-questions-trigger-holder";
+        questionsHolder.style.cssText =
+            "position: fixed; top: 170px; left: 4%; z-index: 9999997 !important; pointer-events: none !important;";
+
+        const btnQuestions = document.createElement("button");
+        btnQuestions.className = "btn-unified-questions-node";
+        btnQuestions.id = "unified-questions-button-node";
+        btnQuestions.style.cssText = `all: unset !important; background: linear-gradient(135deg, #161c26 0%, #423423 100%) !important; border: 2px solid var(--gold-glow, #d5a75c) !important; color: var(--gold-glow, #d5a75c) !important; font-family: 'Alexandria', sans-serif !important; font-weight: 700 !important; font-size: 0.69rem !important; padding: 10px 14px !important; border-radius: 8px !important; cursor: pointer !important; display: flex !important; align-items: center !important; justify-content: center !important; gap: 6px !important; box-shadow: 0 4px 15px rgba(213, 167, 92, 0.25) !important; box-sizing: border-box !important; text-align: center !important; transition: all 0.2s ease-in-out !important; pointer-events: auto !important; -webkit-tap-highlight-color: transparent !important; touch-action: manipulation !important;`;
+        btnQuestions.textContent = "🗨️ الأسئلة";
+
+        // 🌟 [مودال اختيار اللاعب المستهدف]: نفس فكرة مودال حقيبة الأدلة تماماً لضمان اتساق تجربة الاستخدام
+        const renderTargetedQuestionsPicker = (activeCase, latestPlayersData, latestAssignments) => {
+            const modal = document.getElementById("custom-alert-modal");
+            if (!modal) return;
+            const fullPool = activeCase.radar_questions_pool || [];
+
+            document.getElementById("modal-alert-title").textContent = "🗨️ استجواب لاعب محدد";
+
+            let pickerHTML = `
+                <div style="text-align: right; font-family: 'Alexandria', sans-serif; direction: rtl;">
+                    <label style="color: var(--gold-glow); font-size: 0.8rem; font-weight: 700; display: block; margin-bottom: 8px;">اختر اللاعب الذي تريد استجوابه:</label>
+                    <select id="questions-target-player" style="width: 100%; padding: 10px; background: #161c26; color: #fff; border: 1px solid var(--gold-glow); border-radius: 6px; font-family: 'Alexandria'; font-size: 0.85rem; outline: none; margin-bottom: 12px;">
+                        <option value="">-- اختر لاعباً --</option>
+            `;
+
+            Object.keys(latestPlayersData).forEach((key) => {
+                const p = latestPlayersData[key];
+                const card = latestAssignments[p.uid] || {};
+                if (card.role_type !== "judge" && card.role_type !== "lawyer") {
+                    pickerHTML += `<option value="${p.uid}">${p.name} (${card.role_name || "متهم"})</option>`;
+                }
+            });
+
+            pickerHTML += `
+                    </select>
+                    <p id="questions-count-display" style="color: #cfd8e3; font-size: 0.85rem; text-align: center; min-height: 20px; margin: 0 0 12px;">بانتظار اختيار اللاعب المستهدف لعرض عدد أسئلته الخاصة...</p>
+                    <button id="btn-pull-random-question" disabled style="width: 100%; padding: 12px; background: var(--gold-glow); color: #101820; border: none; border-radius: 8px; font-family: 'Alexandria'; font-weight: 700; font-size: 0.9rem; cursor: pointer; opacity: 0.5;">🎲 اسحب سؤالاً عشوائياً</button>
+                    <p id="questions-drawn-result" style="color: #ffe9b3; font-size: 0.85rem; text-align: center; margin-top: 12px; min-height: 20px;"></p>
+                </div>
+            `;
+
+            document.getElementById("modal-alert-message").innerHTML = pickerHTML;
+
+            const targetSelect = document.getElementById("questions-target-player");
+            const countDisplay = document.getElementById("questions-count-display");
+            const btnPull = document.getElementById("btn-pull-random-question");
+            const drawnResult = document.getElementById("questions-drawn-result");
+
+            // 🌟 مفتاح تخزين مستقل لكل (سائل + مستهدف) على هذا الجهاز تحديداً، بديلاً عن التسمية القديمة الحصرية بالادعاء فقط
+            const getStorageKey = (targetUID, caseId) =>
+                `remaining_questions_case_${caseId}_asker_${mySecretUID}_target_${targetUID}_${currentRoomCode}`;
+
+            targetSelect.addEventListener("change", function () {
+                const targetUID = targetSelect.value;
+                drawnResult.textContent = "";
+                if (!targetUID) {
+                    countDisplay.textContent = "بانتظار اختيار اللاعب المستهدف لعرض عدد أسئلته الخاصة...";
+                    btnPull.disabled = true;
+                    btnPull.style.opacity = "0.5";
+                    return;
+                }
+
+                const targetCard = latestAssignments[targetUID] || {};
+                // 🌟 [استهداف بالمعرّف]: تصفية الأسئلة لتشمل فقط الأسئلة العامة أو المطابقة تحديداً لهوية هذا اللاعب المستهدف
+                const targetedPool = fullPool.filter(
+                    (q) => !q.target_role || resolveEvidenceItemMatchGlobal(q, targetCard)
+                );
+                const finalPool = targetedPool.length > 0 ? targetedPool : fullPool;
+
+                const storageKey = getStorageKey(targetUID, activeCase.id);
+                if (!sessionStorage.getItem(storageKey)) {
+                    // 🌟 [البند 2]: تخزين كائن السؤال كاملاً (النص + الإجابات الثلاث) بدل النص المجرد فقط
+                    const questionObjects = finalPool.filter((q) => q.text);
+                    sessionStorage.setItem(storageKey, JSON.stringify(questionObjects));
+                }
+                const remaining = JSON.parse(sessionStorage.getItem(storageKey));
+
+                countDisplay.innerHTML = `📋 الأسئلة المخصصة لهذا اللاعب: <b style="color: var(--gold-glow);">${finalPool.length}</b> من إجمالي ${fullPool.length} سؤال بالقضية — المتبقي لك: <b style="color: var(--gold-glow);">${remaining.length}</b>`;
+
+                btnPull.disabled = remaining.length === 0;
+                btnPull.style.opacity = remaining.length === 0 ? "0.5" : "1";
+
+                btnPull.onclick = () => {
+                    const storageKeyNow = getStorageKey(targetUID, activeCase.id);
+                    let remainingNow = JSON.parse(sessionStorage.getItem(storageKeyNow) || "[]");
+                    if (remainingNow.length === 0) return;
+
+                    const randomIndex = Math.floor(Math.random() * remainingNow.length);
+                    const selectedQuestion = remainingNow[randomIndex];
+                    remainingNow.splice(randomIndex, 1);
+                    sessionStorage.setItem(storageKeyNow, JSON.stringify(remainingNow));
+
+                    const targetPlayerKey = Object.keys(latestPlayersData).find(
+                        (k) => latestPlayersData[k].uid === targetUID
+                    );
+                    const targetName = targetPlayerKey ? latestPlayersData[targetPlayerKey].name : "اللاعب المستهدف";
+
+                    countDisplay.innerHTML = `📋 الأسئلة المخصصة لهذا اللاعب: <b style="color: var(--gold-glow);">${finalPool.length}</b> من إجمالي ${fullPool.length} سؤال بالقضية — المتبقي لك: <b style="color: var(--gold-glow);">${remainingNow.length}</b>`;
+                    drawnResult.textContent = `❓ ${selectedQuestion.text}`;
+
+                    if (remainingNow.length === 0) {
+                        btnPull.disabled = true;
+                        btnPull.style.opacity = "0.5";
+                    }
+
+                    // 🌟 [صندوق الردود الموقوتة]: بث السؤال والإجابات الثلاث الجاهزة سحابياً - سيلتقطه الجميع (Kill-Feed عام) والمستهدف تحديداً (أزرار الرد)
+                    update(gameStateRef, {
+                        active_question_prompt: {
+                            target_uid: targetUID,
+                            target_name: targetName,
+                            asker_uid: mySecretUID,
+                            asker_name: myRoleCard.role_name || "أحد أطراف المحكمة",
+                            question_text: selectedQuestion.text,
+                            answers: selectedQuestion.answers || null,
+                            timestamp: Date.now()
+                        }
+                    });
+                };
+            });
+
+            modal.style.setProperty("display", "flex", "important");
+            modal.className = "modal-overlay-active";
+        };
+
+        const openQuestionsPickerHandler = (e) => {
+            if (e) {
+                e.preventDefault();
+                e.stopPropagation();
+            }
+
+            get(ref(db, "rooms/" + currentRoomCode)).then((roomSnapshot) => {
+                if (!roomSnapshot.exists()) return;
+                const roomData = roomSnapshot.val();
+                const latestPlayersData = roomData.players || {};
+                const latestGameState = roomData.game_state || {};
+                const latestAssignments = latestGameState.assignments || {};
+
+                fetch("cases.json")
+                    .then((res) => {
+                        if (!res.ok) throw new Error("فشل في تحميل ملف القضايا");
+                        return res.json();
+                    })
+                    .then((allCases) => {
+                        const activeCase = allCases.find((c) => c.id == latestGameState.caseId);
+                        if (!activeCase) return;
+                        renderTargetedQuestionsPicker(activeCase, latestPlayersData, latestAssignments);
+                    })
+                    .catch((err) => console.error("خطأ في تحميل مسبح الأسئلة:", err));
+            });
+        };
+
+        btnQuestions.addEventListener("touchstart", openQuestionsPickerHandler, { passive: false });
+        btnQuestions.addEventListener("click", openQuestionsPickerHandler);
+
+        questionsHolder.appendChild(btnQuestions);
+        appArena.appendChild(questionsHolder);
+    }
+
     setTimeout(() => {
         if (myRoleCard.role_type !== "judge" && !document.getElementById("request-speak-trigger")) {
             const speakHolder = document.createElement("div");
@@ -2941,6 +3025,103 @@ function injectLawyerActionControls(
         radarHolder.appendChild(btnRadar);
         appArena.appendChild(radarHolder);
     }
+}
+
+// ==========================================================================
+// 🌟 [صندوق الردود الموقوتة]: إظهار ثلاثة أزرار رد تلقائية (كذب/محايد/صدق) حصرياً للاعب المستهدف بسؤال
+// ==========================================================================
+function injectAutomatedResponseButtons(promptData) {
+    // إزالة أي صندوق ردود سابق معلق لضمان عدم التكرار أو التراكم البصري
+    const oldBox = document.getElementById("automated-response-box");
+    if (oldBox) oldBox.remove();
+
+    const box = document.createElement("div");
+    box.id = "automated-response-box";
+    box.style.cssText = `
+        position: fixed !important; bottom: 90px !important; left: 50% !important; transform: translateX(-50%) !important;
+        z-index: 9999999 !important; display: flex !important; flex-direction: column !important; gap: 8px !important;
+        background: rgba(5, 10, 18, 0.96) !important; border: 2px solid var(--gold-glow, #d5a75c) !important;
+        border-radius: 14px !important; padding: 14px !important; width: 92% !important; max-width: 380px !important;
+        box-shadow: 0 6px 25px rgba(213, 167, 92, 0.4) !important; direction: rtl !important; box-sizing: border-box !important;
+        animation: smoothPanelReveal 0.4s ease-out;
+    `;
+
+    const questionLabel = document.createElement("p");
+    questionLabel.style.cssText =
+        "color: #fff; font-family: 'Alexandria', sans-serif; font-size: 0.82rem; text-align: center; margin: 0 0 8px; font-weight: 700; line-height: 1.6;";
+    questionLabel.textContent = `❓ سؤال موجّه لك من (${promptData.asker_name || "طرف المحكمة"}): ${promptData.question_text}`;
+    box.appendChild(questionLabel);
+
+    const btnRow = document.createElement("div");
+    btnRow.style.cssText = "display: flex; gap: 8px; justify-content: center;";
+
+    const responseTypes = [
+        { key: "lie", label: "🤥 الكذب", color: "#ff5252" },
+        { key: "neutral", label: "😐 إجابة محايدة", color: "#d5a75c" },
+        { key: "truth", label: "😇 الصدق", color: "#6ee7a0" }
+    ];
+
+    responseTypes.forEach((type) => {
+        const btn = document.createElement("button");
+        btn.textContent = type.label;
+        btn.style.cssText = `flex: 1; padding: 10px 4px; background: rgba(255,255,255,0.05); border: 1px solid ${type.color}; color: ${type.color}; font-family: 'Alexandria', sans-serif; font-weight: 700; font-size: 0.68rem; border-radius: 8px; cursor: pointer; touch-action: manipulation; -webkit-tap-highlight-color: transparent;`;
+        btn.addEventListener("click", () => {
+            showResponseGuidanceModal(type.key, promptData);
+            box.remove();
+        });
+        btnRow.appendChild(btn);
+    });
+
+    box.appendChild(btnRow);
+    document.body.appendChild(box);
+}
+
+// ==========================================================================
+// 🌟 [صندوق الردود الموقوتة]: مودال توجيهي يظهر بعد اختيار أسلوب الرد، يوضح للاعب كيف يؤدي هذا الأسلوب
+// (البند 2): يعرض الآن الإجابة الفعلية المكتوبة خصيصاً لهذا السؤال بالذات من ملف القضايا (كذب/محايد/صدق)،
+// مع نص إرشادي احتياطي عام في حال عدم توفر إجابة مخصصة لهذا السؤال تحديداً (حماية من الأعطال)
+// ==========================================================================
+function showResponseGuidanceModal(responseType, promptData) {
+    const modal = document.getElementById("custom-alert-modal");
+    if (!modal) return;
+
+    const FALLBACK_GUIDANCE = {
+        lie: {
+            title: "🤥 وضع الكذب",
+            text: "قدّم إجابة مقنعة تماماً لكنها غير صحيحة. حافظ على ثقتك وهدوء صوتك، تجنب التلعثم أو التردد، واختر تفاصيل بسيطة يسهل تذكرها لاحقاً لتفادي التناقض مع نفسك في استجواب قادم."
+        },
+        neutral: {
+            title: "😐 إجابة محايدة",
+            text: "قدّم إجابة مراوغة وغامضة دون كذب صريح أو اعتراف كامل. استخدم عبارات مثل 'لا أتذكر بالتفصيل' أو 'الأمر لم يكن بهذا الوضوح'، واترك الباب مفتوحاً لتفسيرات متعددة."
+        },
+        truth: {
+            title: "😇 الصدق",
+            text: "أجب بصدق كامل عن هذا السؤال تحديداً. إن كانت الإجابة الصادقة تكشف تورطك في أمر جانبي، فتحمّل عواقب ذلك بدل المجازفة بتناقض قد يفضحك بشكل أسوأ لاحقاً."
+        }
+    };
+
+    const TITLES = {
+        lie: "🤥 وضع الكذب",
+        neutral: "😐 إجابة محايدة",
+        truth: "😇 الصدق"
+    };
+
+    // 🌟 [الأولوية القصوى]: الإجابة الفعلية المكتوبة لهذا السؤال بالذات من الجيسون، وإلا نعرض الإرشاد العام كحل احتياطي
+    const specificAnswer = promptData.answers && promptData.answers[responseType];
+    const title = TITLES[responseType] || TITLES.neutral;
+    const bodyLabel = specificAnswer ? "إجابتك الجاهزة:" : "إرشاد عام (لا توجد إجابة مخصصة لهذا السؤال):";
+    const bodyText = specificAnswer || (FALLBACK_GUIDANCE[responseType] || FALLBACK_GUIDANCE.neutral).text;
+
+    document.getElementById("modal-alert-title").textContent = title;
+    document.getElementById("modal-alert-message").innerHTML = `
+        <div style="text-align: right; font-family: 'Alexandria', sans-serif; direction: rtl;">
+            <p style="color: #cfd8e3; font-size: 0.8rem; margin-bottom: 10px; line-height: 1.6;">السؤال: <b style="color:#fff;">${promptData.question_text}</b></p>
+            <p style="color: var(--gold-glow, #d5a75c); font-size: 0.75rem; font-weight: 700; margin-bottom: 6px;">${bodyLabel}</p>
+            <p style="color: #ffe9b3; font-size: 0.88rem; line-height: 1.8;">${bodyText}</p>
+        </div>
+    `;
+    modal.style.setProperty("display", "flex", "important");
+    modal.className = "modal-overlay-active";
 }
 
 function triggerKillFeedAlert(alertText, isJudgeReveal = false) {
