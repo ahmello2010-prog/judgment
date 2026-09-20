@@ -840,7 +840,7 @@ function listenToFinalLobby() {
                 document.getElementById("loading-screen").style.display = "none";
             if (document.getElementById("court-arena")) document.getElementById("court-arena").style.display = "block";
 
-            renderCircularSeats(playersList, assignments);
+            renderCircularSeats(playersList, assignments, gameState);
 
             // 🌟 [تحديد الرتبة السحابية وتغذية حقيبة الأدلة للقاضي والمحاميين]
             const myRoleCard = assignments[mySecretUID] || {};
@@ -1060,7 +1060,7 @@ function listenToFinalLobby() {
         }
     });
 }
-function renderCircularSeats(playersList, assignments) {
+function renderCircularSeats(playersList, assignments, gameState) {
     const container = document.getElementById("seats-container");
     if (!container) return;
     container.innerHTML = "";
@@ -1291,9 +1291,24 @@ function renderCircularSeats(playersList, assignments) {
                         .then((allCases) => {
                             const activeCase = allCases.find((c) => c.id == gameState.caseId);
                             if (activeCase) {
+                                // 🌟 [البند 3 - الإصلاح الحقيقي]: حل اسم موكل محامي الدفاع من الحقل الثابت المخزن سحابياً
+                                // لعرضه في المودال الفعلي الذي يظهر بالفعل في بداية اللوبي (وليس دالة ميتة لا تُستدعى أبداً)
+                                let defenseClientName = "";
+                                if (
+                                    roleCard.role_type === "lawyer" &&
+                                    roleCard.role_name &&
+                                    (roleCard.role_name.includes("دفاع") || roleCard.role_name.includes("الدفاع")) &&
+                                    gameState.defense_client_uid
+                                ) {
+                                    const clientPlayer = playersList.find(
+                                        (pl) => pl.id === gameState.defense_client_uid
+                                    );
+                                    defenseClientName = clientPlayer ? clientPlayer.name : "";
+                                }
+
                                 setTimeout(() => {
                                     // إطلاق المودال الأول (ملخص الجريمة العامة)
-                                    openCaseStoryFirstModal(roleCard, activeCase);
+                                    openCaseStoryFirstModal(roleCard, activeCase, defenseClientName);
                                 }, 600);
                             } else {
                                 console.log("⚠️ لم يتم العثور على تفاصيل القضية رقم: " + gameState.caseId);
@@ -2171,12 +2186,15 @@ if (!window.hasJudgeInterrogationEngineAttached) {
 
                     document.getElementById("btn-verdict-convict").addEventListener("click", function () {
                         const isCorrect = assignments[suspectUID] && assignments[suspectUID].is_guilty === true;
-                        processVerdictLogic(isCorrect, suspectName, true);
+                        // 🌟 [الإصلاح الحاسم للبند 6]: تمرير suspectUID كمعرّف رابع - كان غائباً تماماً، وهو ما يجعل
+                        // executeVerdictEndGame يفشل دوماً في تحديد هوية المتهم الفعلي ويعامله كبريء دائماً بالخطأ
+                        processVerdictLogic(isCorrect, suspectName, true, suspectUID);
                     });
 
                     document.getElementById("btn-verdict-acquit").addEventListener("click", function () {
                         const isCorrect = assignments[suspectUID] && assignments[suspectUID].is_guilty === false;
-                        processVerdictLogic(isCorrect, suspectName, false);
+                        // 🌟 [الإصلاح الحاسم للبند 6]: نفس الإصلاح - تمرير suspectUID لضمان صحة معادلات النقاط
+                        processVerdictLogic(isCorrect, suspectName, false, suspectUID);
                     });
                 } else {
                     // وضعية الـ 4 لاعبين فأكثر تعود لنظام القائمة المفلترة للمتهمين والشهود فقط
@@ -2449,34 +2467,25 @@ function injectLawyerActionControls(
                     localStorage.getItem(`locked_radar_target_${targetUID}_${currentRoomCode}`) === "true";
 
                 // 🎙️ ميزان حسابات اتهام محامي المنصة المباشر أو المدعوم بالرادار طبقاً للنظام الجديد
+                // 🌟 [إصلاح البند 6 - الازدواج في تسجيل النقاط]: نقاط القاضي أُلغيت من هنا تماماً لأن executeVerdictEndGame
+                // أدناه سيحسم حكمه ونقاطه بشكل مستقل ودقيق حسب الشجرة الكبرى؛ تسجيلها هنا أيضاً كان يُضاعف رصيد القاضي
+                // خطأً (مرتين لكل قرار واحد). نقاط محامي الادعاء وحدها فريدة لهذا المسار ولا تتكرر فتبقى هنا كما هي.
                 if (!isRadarUsedAndMatched) {
                     // أ. حالات الاتهام المباشر (دون استخدام الرادار أو كتابة شبهة)
                     if (isTargetActuallyGuilty) {
-                        alert(
-                            `⚖️ اتهام مباشر صحيح بالمنصة الجنائية!\n- القاضي: +10 نقاط\n- محامي الادعاء: +10 نقاط\n(لم يتأثر أي فرد آخر بهذا القرار)`
-                        );
-                        updateScore(judgeScoreRef, 10);
+                        alert(`⚖️ اتهام مباشر صحيح بالمنصة الجنائية!\n- محامي الادعاء: +10 نقاط`);
                         updateScore(prosecutorScoreRef, 10);
                     } else {
-                        alert(
-                            `❌ اتهام مباشر خاطئ بالمنصة الجنائية!\n- القاضي: -10 نقاط\n- محامي الادعاء: -10 نقاط\n(لم يتأثر أي فرد آخر بهذا القرار)`
-                        );
-                        updateScore(judgeScoreRef, -10);
+                        alert(`❌ اتهام مباشر خاطئ بالمنصة الجنائية!\n- محامي الادعاء: -10 نقاط`);
                         updateScore(prosecutorScoreRef, -10);
                     }
                 } else {
                     // ب. حالات الاتهام بعد كشف الشبهة بالرادار
                     if (isTargetActuallyGuilty) {
-                        alert(
-                            `⚖️ اتهام ذكي صحيح مدعوم بالرادار!\n- القاضي: +10 نقاط\n- محامي الادعاء: +15 نقطة\n(لم يتأثر أي فرد آخر بهذا القرار)`
-                        );
-                        updateScore(judgeScoreRef, 10);
+                        alert(`⚖️ اتهام ذكي صحيح مدعوم بالرادار!\n- محامي الادعاء: +15 نقطة`);
                         updateScore(prosecutorScoreRef, 15);
                     } else {
-                        alert(
-                            `❌ اتهام ذكي خاطئ مدعوم بالرادار!\n- القاضي: -10 نقاط\n- محامي الادعاء: -15 نقطة\n(لم يتأثر أي فرد آخر بهذا القرار)`
-                        );
-                        updateScore(judgeScoreRef, -10);
+                        alert(`❌ اتهام ذكي خاطئ مدعوم بالرادار!\n- محامي الادعاء: -15 نقطة`);
                         updateScore(prosecutorScoreRef, -15);
                     }
                 }
@@ -2637,17 +2646,64 @@ function injectLawyerActionControls(
         // 🌟 [تحديث ميكانيكية الاستهداف]: إلغاء "الأدلة العامة" نهائياً - يجب اختيار لاعب مستهدف أولاً قبل عرض أي دليل
         const resolveEvidenceItemMatch = (item, playerCard) => resolveEvidenceItemMatchGlobal(item, playerCard);
 
-        const renderTargetedEvidenceList = (activeCase, latestPlayersData, latestAssignments) => {
+        const renderTargetedEvidenceList = (activeCase, latestPlayersData, latestAssignments, latestGameState) => {
             const modal = document.getElementById("custom-alert-modal");
             if (!modal) return;
             const specificPool =
                 (activeCase.lawyers_evidence_pool && activeCase.lawyers_evidence_pool[myLawyerType]) || [];
+            const isDefenseLawyer = myLawyerType === "defense_evidence";
+            const clientUID = latestGameState.defense_client_uid || null;
 
             document.getElementById("modal-alert-title").textContent = "💼 حقيبة الأدلة الجنائية";
+
+            // ==========================================================================
+            // 🌟 [البند 4 - وضعية الـ 3 لاعبين]: محامي الدفاع يرى مباشرة أدلة تبرئة موكله (حتى لو كان الجاني الحقيقي)
+            // بدون أي خطوة اختيار - لأن الموكل هو المتهم الوحيد الموجود أساساً في هذه الوضعية
+            // ==========================================================================
+            if (isDefenseLawyer && totalPlayersCount === 3 && clientUID) {
+                const clientCard = latestAssignments[clientUID] || {};
+                const clientPlayerKey = Object.keys(latestPlayersData).find(
+                    (k) => latestPlayersData[k].uid === clientUID
+                );
+                const clientName = clientPlayerKey ? latestPlayersData[clientPlayerKey].name : "موكلك";
+
+                const matchedItems = specificPool.filter((item) => resolveEvidenceItemMatch(item, clientCard));
+                let directHTML = `
+                    <div style="text-align: right; font-family: 'Alexandria', sans-serif; direction: rtl;">
+                        <p style="color: var(--gold-glow); font-weight: 700; font-size: 0.9rem; margin-bottom: 10px;">🛡️ دافع عن موكلك: (${clientName})</p>
+                        <div class="custom-modal-scroll-area" style="display: flex; flex-direction: column; gap: 12px; max-height: 260px; overflow-y: auto !important; padding: 4px 5px;">
+                `;
+                if (matchedItems.length === 0) {
+                    directHTML += `<p style="color: #ffb34d; font-size: 0.85rem; text-align: center;">🔍 لا توجد أدلة مسجلة خاصة بموكلك في ملفات القضية الحالية.</p>`;
+                } else {
+                    matchedItems.forEach((item) => {
+                        directHTML += `<p class="evidence-modal-item">${item.text}</p>`;
+                    });
+                }
+                directHTML += `</div></div>`;
+
+                document.getElementById("modal-alert-message").innerHTML = directHTML;
+                modal.style.setProperty("display", "flex", "important");
+                modal.className = "modal-overlay-active";
+                return;
+            }
+
+            // ==========================================================================
+            // 🌟 [البند 4 - وضعية الـ 4 لاعبين فأكثر]: عرض عبارة "دافع عن موكلك" في المقدمة، ثم قائمة اختيار
+            // تستثني الموكل نفسه تماماً - محامي الدفاع يبحث عن أدلة تشتيت ضد المشتبهين الآخرين فقط
+            // ==========================================================================
+            let clientNameHeader = "";
+            if (isDefenseLawyer && clientUID) {
+                const clientPlayerKey = Object.keys(latestPlayersData).find(
+                    (k) => latestPlayersData[k].uid === clientUID
+                );
+                clientNameHeader = clientPlayerKey ? latestPlayersData[clientPlayerKey].name : "موكلك";
+            }
 
             // 1️⃣ [خطوة الاستهداف]: بناء قائمة اختيار اللاعب المتهم المستهدف أولاً - إلزامية قبل عرض أي دليل
             let pickerHTML = `
                 <div style="text-align: right; font-family: 'Alexandria', sans-serif; direction: rtl;">
+                    ${isDefenseLawyer && clientNameHeader ? `<p style="color: var(--gold-glow); font-weight: 700; font-size: 0.9rem; margin-bottom: 10px;">🛡️ دافع عن موكلك: (${clientNameHeader})</p>` : ""}
                     <label style="color: var(--gold-glow); font-size: 0.8rem; font-weight: 700; display: block; margin-bottom: 8px;">اختر المتهم المستهدف لعرض الأدلة الخاصة به تحديداً:</label>
                     <select id="evidence-target-player" style="width: 100%; padding: 10px; background: #161c26; color: #fff; border: 1px solid var(--gold-glow); border-radius: 6px; font-family: 'Alexandria'; font-size: 0.85rem; outline: none; margin-bottom: 15px;">
                         <option value="">-- اختر لاعباً --</option>
@@ -2656,6 +2712,8 @@ function injectLawyerActionControls(
             Object.keys(latestPlayersData).forEach((key) => {
                 const p = latestPlayersData[key];
                 const card = latestAssignments[p.uid] || {};
+                // 🌟 [البند 4]: استثناء الموكل نفسه تماماً من قائمة محامي الدفاع - لا يجمع أدلة تشتيت ضد عميله
+                if (isDefenseLawyer && clientUID && p.uid === clientUID) return;
                 if (card.role_type !== "judge" && card.role_type !== "lawyer") {
                     pickerHTML += `<option value="${p.uid}">${p.name} (${card.role_name || "متهم"})</option>`;
                 }
@@ -2728,7 +2786,7 @@ function injectLawyerActionControls(
                     .then((allCases) => {
                         const activeCase = allCases.find((c) => c.id == gameState.caseId);
                         if (!activeCase || !activeCase.lawyers_evidence_pool) return;
-                        renderTargetedEvidenceList(activeCase, latestPlayersData, latestAssignments);
+                        renderTargetedEvidenceList(activeCase, latestPlayersData, latestAssignments, latestGameState);
                     })
                     .catch((err) => console.error("حدث خطأ في تحميل الأدلة:", err));
             });
@@ -3826,14 +3884,20 @@ const endCurrentCourtSession = (verdictOutcomeData) => {
         activeSpeakerUID: "none",
         isInterrogatingMode: false,
         interrogationsCount: 0
-    }).then(() => {
-        window.location.href = "results.html";
-    });
+    })
+        .then(() => {
+            window.location.href = "results.html";
+        })
+        .catch((err) => {
+            // 🌟 [إصلاح البند 5]: شبكة بطيئة أو عطل مؤقت في الكتابة السحابية لا يجب أن يحبس جهاز القاضي في الجلسة القديمة أبداً
+            console.error("⚠️ فشل بث game_over سحابياً، جاري تنفيذ الانتقال المحلي القسري كخطة احتياطية:", err);
+            window.location.href = "results.html";
+        });
 };
 // ==========================================================================
 // 1️⃣ المودال الأول: منصة عرض السيناريو وملف الجريمة العام للغرفة (حجم مكبر فخم)
 // ==========================================================================
-function openCaseStoryFirstModal(roleCard, activeCase) {
+function openCaseStoryFirstModal(roleCard, activeCase, defenseClientName) {
     const modal = document.getElementById("custom-alert-modal");
     if (!modal) return;
 
@@ -3879,16 +3943,32 @@ function openCaseStoryFirstModal(roleCard, activeCase) {
     document.getElementById("btn-next-to-secret-role").addEventListener("click", function (e) {
         e.preventDefault();
         e.stopPropagation();
-        openSecretRoleSecondModal(roleCard);
+        openSecretRoleSecondModal(roleCard, defenseClientName);
     });
 }
 
 // ==========================================================================
 // 2️⃣ المودال الثاني: منصة فض الأظرف وكشف الهويات والمصالح السرية (حجم مكبر فخم)
 // ==========================================================================
-function openSecretRoleSecondModal(roleCard) {
+function openSecretRoleSecondModal(roleCard, defenseClientName) {
     const modal = document.getElementById("custom-alert-modal");
     if (!modal) return;
+
+    // 🌟 [البند 3 - الإصلاح الحقيقي]: حقن اسم الموكل العشوائي الثابت داخل نص الرواية العلنية
+    // لمحامي الدفاع تحديداً، ليعرف بوضوح من هو اللاعب الذي سيدافع عنه في المرافعة
+    let displayedPublicStory = roleCard.public_story || "";
+    if (defenseClientName) {
+        if (displayedPublicStory.includes("المتهم الحاضر")) {
+            displayedPublicStory = displayedPublicStory.replace(
+                "المتهم الحاضر",
+                `المتهم الحاضر (${defenseClientName})`
+            );
+        } else if (displayedPublicStory.includes("موكلك")) {
+            displayedPublicStory = displayedPublicStory.replace("موكلك", `موكلك (${defenseClientName})`);
+        } else if (displayedPublicStory.includes("المتهم")) {
+            displayedPublicStory = displayedPublicStory.replace("المتهم", `المتهم (${defenseClientName})`);
+        }
+    }
 
     // الحفاظ على الأبعاد الفخمة والمكبرة للمودال في الخطوة الثانية أيضاً
     const modalBox = modal.querySelector("div") || modal;
@@ -3923,9 +4003,16 @@ function openSecretRoleSecondModal(roleCard) {
     // الالتزام بنصوصك وتعديلاتك وأحجام خطوطك المقترحة (1rem و 0.85rem و 0.7rem) بدقة 100%
     let modalHTML = `
         <div style="text-align: right; font-family: 'Alexandria', sans-serif; direction: rtl;">
+            ${
+                defenseClientName
+                    ? `<div style="background: rgba(213, 167, 92, 0.12); border: 1px solid var(--gold-glow); border-radius: 6px; padding: 10px 12px; margin-bottom: 14px; text-align: center;">
+                    <span style="color: var(--gold-glow); font-weight: 800; font-size: 0.9rem;">🛡️ موكلك الذي ستدافع عنه: (${defenseClientName})</span>
+                   </div>`
+                    : ""
+            }
             <span style="color: var(--gold-glow); font-weight: bold; font-size: 0.85rem;">روايتك العلنية أمام الحضور:</span>
             <p style="background: #161c26; padding: 12px; border-radius: 6px; color: #fff; font-family: 'Harmattan'; font-size: 1rem; line-height: 1.5; margin-top: 6px; margin-bottom: 18px; border: 1px solid rgba(213, 167, 92, 0.15);">
-                ${roleCard.public_story}
+                ${displayedPublicStory}
             </p>
     `;
 
