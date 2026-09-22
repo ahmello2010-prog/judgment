@@ -409,8 +409,12 @@ async function loadAndDisplayCases() {
             caseBox.setAttribute("data-id", item.id);
 
             // تكييف الاستايل ليتناسب مع وجود الصورة والتايتل في المنتصف بشكل فخم ومتناسق بصرياً
+            // 🌟 [إصلاح حاسم لتجاوز حدود الصندوق]: استخدام !important على كل خاصية حرجة لضمان
+            // الفوز المطلق على القاعدة القديمة (height: 200px; overflow: hidden;) في style.css بلا أي استثناء،
+            // + justify-content: flex-start بدل center حتى لو حصل أي تجاوز مستقبلي يظهر أسفل الصندوق لا أعلاه
             caseBox.style.cssText = `
-                height: auto; padding: 20px 15px; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; cursor: pointer;
+                height: auto !important; min-height: 0 !important; max-height: none !important; overflow: visible !important;
+                padding: 20px 15px; display: flex; flex-direction: column; align-items: center; justify-content: flex-start; text-align: center; cursor: pointer;
                 ${item.is_pinned ? "border: 3px solid var(--gold-glow); box-shadow: 0 0 15px rgba(213, 167, 92, 0.3);" : ""}
             `;
 

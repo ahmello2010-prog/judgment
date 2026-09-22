@@ -1,22 +1,11 @@
-/* ==========================================================================
-   0. المتغيرات السيادية المعتمدة لمحكمة الأدوار (Theme Variables)
-   ========================================================================== */
 :root {
     --gold-glow: rgb(213, 167, 92);
-    /* الذهبي المضيء للعناصر النشطة والمطرقة */
     --deep-navy: rgb(13, 25, 43);
-    /* الكحلي الداكن للخلفية الأساسية */
     --inner-vintage: rgb(66, 52, 35);
-    /* البني العتيق لخلفية بطاقات القضايا */
     --shadow-black: rgb(5, 10, 18);
-    /* الأسود الحالك لظلال الجريمة والغموض */
     --text-white: rgb(255, 255, 255);
-    /* الأبيض النقي للنصوص والقراءة */
 }
 
-/* ==========================================================================
-   1. إعدادات الخطوط والتهيئة الأساسية (Typography & Reset)
-   ========================================================================== */
 @font-face {
     font-family: "Harmattan";
     src:
@@ -46,95 +35,67 @@
     margin: 0;
     padding: 0;
     -webkit-tap-highlight-color: transparent;
-    /* منع الوميض الأزرق عند اللمس في الموبايل */
 }
 
-/* تهيئة السلوك الافتراضي لجسم الموقع العام */
 body {
     height: 100vh;
     padding-bottom: 0 !important;
-    /* إعطاء مساحة واقية أسفل كل صفحة لمنع حجب الأزرار تحت الشريط */
     overflow: hidden;
     display: flex;
     justify-content: center;
     align-items: center;
     background-color: var(--deep-navy);
-    /* الخلفية الكحلية الداكنة الافتراضية للموقع */
 }
 
-/* ==========================================================================
-   تنسيق شريط الأخبار السينمائي الطافي والمتحرك (Cinematic Ticker Tape UI)
-   ========================================================================== */
 .cinematic-ticker-container {
     position: fixed;
     bottom: 11px;
-    /* تثبيت فوق القاع بمسافة ذكية لعدم التداخل مع أزرار الهاتف */
     left: 0;
     width: 100%;
     height: 35px;
     background-color: rgba(5, 10, 18, 0.95);
-    /* الأسود الحالك الشفاف لبروز النص */
     border-top: 2px solid var(--gold-glow, #d5a75c);
-    /* حد علوي بالذهبي المضيء للمشروع */
     border-bottom: 2px solid var(--gold-glow, #d5a75c);
-    /* حد سفلي بالذهبي المضيء للمشروع */
     z-index: 999999 !important;
-    /* الصدارة المطلقة فوق كل القوائم */
     overflow: hidden;
     display: flex;
     align-items: center;
     box-shadow: 0 -4px 15px rgba(0, 0, 0, 0.7);
     direction: rtl;
-    /* ضبط الاتجاه العام للغة العربية */
 }
 
-/* غلاف الحاوية الكلية */
 .ticker-text-wrapper {
     display: flex;
     width: max-content;
     white-space: nowrap;
-    /* 🌟 منع الالتفاف نهائياً لمنع نزول الكلمات لأسطر جديدة */
 }
 
-/* الكتلة الحركية الفردية */
 .ticker-marquee {
     display: flex;
     flex-shrink: 0;
     white-space: nowrap;
     animation: tickerScrollLeft 45s linear infinite;
-    /* 🌟 تمرير ناعم ومستمر، يمكنك تقليل الرقم لزيادة السرعة */
 }
 
-/* تنسيق العبارات الفردية داخل الشريط */
 .ticker-marquee span {
     display: inline-block;
     font-family: "Harmattan", system-ui, sans-serif;
-    /* خط الشروحات المحكم والمريح للعين */
     font-weight: 600;
     font-size: 0.8rem;
-    /* خط Harmattan يحتاج حجم أكبر نسبياً لقراءته بنعومة */
     color: var(--text-white, #ffffff);
-    /* الأبيض النقي لأعلى تباين وقراءة مريحة */
     padding-left: 60px;
-    /* تباعد مريح وجدار واقٍ بين العبارات الخمس */
     text-shadow: 0 2px 4px rgba(0, 0, 0, 0.8);
 }
 
-/* 🌟 السحر هنا: أنيميشن التمرير اللانهائي المتناسق مع الاتجاه العربي RTL */
 @keyframes tickerScrollLeft {
     0% {
         transform: translate3d(0, 0, 0);
     }
-
     100% {
         transform: translate3d(100%, 0, 0);
-        /* 🌟 سحب الكتلة بالكامل باتجاه اليمين/اليسار المتناسق هندسياً ليدور النص للأبد */
     }
 }
 
-/* ==========================================================================
-   التنسيق السينمائي المباشر للواجهة الترحيبية الفورية فوق الفيديو
-   ========================================================================== */
 .body1 {
     position: relative;
     background-color: var(--shadow-black);
@@ -145,7 +106,6 @@ body {
     align-items: center;
 }
 
-/* حاوية الفيديو المثبتة خلف عناصر الواجهة */
 .video-background-container {
     position: absolute;
     top: 0;
@@ -156,19 +116,14 @@ body {
     overflow: hidden;
 }
 
-/* ==========================================================================
-   نسف أيقونات مشغل الفيديو والومضات الافتراضية داخل التطبيقات (WebView Fix)
-   ========================================================================== */
 #bg-cinema-video {
     width: 100%;
     height: 100%;
     object-fit: cover;
     object-position: center center;
-    /* 🌟 إجبار أرضية الفيديو الخلفية على اتخاذ لوني الأسود الحالك لمنع الومضة الرمادية */
     background-color: var(--shadow-black) !important;
 }
 
-/* 🌟 نسف وحجب زر التشغيل (Play Button) والأيقونات الافتراضية في الأندرويد والـ WebView */
 #bg-cinema-video::-webkit-media-controls {
     display: none !important;
 }
@@ -188,7 +143,6 @@ body {
     -webkit-appearance: none;
 }
 
-/* الأوفرلاي الداكن المدمج */
 .video-overlay {
     position: absolute;
     top: 0;
@@ -204,7 +158,6 @@ body {
     z-index: 2;
 }
 
-/* الحاوية الرئيسية المرتفعة فوق الفيديو */
 .splash-container {
     position: relative;
     z-index: 3;
@@ -218,7 +171,6 @@ body {
     text-align: center;
 }
 
-/* التحكم بالأقسام النشطة بنعومة حركية عند ظهور الموقع فوراً */
 .fade-active {
     display: flex;
     flex-direction: column;
@@ -228,7 +180,6 @@ body {
     animation: smoothPanelReveal 0.6s ease-in-out forwards;
 }
 
-/* تنسيق نصوص الواجهة والزر الطافي */
 #welcome-component .welcome-title {
     font-family: "Alexandria", system-ui, sans-serif;
     font-weight: 700;
@@ -249,99 +200,69 @@ body {
     text-shadow: 0 2px 8px rgba(5, 10, 18, 0.95);
 }
 
-/* ==========================================================================
-   6. الزر الرئيسي التفاعلي المطور والمنسق (أنا جاهز)
-   ========================================================================== */
 a.btn-main {
     width: 75%;
     text-decoration: none;
-    /* إزالة الخط السفلي للرابط تماماً لضمان النظافة البصرية */
     max-width: 240px;
     padding: 14px 28px;
     font-family: "Alexandria", system-ui, sans-serif;
-    /* خط عريض ومقروء داخل الزر */
     font-weight: 700;
     font-size: 1.15rem;
     color: var(--shadow-black);
-    /* نص أسود حالك حاد ومتباين تماماً وسهل القراءة داخل الزر البني */
     background-color: var(--gold-glow);
-    /* لون الذهبي المضيء السائد */
     border: 2px solid var(--gold-glow);
     border-radius: 8px;
     cursor: pointer;
     box-shadow: 0 4px 15px rgba(213, 167, 92, 0.2);
     display: inline-block;
-    /* إجبار وسم الرابط على احترام الأبعاد والتموضع المقاس الحركي */
     transition:
         background-color 0.2s ease,
         color 0.2s ease,
         transform 0.1s ease;
 }
 
-/* تفاعل اللمس المبهر للزر في شاشات الموبايل (Mobile-First) */
 a.btn-main:active {
     transform: scale(0.97);
-    /* تأثير الضغط الفيزيائي الخفيف */
     background-color: var(--shadow-black);
-    /* يقلب الأرضية لأسود اللعبة عند الضغط للتغذية البصرية */
     color: var(--gold-glow);
-    /* ويصبح النص بلون بني اللوتس الفاتح السائد */
     border: 2px solid var(--gold-glow);
 }
 
-/* ==========================================================================
-   تأثيرات حركة الزر السينمائي المباغت والارتداد (Button Animations)
-   ========================================================================== */
-/* الحالة المبدئية للزر: مخفي تماماً ومرفوع لأعلى الشاشة */
 .btn-hidden {
     opacity: 0;
     transform: translateY(-100px) scale(0.3);
     pointer-events: none;
-    /* منع الضغط عليه قبل أن يظهر */
 }
 
-/* الكلاس الذي سيتم حقنه بالجافا سكريبت فور انتهاء النص */
 .btn-cinema-drop {
     pointer-events: auto;
     animation: buttonDropAndBounce 1.2s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
 }
 
-/* أنيميشن الهبوط المباغت مع القفزات والارتداد عند الاستقرار */
 @keyframes buttonDropAndBounce {
     0% {
         opacity: 0;
         transform: translateY(-150px) scale(0.4);
     }
-
     50% {
         opacity: 1;
         transform: translateY(0) scale(1.05);
-        /* الهبوط والارتطام بالأرضية */
     }
-
     65% {
         transform: translateY(-12px) scale(0.98);
-        /* قفزة أولى صغيرة لأعلى */
     }
-
     75% {
         transform: translateY(0) scale(1.02);
-        /* العودة للاستقرار */
     }
-
     85% {
         transform: translateY(-4px) scale(0.99);
-        /* قفزة ثانية ميكروسكوبية أخيرة */
     }
-
     100% {
         opacity: 1;
         transform: translateY(0) scale(1);
-        /* الاستقرار التام والجاهزية */
     }
 }
 
-/* مؤشر الكتابة الوامض (العلامة العمودية) لإضفاء لمسة الكيبورد */
 .welcome-subtitle::after {
     content: "|";
     color: var(--gold-glow);
@@ -353,54 +274,44 @@ a.btn-main:active {
     to {
         color: transparent;
     }
-
     50% {
         color: var(--gold-glow);
     }
 }
 
-/* ==========================================================================
-   7. الحركات والأنيميشن التلقائية (Animations)
-   ========================================================================== */
 @keyframes smoothPanelReveal {
     from {
         opacity: 0;
         transform: translateY(6px);
     }
-
     to {
         opacity: 1;
         transform: translateY(0);
     }
 }
 
-/* ==========================================================================
-   8. تحديث الخلفية الموحدة للشاشة الثانية (Logo Shadow Radial Gradient)
-   ========================================================================== */
-/* 
-   خلفية موحدة ومضيئة تحاكي إضاءة اللوجو الدائرية العتيقة بنسبة 100%
-   المركز يبدأ بالبني العتيق، ينساب للكحلي الداكن، وينتهي في الحواف بالأسود الحالك للتشويق 
-*/
+html {
+    background-color: var(--shadow-black);
+    min-height: 100%;
+}
+
 .body2 {
     background: radial-gradient(circle, var(--inner-vintage) 0%, var(--deep-navy) 65%, var(--shadow-black) 100%);
-    background-attachment: fixed;
-    /* يضمن ثبات التدرج الدائري في المنتصف أثناء حركة العناصر */
+    background-attachment: scroll;
+    display: block;
+    height: auto;
     min-height: 100vh;
     margin: 0;
 }
 
-/* زر الثلاث أسطر الثابت علوياً في زاوية الشاشة لفتح القائمة الجانبية المنزلقة */
 .hamburger-menu {
     position: fixed;
     top: 20px;
     left: 20px;
-    /* التثبيت علوياً يساراً في زاوية الشاشة بنقاء تام */
     width: 40px;
     height: 40px;
     background-color: var(--inner-vintage);
-    /* البني العتيق من اللوجو */
     border: 2px solid var(--gold-glow);
-    /* حدود بالذهبي المضيء المعتمد */
     border-radius: 6px;
     display: flex;
     flex-direction: column;
@@ -409,48 +320,36 @@ a.btn-main:active {
     gap: 5px;
     cursor: pointer;
     z-index: 400;
-    /* الحفاظ على صدارة الطبقات لعدم الاختفاء تحت الصور */
     box-shadow: 0 4px 10px var(--shadow-black);
 }
 
-/* الأشرطة الداخلية المكونة لعلامة الهمبرجر البرجر */
 .hamburger-menu .bar {
     width: 22px;
     height: 3px;
     background-color: var(--gold-glow);
-    /* الأسطر بالذهبي المضيء */
     border-radius: 2px;
     transition: all 0.3s ease;
 }
 
-/* حاوية القائمة الجانبية المنزلقة المستقلة تماماً (Sidebar Drawer) */
 #sidebar-drawer {
     position: fixed;
     top: 0;
     left: -280px;
-    /* مخفية تماماً خارج حقل الرؤية جهة اليسار بشكل افتراضي */
     width: 260px;
     height: 100vh;
     background-color: var(--shadow-black);
-    /* الأسود الحالك للغموض والجريمة */
     border-right: 2px solid var(--gold-glow);
-    /* حد عمودي ذهبي مضيء يحدد الحافة */
     z-index: 350;
     transition: left 0.4s cubic-bezier(0.25, 1, 0.5, 1);
-    /* حركة انزلاق ناعمة ومحترفة */
     box-shadow: 5px 0 25px rgba(5, 10, 18, 0.6);
 }
 
-/* الفئة النشطة التلقائية التي يتم استدعاؤها بالجافا سكريبت لفتح وانزلاق القائمة */
 #sidebar-drawer.sidebar-drawer-active {
     left: 0;
-    /* تنزلق وتستقر داخل الشاشة فوراً */
 }
 
-/* محتويات الهيكل الداخلي للسايد بار */
 .sidebar-content {
     padding: 20px 20px 20px 20px;
-    /* تباعد علوي واقٍ لمنع التداخل مع زر البرجر الثابت */
     display: flex;
     flex-direction: column;
     align-items: flex-start;
@@ -462,17 +361,14 @@ a.btn-main:active {
     font-weight: 700;
     font-size: 1.2rem;
     color: var(--gold-glow);
-    /* العنوان بالذهبي المضيء المعتمد */
 }
 
-/* زر تبديل اللغة الاحترافي والشفاف داخل السايد بار المنزلق ليتناسب مع الهوية */
 .btn-lang {
     padding: 6px 14px;
     font-family: "Alexandria", system-ui, sans-serif;
     font-weight: 700;
     font-size: 0.9rem;
     color: var(--gold-glow);
-    /* لون بني اللوتس الفاتح للحدود والنص */
     background-color: transparent;
     border: 2px solid var(--gold-glow);
     border-radius: 6px;
@@ -485,50 +381,43 @@ a.btn-main:active {
 .btn-lang:active {
     background-color: var(--gold-glow);
     color: var(--shadow-black);
-    /* يقلب لأسود الغموض عند الضغط الفعلي */
 }
-/* ==========================================================================
-   تنسيق وتوحيد زر الإغلاق الموحد داخل المودالات (Custom Modal Button UI)
-   ========================================================================== */
 
 #btn-modal-close,
 .btn-close-ticker-node {
-    all: unset !important; /* نسف أي تنسيقات افتراضية للمتصفح */
+    all: unset !important;
     width: 100% !important;
-    max-width: 200px !important; /* حجم محكم ليتوسط الصندوق الزجاجي */
+    max-width: 200px !important;
     padding: 12px 24px !important;
-    margin: 15px auto 0 auto !important; /* توسيط أفقي وتأمين تباعد علوي مريح */
+    margin: 15px auto 0 auto !important;
     font-family: "Alexandria", system-ui, sans-serif !important;
     font-weight: 700 !important;
     font-size: 0.95rem !important;
-    color: var(--shadow-black, #050a18) !important; /* نص أسود حاد ومتباين جداً */
-    background-color: var(--gold-glow, #d5a75c) !important; /* كتلة ذهبية مضيئة فاخرة */
+    color: var(--shadow-black, #050a18) !important;
+    background-color: var(--gold-glow, #d5a75c) !important;
     border: 2px solid var(--gold-glow, #d5a75c) !important;
     border-radius: 6px !important;
     cursor: pointer !important;
     text-align: center !important;
     box-shadow: 0 4px 12px rgba(213, 167, 92, 0.2) !important;
-    display: block !important; /* إجباره على الظهور ككتلة لتفعيل التوسيط */
+    display: block !important;
     box-sizing: border-box !important;
     transition: all 0.2s ease-in-out !important;
     -webkit-tap-highlight-color: transparent !important;
 }
 
-/* تفاعل اللمس والارتداد الفيزيائي للزر في شاشات الموبايل */
 #btn-modal-close:active {
     transform: scale(0.96) !important;
-    background-color: var(--text-white, #ffffff) !important; /* يقلب للأبيض النقي عند الضغط اللمسي */
-    color: var(--gold-glow, #d5a75c) !important; /* ويتحول النص للذهبي المضيء المعتمد */
+    background-color: var(--text-white, #ffffff) !important;
+    color: var(--gold-glow, #d5a75c) !important;
     border-color: var(--gold-glow, #d5a75c) !important;
 }
 
-/* رابط دليل المستخدم المضاف حديثاً داخل السايد بار */
 .sidebar-link {
     font-family: "Harmattan", system-ui, sans-serif;
     font-weight: 600;
     font-size: 1.3rem;
     color: var(--text-white);
-    /* الأبيض النقي للقراءة الفائقة النظيفة */
     text-decoration: none;
     padding: 8px 0;
     width: 100%;
@@ -538,26 +427,20 @@ a.btn-main:active {
 
 .sidebar-link:active {
     color: var(--gold-glow);
-    /* يضيء بالذهبي الفاخر عند النقر البصري */
 }
 
-/* ==========================================================================
-   9. تخطيط صفحة الغرف ومستطيل الصورة (Rooms Box Layout)
-   ========================================================================== */
 .rooms-container {
     width: 100%;
     max-width: 450px;
     padding: 20px;
     margin-top: 120px;
-    /* تباعد كافٍ ومتناسق للموبايل */
     display: flex;
     flex-direction: column;
-    justify-content: center;
+    justify-content: flex-start;
     align-items: center;
     text-align: center;
 }
 
-/* تظبيط وصنع صندوق صورة اللوجو الدائرية الرسمية للعبة بالبوردر المخصص لها */
 .logo-image-box {
     width: 110px;
     height: 110px;
@@ -574,25 +457,19 @@ a.btn-main:active {
     height: 100%;
     object-fit: contain;
     border-radius: 50% !important;
-    /* إجبار صورة اللوجو على اتخاذ الشكل الدائري الكامل */
     border: 3px solid var(--gold-glow) !important;
-    /* بوردر دائري فخم بلون الذهبي المضيء المعتمد */
     box-shadow: 0 4px 15px rgba(213, 167, 92, 0.35);
-    /* توهج ضوئي ناعم مستوحى من درجات اللوجو */
 }
 
-/* مستطيل الصورة المركزية القديم وبطاقة القضايا الخلفية للعبة */
 .image-showcase-box {
     width: 90%;
-    height: 200px;
+    min-height: 200px;
+    height: auto;
+    overflow: visible;
     border-radius: 12px;
-    overflow: hidden;
     border: 2px solid var(--gold-glow);
-    /* إطار ذهبي مضيء نقي يحمي الصورة ويفصلها */
     background-color: var(--inner-vintage);
-    /* البني العتيق من اللوجو لخلفية بطاقات القضايا */
     box-shadow: 0 4px 15px rgba(213, 167, 92, 0.15);
-    /* ظل ناعم فاتح مستوحى من اللوجو */
     margin-bottom: 25px;
 }
 
@@ -600,46 +477,33 @@ a.btn-main:active {
     width: 100%;
     height: 100%;
     object-fit: cover;
-    /* فرد وضبط الصورة بالكامل داخل المستطيل دون تشويه */
 }
 
 .rooms-subtitle {
     font-family: "Harmattan", system-ui, sans-serif;
     font-weight: 600;
     font-size: 1.4rem;
-    /* حجم مناسب لخط Harmattan لقراءة مريحة فوق الخلفية الكحلية المضيئة */
     color: var(--gold-glow);
-    /* الذهبي المضيء ليكون متناسقاً تماماً ومقروءاً بنقاء */
     margin-bottom: 35px;
     padding: 0 15px;
     line-height: 1.5;
 }
 
-/* ==========================================================================
-   10. حاوية الأزرار المتجاورة (Buttons Side-by-Side)
-   ========================================================================== */
 .buttons-row {
     width: 90%;
     display: flex;
     justify-content: space-between;
-    /* توزيع متساوٍ يضع الأزرار جنب بعض */
     gap: 15px;
-    /* تباعد مرن ومريح بين الزرين */
 }
 
-/* الأزرار الفرعية المتجاورة بلون الذهبي المضيء ونصوص سوداء حادة */
 .btn-secondary {
     flex: 1;
-    /* إجبار الزرين على أخذ مساحة متساوية تماماً بالـ Flexbox لتقف جنب بعض بدقة */
     padding: 14px 0;
     font-family: "Alexandria", system-ui, sans-serif;
-    /* خط عريض ومقروء للأزرار */
     font-weight: 700;
     font-size: 1rem;
     color: #ffffff;
-    /* نص أسود حالك ومتباين تماماً داخل الكتلة الذهبية المضيئة */
     background-color: var(--gold-glow);
-    /* لون الذهبي المضيء المعتمد والأكثر سيادة */
     border: 2px solid var(--gold-glow);
     border-radius: 8px;
     cursor: pointer;
@@ -650,53 +514,41 @@ a.btn-main:active {
         transform 0.1s ease;
 }
 
-/* تفاعل اللمس المبهر للأزرار المتجاورة في شاشات الموبايل */
 .btn-secondary:active {
     transform: scale(0.96);
     background-color: var(--text-white);
     color: var(--gold-glow);
 }
 
-/* ==========================================================================
-   13. إضافات صفحة دليل المستخدم ومربعات الأسئلة القابلة للتمدد (Accordion UI)
-   ========================================================================== */
-/* حاوية دليل المستخدم المتجاوبة - Mobile First */
 .guide-container {
     width: 100%;
     max-width: 450px;
     padding: 20px;
     margin-top: 90px;
-    /* تباعد كافٍ لمنع التداخل مع زر الهمبرجر العلوي */
     display: flex;
     flex-direction: column;
-    justify-content: center;
+    justify-content: flex-start;
     align-items: center;
     text-align: center;
 }
 
-/* غلاف مربعات الأسئلة */
 .accordion-wrapper {
     width: 90%;
     display: flex;
     flex-direction: column;
     gap: 15px;
-    /* تباعد مرن ومريح بين المربعات */
     margin-top: 10px;
 }
 
-/* المربع الفردي للسؤال */
 .accordion-item {
     background-color: var(--shadow-black);
-    /* الأسود الحالك لظلال الجريمة من اللوجو */
     border: 2px solid var(--gold-glow);
-    /* إطار فخم بالذهبي المضيء المعتمد */
     border-radius: 10px;
     overflow: hidden;
     box-shadow: 0 4px 12px rgba(5, 10, 18, 0.4);
     transition: transform 0.2s ease;
 }
 
-/* زر السؤال الرئيسي (المستطيل القابل للضغط) */
 .accordion-trigger {
     width: 100%;
     padding: 16px 20px;
@@ -704,115 +556,75 @@ a.btn-main:active {
     border: none;
     outline: none;
     font-family: "Alexandria", system-ui, sans-serif;
-    /* خط العناوين العريضة */
     font-weight: 700;
     font-size: 0.95rem;
     color: var(--gold-glow);
-    /* لون الذهبي المضيء المعتمد للقطع النشطة */
     cursor: pointer;
     text-align: inherit;
-    /* ينضبط تلقائياً يمين أو يسار حسب اتجاه لغة المتصفح */
     display: flex;
     justify-content: space-between;
     align-items: center;
     transition: background-color 0.2s ease;
 }
 
-/* تأثير اللمس والضغط للمستطيل في شاشات الموبايل */
 .accordion-trigger:active {
     background-color: rgba(213, 167, 92, 0.08);
-    /* وميض ذهبي خفيف جداً للتغذية البصرية */
 }
 
-/* لوحة الإجابة المخفية (تتمدد لتحت بالجافا سكريبت) */
 .accordion-panel {
     max-height: 0;
-    /* مخفية ومغلقة تماماً في البداية */
     overflow: hidden;
     transition: max-height 0.35s cubic-bezier(0.25, 1, 0.5, 1);
-    /* حركة تمدد وانزلاق انسيابية فائقة */
     background-color: var(--inner-vintage);
-    /* البني العتيق من اللوجو لبطاقات الشروحات والقضايا */
 }
 
-/* نصوص الشروحات الداخلية داخل المربع المتمدد */
 .guide-text {
     padding: 18px;
     font-family: "Harmattan", system-ui, sans-serif;
-    /* خط الشروحات المحكم والمريح جداً للعين */
     font-weight: 500;
     font-size: 1.25rem;
-    /* حجم مناسب ومثالي لخط Harmattan لقراءته بنعومة */
     color: var(--text-white);
-    /* الأبيض النقي لضمان أعلى مستويات التباين والنقاء */
     line-height: 1.5;
     text-align: justify;
-    /* محاذاة النص والسطور بشكل احترافي ومنظم */
     border-top: 1px solid rgba(213, 167, 92, 0.15);
-    /* خط علوي دقيق يفصل السؤال عن الجواب */
 }
 
-/* ==========================================================================
-   14. إضافات السهم التفاعلي وإعدادات الهواتف والميديا (Arrow & Media Queries)
-   ========================================================================== */
-/* تصميم السهم النقي الموجه للأسفل برمجياً باستخدام الـ CSS Borders */
 .accordion-trigger .arrow {
     width: 0;
     height: 0;
     border-left: 6px solid transparent;
     border-right: 6px solid transparent;
     border-top: 6px solid var(--gold-glow);
-    /* السهم يتلون بالذهبي المضيء المعتمد للقطع النشطة */
     margin-right: 15px;
-    /* تباعد مريح للعين بين النص والسهم */
     transition: transform 0.3s cubic-bezier(0.25, 1, 0.5, 1);
-    /* حركة دوران انسيابية فائقة */
 }
 
-/* فئة الدوران الإجبارية التي يتم حقنها بالجافا سكريبت لتجعل السهم يدور للأعلى عند الفتح */
 .accordion-trigger.arrow-rotate .arrow {
     transform: rotate(180deg);
 }
 
-/* ==========================================================================
-   15. تفعيل وتخصيص السكرول بار لصفحة الدليل (Custom Scrollbar UI)
-   ========================================================================== */
-/* فتح السكرول بار الرأسي حصرياً لصفحة الدليل لتمكين التمرير بنقاء */
 body.body2 {
     overflow-y: auto !important;
-    /* السماح بالتمرير لأسفل عند تمدد الأسئلة */
     overflow-x: hidden;
-    /* منع الاهتزاز الجانبي */
 }
 
-/* تخصيص شكل مجرى السكرول بار (Track) ليناسب سواد الغموض الكلي */
 body.body2::-webkit-scrollbar {
     width: 6px;
-    /* عرض نحيف وأنيق جداً متناسب مع الموبايل */
 }
 
 body.body2::-webkit-scrollbar-track {
     background: var(--shadow-black);
-    /* الأسود الحالك كأرضية للمجرى */
 }
 
-/* تخصيص لسان السكرول بار المتحرك (Thumb) بلون الذهبي المضيء للمشروع */
 body.body2::-webkit-scrollbar-thumb {
     background: var(--gold-glow);
-    /* الذهبي المضيء المعتمد للقطع النشطة */
     border-radius: 3px;
-    /* حواف دائرية ناعمة */
 }
 
 body.body2::-webkit-scrollbar-thumb:hover {
     background: var(--text-white);
-    /* يضيء بالأبيض النقي عند التمرير الفعلي */
 }
 
-/* ==========================================================================
-   16. إعدادات الميديا كويري المضافة لشاشة إنشاء الغرفة (Lobby Mobile Layout)
-   ========================================================================== */
-/* تخصيص مظهر حقل الإدخال ليكون متناسقاً مع ألوان وهوية بطاقات قضايا اللوجو */
 #admin-name-input {
     width: 100%;
     padding: 12px;
@@ -830,40 +642,23 @@ body.body2::-webkit-scrollbar-thumb:hover {
 
 #admin-name-input:focus {
     border-color: var(--text-white);
-    /* يضيء بالأبيض النقي عند الكتابة التفاعلية */
 }
 
-/* ==========================================================================
-   17. تنسيق فئة أسماء اللاعبين داخل لوحة الانتظار (Lobby Li Typography)
-   ========================================================================== */
-/* استهداف التاج الخاص بالأسماء داخل قائمة اللوبي لمنحها الفخامة والوضوح */
 #lobby-players-list li {
     font-family: "Harmattan", system-ui, sans-serif;
-    /* خط الشروحات المريح جداً للعين */
     font-weight: 500;
     font-size: 1.45rem;
-    /* حجم مثالي ومناسب لقراءة خط Harmattan بنقاء */
     color: var(--text-white);
-    /* الأبيض النقي لضمان أعلى مستويات التباين */
     padding: 10px 16px;
     background-color: rgba(255, 255, 255, 0.08);
-    /* أرضية زجاجية شفافة تبرز الاسم فوق تدرج الخلفية */
     border-radius: 8px;
     border: 1px solid rgba(213, 167, 92, 0.2);
-    /* لمحة إطار ناعمة جداً بلون الذهبي المضيء */
     text-align: right;
-    /* لتنسيق الأسماء ومحاذاتها بدقة جهة اليمين */
     box-shadow: 0 2px 8px var(--shadow-black);
-    /* ظل أسود حالك ناعم للعمق */
     list-style: none;
-    /* إزالة النقطة الافتراضية للقائمة تماماً لضمان النظافة البصرية */
     width: 100%;
 }
 
-/* ==========================================================================
-   18. نافذة الإنذارات المنبثقة الموحدة (Custom Alert Modal UI)
-   ========================================================================== */
-/* الخلفية الشفافة التي تغطي الموقع بالكامل وتظهر المودال في المنتصف */
 .modal-overlay-active {
     position: fixed !important;
     top: 0 !important;
@@ -871,31 +666,23 @@ body.body2::-webkit-scrollbar-thumb:hover {
     width: 100vw !important;
     height: 100vh !important;
     background-color: rgba(0, 0, 0, 0.7) !important;
-    /* خلفية سوداء شفافة لطمس الموقع */
     display: flex !important;
     justify-content: center !important;
-    /* توسيط المودال أفقياً */
     align-items: center !important;
-    /* توسيط المودال عمودياً */
     z-index: 99999999999999999 !important;
-    /* رفعه فوق أي عنصر أو قائمة جانبية */
     opacity: 1 !important;
     pointer-events: auto !important;
 }
 
-/* كلاس الإخفاء */
 .modal-overlay-hidden {
     display: none !important;
 }
 
-/* صندوق التنبيه الداخلي المحكم بلمسات ألوان اللوجو */
 .modal-alert-box {
     width: 90%;
     max-width: 380px;
     background-color: var(--inner-vintage);
-    /* البني العتيق لخلفية بطاقات الشروحات والقضايا */
     border: 3px solid var(--gold-glow);
-    /* إطار ذهبي مضيء عريض يعكس مظهر القانون */
     border-radius: 12px;
     padding: 25px 20px;
     text-align: center;
@@ -906,13 +693,11 @@ body.body2::-webkit-scrollbar-thumb:hover {
     gap: 12px;
 }
 
-/* نصوص التنبيه والمحاذاة بالخطوط المعتمدة */
 #modal-alert-title {
     font-family: "Alexandria", system-ui, sans-serif;
     font-weight: 600;
     font-size: 1.4rem;
     color: var(--gold-glow);
-    /* العنوان الرئيسي يضيء بالذهبي */
 }
 
 #modal-alert-message {
@@ -920,37 +705,28 @@ body.body2::-webkit-scrollbar-thumb:hover {
     font-weight: 600;
     font-size: 1.35rem;
     color: var(--text-white);
-    /* الأبيض النقي لأعلى تباين وقراءة مريحة */
     line-height: 1.5;
 }
 
-/* إجبار زر الإغلاق على الصدارة واستقبال الضغط بنسبة 100% */
 #btn-modal-close {
     position: relative !important;
     z-index: 29909999888999999 !important;
-    /* رفعه فوق صندوق التنبيه نفسه */
     pointer-events: auto !important;
-    /* إجباره على استقبال الكليكات */
     cursor: pointer !important;
-    /* تحويل المؤشر ليد للتأكد من القابلية للتفاعل */
 }
 
-/* 🌟 [إصلاح التشوه المطاطي]: فصل ميكانيكي تام بين منطقة الصورة العلوية الثابتة ومنطقة النص السفلية */
 .room-grid-card {
     position: relative;
     background-color: var(--inner-vintage, #1c2430);
-    /* 🌟 صنع البوردر الفخم المضيء حول المربع بالكامل */
     border: 3px solid var(--gold-glow, #d5a75c) !important;
     border-radius: 12px;
-    height: 180px;
-    /* طول مناسب جداً للمربع العريض */
+    min-height: 180px;
     display: flex;
     flex-direction: column;
     align-items: stretch;
     justify-content: flex-start;
     padding: 0;
     overflow: hidden;
-    /* إجبار الصورة على الانقياع لحواف المربع المائل */
     box-shadow:
         0 0 15px rgba(213, 167, 92, 0.2),
         inset 0 0 20px rgba(0, 0, 0, 0.6);
@@ -959,13 +735,11 @@ body.body2::-webkit-scrollbar-thumb:hover {
         box-shadow 0.2s ease;
 }
 
-/* تأثير التمرير واللمس لتوهج البوردر */
 .room-grid-card:hover {
     transform: translateY(-4px);
     box-shadow: 0 0 25px var(--gold-glow, #d5a75c);
 }
 
-/* 🌟 [هندسة نظيفة]: منطقة الصورة العلوية محددة وثابتة الارتفاع، مستقلة تماماً عن منطقة النص السفلية */
 .card-image-holder,
 .card-image-holder1 {
     position: relative;
@@ -981,7 +755,6 @@ body.body2::-webkit-scrollbar-thumb:hover {
     width: 100%;
     height: 100%;
     object-fit: cover;
-    /* 🌟 تفريد الصورة داخل المستطيل دون أي تشويه أو مط، بغض النظر عن عرض الكارت (حتى لو امتد لعمودين) */
     object-position: center;
     transform: none;
     opacity: 1;
@@ -991,24 +764,17 @@ body.body2::-webkit-scrollbar-thumb:hover {
 .room-grid-card:hover .card-image-holder img,
 .room-grid-card:hover .card-image-holder1 img {
     transform: scale(1.04);
-    /* انيميشن زووم خفيف ومبهر عند التمرير */
 }
-/* ==========================================================================
-   كود صندوق التغليف المضيء لصفحة الانضمام (Safe Wrapper Box UI)
-   ========================================================================== */
 
-/* 2️⃣ ضبط تموضع مربع الانضمام الجديد ليتمركز في السنتر تماماً */
 .join-card-panel {
     background-color: var(--inner-vintage, #423423) !important;
     border: 3px solid var(--gold-glow, #d5a75c) !important;
     border-radius: 14px !important;
     padding: 32px 24px !important;
     box-shadow: 0 8px 32px var(--shadow-black, #050a18) !important;
-
-    /* هندسة التمركز الصارم في منتصف الشاشة */
     width: 92% !important;
     max-width: 380px !important;
-    margin: 0 auto !important; /* تصفير الهوامش العلوية التي كانت تدفعه لأعلى */
+    margin: 0 auto !important;
     display: flex !important;
     flex-direction: column !important;
     align-items: center !important;
@@ -1016,7 +782,6 @@ body.body2::-webkit-scrollbar-thumb:hover {
     box-sizing: border-box !important;
 }
 
-/* 🌟 تأمين وتنسيق العناصر العامة بالداخل تلقائياً دون استخدام كلاسات قديمة */
 .join-card-panel h1,
 .join-card-panel h2,
 .join-card-panel h3 {
@@ -1035,7 +800,6 @@ body.body2::-webkit-scrollbar-thumb:hover {
     box-sizing: border-box !important;
 }
 
-/* 🌟 [منطقة سفلية مستقلة تماماً]: العبارات والنصوص تستقر في مستطيلها الخاص أسفل الصورة دون تراكب */
 .card-caption {
     position: relative;
     z-index: 2;
@@ -1043,7 +807,6 @@ body.body2::-webkit-scrollbar-thumb:hover {
     display: flex;
     align-items: center;
     justify-content: center;
-    /* رفع النص فوق الصورة */
     font-family: "Alexandria", sans-serif;
     font-weight: 700;
     font-size: 1.1rem;
@@ -1051,9 +814,7 @@ body.body2::-webkit-scrollbar-thumb:hover {
     text-shadow:
         0 2px 8px #000000,
         0 0 10px var(--gold-glow, #d5a75c);
-    /* توهج ذهبي للنص */
     background: #101b26;
-    /* شريط داكن خلف النص لضمان وضوح القراءة */
     width: 100%;
     padding: 6px 0;
     text-align: center;
@@ -1061,11 +822,6 @@ body.body2::-webkit-scrollbar-thumb:hover {
     cursor: pointer;
 }
 
-/* ==========================================================================
-   تطوير عداد الرصيد الشخصي بالتموضع المطلق لبروز سينمائي (Absolute Position)
-   ========================================================================== */
-/* 🌟 إجبار الغلاف أو الحاوية الأب لزر الخروج على اتخاذ التموضع النسبي
-   (تأكد أن زر الخروج متواجد داخل حاوية تأخذ هذا الكلاس أو قم بإضافته للأب في الـ HTML) */
 .rooms-container,
 .splash-container,
 .guide-container,
@@ -1075,22 +831,14 @@ body.body2::-webkit-scrollbar-thumb:hover {
 
 .personal-score-card {
     position: fixed !important;
-    /* 🌟 تثبيت مطلق بالنسبة للشاشة بالكامل لتبقى طافية وثابتة دائماً */
     top: 20px !important;
-    /* 🌟 التموضع السحري المعتمد من قبلك */
     left: 74% !important;
-    /* 🌟 التمركز الجانبي الدقيق المعتمد من قبلك */
     transform: translateX(-50%) !important;
-    /* توسيط أفقي حاد في منتصف الهاتف */
     width: 65% !important;
-    /* متطابق بالملي مع عرض زر الخروج */
     max-width: 139px !important;
-    /* الحجم القياسي المحبوك من قبلك */
     height: 48px !important;
     background-color: rgba(5, 10, 18, 0.95) !important;
-    /* الأسود الحالك للغموض والجريمة */
     border: 2px solid var(--gold-glow, #d5a75c) !important;
-    /* إطار فخم بالذهبي المضيء المعتمد */
     border-radius: 6px !important;
     padding: 0 14px !important;
     display: flex !important;
@@ -1100,7 +848,6 @@ body.body2::-webkit-scrollbar-thumb:hover {
     direction: rtl !important;
     text-align: right !important;
     z-index: 100000 !important;
-    /* صدارة الطبقات لعدم الاختفاء تحت مستطيلات القضايا */
 }
 
 .personal-score-card span {
@@ -1126,7 +873,6 @@ body.body2::-webkit-scrollbar-thumb:hover {
     text-shadow: 0 0 8px rgba(213, 167, 92, 0.4);
 }
 
-/* كلاس التجميد (Cooldown) المخصص لتعطيل الزر برمجياً ومنع السبام */
 .btn-judge-action:disabled {
     opacity: 0.4 !important;
     background-color: #1a2433 !important;
@@ -1137,10 +883,6 @@ body.body2::-webkit-scrollbar-thumb:hover {
     box-shadow: none !important;
 }
 
-/* ==========================================================================
-   التنسيق السينمائي الفخم لمودال مغادرة قاعة القضايا (Host Exit Modal UI)
-   ========================================================================== */
-/* 1️⃣ فئة التفعيل النشطة: حجب وتعتيم موسوعة القضايا بالكامل وتوسيط صندوق التنبيه صارماً */
 .host-overlay-active {
     position: fixed !important;
     top: 0 !important;
@@ -1148,33 +890,25 @@ body.body2::-webkit-scrollbar-thumb:hover {
     width: 100vw !important;
     height: 100vh !important;
     background-color: rgba(5, 10, 18, 0.92) !important;
-    /* تعتيم ليلي عميق متناسق مع اللعبة */
     display: flex !important;
     justify-content: center !important;
-    /* توسيط أفقي حاد */
     align-items: center !important;
-    /* توسيط عمودي حاد */
     z-index: 999999999999999999 !important;
-    /* الصدارة المطلقة فوق اللوجو ومستطيلات القضايا للكل */
     opacity: 1 !important;
     pointer-events: auto !important;
 }
 
-/* 2️⃣ فئة الإخفاء الافتراضية الصارمة لحجب نصوص المودال عند دخول الصفحة */
 .host-overlay-hidden {
     display: none !important;
     opacity: 0 !important;
     pointer-events: none !important;
 }
 
-/* 3️⃣ صندوق التنبيه الزجاجي الفخم الممتزج مع الهوية البصرية لقاعة المحكمة */
 .host-confirm-box {
     width: 88% !important;
     max-width: 380px !important;
     background-color: var(--inner-vintage, #423423) !important;
-    /* البني العتيق من هويتك المعتمدة */
     border: 3px solid var(--gold-glow, #d5a75c) !important;
-    /* إطار ذهبي مضيء يعكس هيبة القانون */
     border-radius: 18px !important;
     padding: 16px 22px 10px 22px !important;
     text-align: center !important;
@@ -1186,58 +920,46 @@ body.body2::-webkit-scrollbar-thumb:hover {
     align-items: center !important;
     gap: 15px !important;
     animation: hostModalPopReveal 0.35s cubic-bezier(0.25, 1, 0.5, 1) forwards !important;
-    /* أنيميشن ظهور مبهج */
 }
 
-/* 4️⃣ تأثيرات الضغط الفيزيائي والتفاعل على شاشات اللمس للهواتف */
 #btn-host-cancel-exit,
 #btn-host-confirm-exit {
     transition: all 0.2s ease-in-out !important;
 }
 
-/* زر التراجع والعودة للموسوعة عند النقر */
 #btn-host-cancel-exit:active {
     background-color: rgba(213, 167, 92, 0.15) !important;
     transform: scale(0.96) !important;
 }
 
-/* زر تأكيد المغادرة والنسف الفعلي عند النقر */
 #btn-host-confirm-exit:active {
     background-color: #050a12 !important;
     border-color: #ff4d4d !important;
     transform: scale(0.96) !important;
 }
 
-/* 5️⃣ حركة الانبثاق والتقريب الفوري للمودال الزجاجي عند الفتح */
 @keyframes hostModalPopReveal {
     from {
         opacity: 0;
         transform: scale(0.9) translateY(12px);
     }
-
     to {
         opacity: 1;
         transform: scale(1) translateY(0);
     }
 }
 
-/* ==========================================================================
-   تنسيق لوحة التحكم والسيادة القضائية للقاضي (Judge Control Panel UI)
-   ========================================================================== */
 .judge-panel-container {
     position: fixed;
     bottom: 85px;
-    /* مستقر فوق شريط الأخبار ولوحة النقاط بدقة سينمائية */
     left: 50%;
     transform: translateX(-50%);
     width: 92%;
     max-width: 410px;
     display: flex;
     justify-content: space-between;
-    /* توزيع متباعد: زر شرق وزر غرب وبينهما العداد */
     align-items: center;
     background-color: rgba(13, 25, 43, 0.95);
-    /* -الكحلي الداكن الفخم اللامع */
     border: 2px solid var(--gold-glow);
     border-radius: 12px;
     padding: 10px 14px;
@@ -1245,7 +967,6 @@ body.body2::-webkit-scrollbar-thumb:hover {
     z-index: 999999 !important;
 }
 
-/* التنسيق الأساسي للأزرار القضائية */
 .btn-judge-action {
     flex: 1;
     max-width: 130px;
@@ -1259,7 +980,6 @@ body.body2::-webkit-scrollbar-thumb:hover {
     text-align: center;
 }
 
-/* 🎙️ زر الاستجواب الغربي باللون البني العتيق والحدود الذهبية */
 .btn-interrogate-style {
     background-color: var(--inner-vintage);
     border: 2px solid var(--gold-glow);
@@ -1272,7 +992,6 @@ body.body2::-webkit-scrollbar-thumb:hover {
     color: var(--shadow-black);
 }
 
-/* 🔨 زر إصدار الحكم الشرقي بالكتلة الذهبية الصلبة المضيئة */
 .btn-verdict-style {
     background-color: var(--gold-glow);
     border: 2px solid var(--gold-glow);
@@ -1286,7 +1005,6 @@ body.body2::-webkit-scrollbar-thumb:hover {
     color: var(--gold-glow);
 }
 
-/* العداد المركزي بين الزرين */
 .judge-counter-display {
     display: flex;
     flex-direction: column;
@@ -1305,7 +1023,6 @@ body.body2::-webkit-scrollbar-thumb:hover {
     text-shadow: 0 0 8px rgba(213, 167, 92, 0.4);
 }
 
-/* كلاس التجميد (Cooldown) المخصص لتعطيل الزر برمجياً ومنع السبام */
 .btn-judge-action:disabled {
     opacity: 0.4 !important;
     background-color: #1a2433 !important;
@@ -1316,22 +1033,16 @@ body.body2::-webkit-scrollbar-thumb:hover {
     box-shadow: none !important;
 }
 
-/* ==========================================================================
-   1. شريط الأدلة السينمائي المتحرك للمحاميين (Lawyer Evidence Ticker)
-   ========================================================================== */
 .lawyer-evidence-bar {
     position: fixed;
     bottom: 145px;
-    /* مستقر بدقة أعلى لوحة تحكم القاضي */
     left: 50%;
     transform: translateX(-50%);
     width: 92%;
     max-width: 410px;
     height: 40px;
     background-color: rgba(5, 10, 18, 0.95);
-    /* الأسود الحالك للغموض */
     border: 2px dashed var(--gold-glow);
-    /* حد مقطع بالذهبي يعكس التلميحات الجنائية */
     border-radius: 8px;
     z-index: 999998 !important;
     overflow: hidden;
@@ -1359,44 +1070,31 @@ body.body2::-webkit-scrollbar-thumb:hover {
     font-family: "Harmattan", system-ui, sans-serif;
     font-weight: 600;
     font-size: 1.15rem;
-    /* حجم مناسب لخط Harmattan لقراءة التلميحات */
     color: var(--text-white);
     padding-left: 80px;
-    /* تباعد كافٍ بين الأدلة */
     text-shadow: 0 2px 4px rgba(0, 0, 0, 0.8);
     transition: all 0.3s ease-in-out;
 }
 
-/* 🌟 أنيميشن الحركة اللانهائية للأدلة */
 @keyframes evidenceScrollRight {
     0% {
         transform: translate3d(0, 0, 0);
     }
-
     100% {
         transform: translate3d(100%, 0, 0);
     }
 }
 
-/* 🌟 السحر هنا: كلاس الكبح والتجميد والتوهج الذهبي للأدلة الجنائية المرتبطة بالمستجوب */
 .evidence-marquee.freeze-and-glow {
     animation-play-state: paused !important;
-    /* تجميد الحركة فوراً */
 }
 
 .evidence-marquee.freeze-and-glow span.active-evidence {
     color: var(--gold-glow) !important;
-    /* تحويل لون الدليل للذهبي المضيء */
     font-size: 1.25rem !important;
-    /* تكبير الخط ديناميكياً للتركيز */
     font-weight: 800 !important;
     text-shadow: 0 0 15px var(--gold-glow);
-    /* توهج وإشعاع ذهبي مرعب */
 }
-
-/* ==========================================================================
-   2. كروت الاعتراض القضائي القسري (Objection Cards)
-   ========================================================================== */
 
 .btn-objection-card:active:not(:disabled) {
     transform: scale(0.95);
@@ -1404,12 +1102,10 @@ body.body2::-webkit-scrollbar-thumb:hover {
     color: #050a12;
 }
 
-/* 🌟 أنيميشن وميض كرسي المحامي المعترض قسرياً عند الجميع لـ 30 ثانية */
 .court-seat-node.objection-glow-active {
     border-color: #ff5252 !important;
     box-shadow: 0 0 35px #ff5252 !important;
     transform: scale(1.22) !important;
-    /* تضخيم كرسي المحامي وسحق القاعة */
     animation: smoothPulseObjection 1s ease-in-out infinite alternate !important;
 }
 
@@ -1417,13 +1113,11 @@ body.body2::-webkit-scrollbar-thumb:hover {
     from {
         box-shadow: 0 0 20px rgba(255, 82, 82, 0.5);
     }
-
     to {
         box-shadow: 0 0 40px rgba(255, 82, 82, 0.9);
     }
 }
 
-/* كلاس الدليل الجنائي الفردي داخل المودال */
 .evidence-modal-item {
     background: #161c26;
     padding: 12px;
@@ -1431,46 +1125,34 @@ body.body2::-webkit-scrollbar-thumb:hover {
     margin: 0;
     line-height: 1.4;
     border-right: 4px solid var(--gold-glow);
-    /* حد جانبي ذهبي مضيء */
     color: var(--text-white);
     font-family: "Harmattan", sans-serif;
     font-size: 1.25rem;
     transition: all 0.35s cubic-bezier(0.25, 1, 0.5, 1);
 }
 
-/* 🌟 السحر هنا: كلاس التوهج والإشعاع الذهبي للدليل النشط المرتبط بالمستجوب حالياً */
 .evidence-modal-item.active-evidence-glow {
     color: var(--gold-glow) !important;
-    /* تحويل اللون للذهبي الفاخر */
     font-size: 1.4rem !important;
-    /* تضخم العبارة تلقائياً لجذب انتباه المحامي */
     font-weight: 800 !important;
     background: rgba(213, 167, 92, 0.1) !important;
-    /* خلفية ذهبية ناعمة */
     border-right-color: var(--text-white) !important;
-    /* قلب الحد الجانبي للأبيض */
     box-shadow: inset 0 0 15px rgba(213, 167, 92, 0.2);
     animation: smoothEvidencePulse 1s ease-in-out infinite alternate;
-    /* نبض ضوئي مستمر */
 }
 
 @keyframes smoothEvidencePulse {
     from {
         text-shadow: 0 0 4px var(--gold-glow);
     }
-
     to {
         text-shadow: 0 0 12px var(--gold-glow);
     }
 }
 
-/* ==========================================================================
-   تنسيق لوحة تحكم محامي المحكمة / الادعاء (Court Lawyer Panel)
-   ========================================================================== */
 #court-lawyer-decision-panel {
     position: fixed !important;
     bottom: 150px;
-    /* متموضع يسار الشاشة أسفل زر طلب الكلمة بدقة */
     left: 4%;
     z-index: 999999 !important;
     display: flex;
@@ -1478,7 +1160,6 @@ body.body2::-webkit-scrollbar-thumb:hover {
     gap: 8px;
 }
 
-/* التنسيق البرمي المباشر لزر تقديم المذكرة */
 .btn-court-lawyer-action {
     all: unset !important;
     background: linear-gradient(135deg, #161c26 0%, #423423 100%) !important;
@@ -1497,18 +1178,12 @@ body.body2::-webkit-scrollbar-thumb:hover {
     -webkit-tap-highlight-color: transparent;
 }
 
-/* تفاعل اللمس والاهتزاز الفيزيائي في شاشات الموبايل لمحامي المحكمة */
 .btn-court-lawyer-action:active {
     transform: scale(0.95) !important;
     background: var(--gold-glow, #d5a75c) !important;
     color: #050a12 !important;
-    /* يقلب لأسود الجريمة عند الضغط */
 }
 
-/* ==========================================================================
-   تنسيق المودال الثالث الحاسم (منصة حسم قرار محامي المحكمة)
-   ========================================================================== */
-/* تصميم أزرار الموافقة والرفض داخل شاشة القاضي */
 #btn-judge-accept-court {
     flex: 1;
     padding: 12px;
@@ -1547,7 +1222,6 @@ body.body2::-webkit-scrollbar-thumb:hover {
     color: #050a12;
 }
 
-/* تنسيق القوائم المنسدلة (Select) داخل المودال لتناسب سواد الغموض */
 #court-verdict-type,
 #court-target-player {
     width: 100%;
@@ -1584,11 +1258,8 @@ body.body2::-webkit-scrollbar-thumb:hover {
     width: calc(50% - 7.5px) !important;
     min-width: 140px !important;
 }
-/* ==========================================================================
-   0. الكلاس السيادي الجديد الخاص بصفحة اللوبي حصرياً (Body3 Core Layout)
-   ========================================================================== */
+
 body.body3 {
-    /* نقل تدرج الإضاءة الدائري الفخم من body2 لضمان عدم اختلاف المظهر */
     background: radial-gradient(
         circle,
         var(--inner-vintage) 0%,
@@ -1596,8 +1267,6 @@ body.body3 {
         var(--shadow-black) 100%
     ) !important;
     background-attachment: fixed !important;
-
-    /* 🌟 الحل الحاسم: قفل أبعاد شاشة اللوبي 100% ومنع تمدد الشاشة لأسفل */
     width: 100vw !important;
     height: 100vh !important;
     max-height: 100vh !important;
@@ -1606,11 +1275,6 @@ body.body3 {
     box-sizing: border-box !important;
 }
 
-/* ==========================================================================
-   1. ضبط وإجبار الساحة القضائية والكراسي على التوسط الرأسي الموحد
-   ========================================================================== */
-
-/* حاوية الساحة الكونية المطلقة */
 #court-arena {
     position: relative !important;
     width: 100vw !important;
@@ -1618,17 +1282,16 @@ body.body3 {
     max-height: 100vh !important;
     display: flex !important;
     justify-content: center !important;
-    align-items: center !important; /* إجبار كل ما بداخل الساحة على التوسط في السنتر */
+    align-items: center !important;
     overflow: hidden !important;
     box-sizing: border-box !important;
 }
 
-/* حاوية المقاعد والدوائر المركزية (توسيط رياضي حاد) */
 #seats-container {
     position: absolute !important;
     top: 50% !important;
     left: 50% !important;
-    transform: translate(-50%, -50%) !important; /* سنتر مطلق في منتصف الشاشة */
+    transform: translate(-50%, -50%) !important;
     width: 100% !important;
     height: 100% !important;
     display: flex !important;
@@ -1636,18 +1299,14 @@ body.body3 {
     align-items: center !important;
     pointer-events: auto;
 }
-/* ==========================================================================
-   الهيكلة المعمارية الصحيحة لمنصة القاضي بناءً على المخطط البصري الأخير
-   ========================================================================== */
 
-/* الحاوية والقاعدة الرئيسية للمنصة: تلتصق تماماً بحافة القاع وتنفرد بكامل العرض */
 body.body3 #judge-control-panel,
 body.body3 .judge-panel-container {
     position: fixed !important;
-    bottom: 0 !important; /* الالتصاق التام والقطعي بحافة قاع الصفحة */
+    bottom: 0 !important;
     left: 0 !important;
     right: 0 !important;
-    width: 100vw !important; /* الانفراد المطلق بكامل عرض الشاشة */
+    width: 100vw !important;
     max-width: 100vw !important;
     transform: none !important;
     background: linear-gradient(135deg, rgba(5, 10, 18, 0.98) 0%, rgba(22, 28, 38, 0.98) 100%) !important;
@@ -1655,27 +1314,24 @@ body.body3 .judge-panel-container {
     border-left: none !important;
     border-right: none !important;
     border-bottom: none !important;
-    border-radius: 14px 14px 0 0 !important; /* حواف دائرية علوية فقط لجمال الالتصاق */
-    padding: 14px 16px 20px 16px !important; /* مساحة واقية سفلية مريحة للموبايل */
+    border-radius: 14px 14px 0 0 !important;
+    padding: 14px 16px 20px 16px !important;
     box-shadow: 0 -8px 32px rgba(5, 10, 18, 0.85) !important;
-
-    /* تفعيل محرك الـ Flexbox مع الالتفاف التلقائي لفرز الصفوف الثلاثة */
     display: flex !important;
     flex-wrap: wrap !important;
     justify-content: space-between !important;
-    align-items: flex-start !important; /* محاذاة كافة عناصر الصف الأوسط لتبدأ من أعلى أفقياً */
-    gap: 12px 0 !important; /* تباعد رأسي 12 بكسل بين الصفوف، والأفقي محكوم بالنسب المئوية */
+    align-items: flex-start !important;
+    gap: 12px 0 !important;
     direction: rtl !important;
     box-sizing: border-box !important;
     z-index: 999999 !important;
 }
 
-/* ─── 1️⃣ الصف الأول (العلوي): زر استجواب لاعب (منفرد وبعرض قصير وممركز في المنتصف) ─── */
 body.body3 #btn-interrogate-toggle {
-    order: 1 !important; /* قذفه برمجياً ليكون في سقف المنصة كصف أول */
-    flex: 0 0 60% !important; /* 🌟 تحديد عرض قصير ومحكم بنسبة 60% فقط بناءً على طلبك */
+    order: 1 !important;
+    flex: 0 0 60% !important;
     width: 60% !important;
-    margin: 0 29% 0 20% !important; /* 🌟 هوامش جانبية 20% تجبر الزر القصير على التوسط الحاد في السنتر */
+    margin: 0 29% 0 20% !important;
     padding: 11px 0 !important;
     font-family: "Alexandria", sans-serif !important;
     font-weight: 700 !important;
@@ -1688,12 +1344,9 @@ body.body3 #btn-interrogate-toggle {
     text-align: center !important;
 }
 
-/* ─── 2️⃣ الصف الثاني (الأوسط): يجمع (الأسئلة، الرادار، العداد) متجاورين أفقياً بنفس المساحة ─── */
-
-/* أ. العنصر الأول يميناً: حاوية زر الأسئلة (كشف الشبهة) مع عدادها المدمج */
 body.body3 #judge-control-panel > div:nth-child(2) {
-    order: 2 !important; /* تثبيت الحاوية في الصف الثاني الأوسط */
-    flex: 0 0 31% !important; /* 🌟 حجز مساحة ثلث الصف بالملي بالتساوي مع جيرانه */
+    order: 2 !important;
+    flex: 0 0 31% !important;
     width: 31% !important;
     margin: 0 !important;
     display: flex !important;
@@ -1704,7 +1357,7 @@ body.body3 #judge-control-panel > div:nth-child(2) {
 }
 body.body3 #btn-judge-reveal-suspect {
     width: 100% !important;
-    height: 44px !important; /* توحيد الارتفاع الهندسي لجميع عناصر الصف الأوسط */
+    height: 44px !important;
     padding: 10px 0 !important;
     font-family: "Alexandria", sans-serif !important;
     font-weight: 700 !important;
@@ -1727,10 +1380,9 @@ body.body3 #judge-questions-remaining-counter {
     direction: rtl !important;
 }
 
-/* ب. العنصر الثاني في المنتصف: زر رادار الشبهات (اكتشف الشبهة) */
 body.body3 #btn-judge-radar-trigger {
-    order: 2 !important; /* تثبيت الزر في الصف الثاني الأوسط */
-    flex: 0 0 31% !important; /* 🌟 حجز مساحة ثلث الصف بالملي بالتساوي مع جيرانه */
+    order: 2 !important;
+    flex: 0 0 31% !important;
     width: 31% !important;
     height: 44px !important;
     margin: 0 !important;
@@ -1746,10 +1398,9 @@ body.body3 #btn-judge-radar-trigger {
     text-align: center !important;
 }
 
-/* ج. العنصر الثالث يساراً: صندوق عداد الاستجوابات البيضاوي القديم */
 body.body3 #judge-counter-wrapper-node {
-    order: 2 !important; /* تثبيت العداد في الصف الثاني الأوسط ليصطف يسار الرادار أفقياً */
-    flex: 0 0 31% !important; /* 🌟 حجز مساحة ثلث الصف بالملي بالتساوي مع جيرانه */
+    order: 2 !important;
+    flex: 0 0 31% !important;
     width: 31% !important;
     height: 44px !important;
     margin: 0 !important;
@@ -1779,10 +1430,9 @@ body.body3 #interrogation-count-number {
     text-shadow: 0 0 8px rgba(213, 167, 92, 0.4) !important;
 }
 
-/* ─── 4️⃣ الصف الثالث (القاع): زر إصدار الحكم ينفرد بالكامل بكامل العرض في القاع ─── */
 body.body3 #btn-verdict-trigger {
-    order: 3 !important; /* قذف زر الحكم برمجياً ليستقر وحيداً ومفروداً في الصف الثالث السفلي */
-    width: 100% !important; /* 🌟 الانفراد والاتساع الكامل بعرض المنصة لوحده في القاع */
+    order: 3 !important;
+    width: 100% !important;
     max-width: 100% !important;
     flex: 0 0 100% !important;
     padding: 12px 0 !important;
@@ -1798,7 +1448,6 @@ body.body3 #btn-verdict-trigger {
     box-sizing: border-box !important;
 }
 
-/* التنسيق العام الموحد لحدث النقر واللمس للأزرار في الموبايل */
 body.body3 #btn-interrogate-toggle:active,
 body.body3 #btn-judge-reveal-suspect:active,
 body.body3 #btn-judge-radar-trigger:active {
@@ -1812,7 +1461,6 @@ body.body3 #btn-verdict-trigger:active:not(:disabled) {
     color: var(--gold-glow, #d5a75c) !important;
 }
 
-/* 📱 تكييف كبح وتصغير خطوط المنصة المفرودة داخل استعلام الميديا لـ 541 بكسل فما دون */
 @media screen and (max-width: 541px) {
     body.body3 .judge-panel-container {
         padding: 10px 10px 16px 10px !important;
@@ -1835,24 +1483,16 @@ body.body3 #btn-verdict-trigger:active:not(:disabled) {
     }
 }
 
-/* ==========================================================================
-   2. تحديث استعلام الميديا كويري لشاشات الموبايل (Media Queries @ 541px)
-   ========================================================================== */
 @media screen and (max-width: 541px) {
-    /* نسف الهوامش والارتفاعات الزائدة التي كانت تدفع الساحة للأعلى */
     body.body3,
     #court-arena {
         overflow: hidden;
         margin-top: 0 !important;
         padding-top: 0 !important;
     }
-
-    /* 🌟 كبح وتصغير حجم الدائرة لتتوسط الشاشة الضيقة بنعومة وبدون خروج عن الحواف */
     body.body3 #seats-container {
         transform: translate(-50%, -50%) scale(0.82) !important;
     }
-
-    /* ضبط طاولة ميزان العدالة لتستقر في السنتر البصري تماماً */
     body.body3 #court-table {
         position: absolute !important;
         top: 50% !important;
@@ -1865,15 +1505,14 @@ body.body3 #btn-verdict-trigger:active:not(:disabled) {
     #court-arena {
         position: relative;
         width: 100vw !important;
-        height: 100vh !important; /* إجبار الارتفاع على أن يكون مساوياً للشاشة الحقيقية بالضبط */
+        height: 100vh !important;
         max-height: 100vh !important;
         display: flex !important;
         justify-content: center !important;
-        align-items: center !important; /* توسيط الدائرة والكراسي عمودياً بالملي في السنتر */
+        align-items: center !important;
         overflow: hidden !important;
         box-sizing: border-box !important;
     }
-    /* طاولة ميزان العدالة بالمنتصف */
     #court-table {
         position: absolute;
         top: 50%;
@@ -1897,12 +1536,11 @@ body.body3 #btn-verdict-trigger:active:not(:disabled) {
         font-weight: bold;
         text-align: center;
     }
-
     #seats-container {
         position: absolute !important;
         top: 50% !important;
         left: 50% !important;
-        transform: translate(-55%, -50%) !important; /* توسيط رياضي حاد في منتصف الشاشة الكونية */
+        transform: translate(-55%, -50%) !important;
         width: 100% !important;
         height: 100% !important;
         pointer-events: auto;
@@ -1910,8 +1548,6 @@ body.body3 #btn-verdict-trigger:active:not(:disabled) {
         justify-content: center !important;
         align-items: center !important;
     }
-
-    /* الكراسي أو المقاعد المتفاعلة بالتوزيع الدائري */
     .court-seat-node {
         position: absolute;
         width: 110px;
@@ -1931,40 +1567,32 @@ body.body3 #btn-verdict-trigger:active:not(:disabled) {
             transform 0.2s ease,
             border-color 0.2s ease;
     }
-
-    /* 1️⃣ إصلاح وتموضع حقيبة الأدلة وفصلها الشامل في الموبايل */
     #btn-evidence-bag-trigger {
         position: fixed !important;
-        top: 65px !important; /* رفع الحقيبة قليلاً للأعلى */
+        top: 65px !important;
         left: 4% !important;
         width: auto !important;
         height: auto !important;
-        z-index: 9999999 !important; /* صدارة مطلقة فوق الكراسي */
-        pointer-events: none !important; /* حظر اللمس عن الحاوية الشفافة المحيطة */
+        z-index: 9999999 !important;
+        pointer-events: none !important;
     }
-
-    /* إجبار الأزرار الداخلية لحقيبة الأدلة على استقبال اللمس الفوري */
     #evidence-bag-button-node,
     .btn-evidence-bag-custom-node {
-        pointer-events: auto !important; /* السماح المطلق بالضغط */
+        pointer-events: auto !important;
         cursor: pointer !important;
         display: block !important;
-        touch-action: manipulation !important; /* استجابة لمسية فائقة السرعة */
+        touch-action: manipulation !important;
         -webkit-tap-highlight-color: transparent !important;
     }
-
     .btn-objection-holder {
         position: fixed;
         top: 70px;
-        /* متموضع في الساحة العلوية لسهولة الوصول للمحامي */
         right: 5%;
         z-index: 999999 !important;
     }
-
     .btn-objection-card {
         background: linear-gradient(135deg, #1a1315 0%, #423423 100%);
         border: 2px solid #ff5252;
-        /* حد أحمر صارخ لكسر صمت القاعة ومجابهة القاضي */
         color: #ff5252;
         font-family: "Alexandria", sans-serif;
         font-weight: 700;
@@ -1978,16 +1606,12 @@ body.body3 #btn-verdict-trigger:active:not(:disabled) {
         align-items: center;
         gap: 6px;
     }
-
     #btn-end-trial {
-        /* التموضع أسفل الشاشة أو في لوحة القيادة */
-        display: none; /* يتم التحكم بالظهور برمجياً عبر الجافا سكريبت للأدمن فقط */
+        display: none;
         position: fixed;
         top: 20px;
-        right: 20px; /* متموضع في الزاوية اليسرى المقابلة للأزرار الأخرى */
-        z-index: 9999; /* في الصدارة دائماً فوق كل المقاعد والمودالات */
-
-        /* الأبعاد والتصميم الداخلي */
+        right: 20px;
+        z-index: 9999;
         padding: 12px 24px;
         background: linear-gradient(135deg, #1e1315 0%, #11090a 100%);
         color: #ff5252;
@@ -2001,14 +1625,10 @@ body.body3 #btn-verdict-trigger:active:not(:disabled) {
         box-shadow:
             0 4px 15px rgba(0, 0, 0, 0.5),
             inset 0 0 10px rgba(255, 82, 82, 0.1);
-
-        /* تنعيم الحركات الإضافية */
         transition: all 0.3s cubic-bezier(0.25, 1, 0.5, 1);
         backdrop-filter: blur(4px);
         -webkit-backdrop-filter: blur(4px);
     }
-
-    /* تأثير تمرير الماوس فوق الزر (Hover) */
     #btn-end-trial:hover {
         background: linear-gradient(135deg, #2d191c 0%, #1a0d0f 100%);
         color: #ff7373;
@@ -2018,68 +1638,46 @@ body.body3 #btn-verdict-trigger:active:not(:disabled) {
             0 6px 20px rgba(255, 82, 82, 0.25),
             inset 0 0 15px rgba(255, 82, 82, 0.2);
     }
-    /* ==========================================================================
-   التنسيق المستقل والمخصص لزر رادار الشبهات (Judge Radar Trigger UI)
-   ========================================================================== */
-
     #btn-judge-radar-trigger {
-        /* نسف أي تنسيقات افتراضية للمتصفح لضمان النقاء البصري */
         all: unset !important;
         box-sizing: border-box !important;
         top: 20px;
-        /* متموضع في الساحة العلوية لسهولة الوصول للمحامي */
         left: 4%;
-        /* الخلفية المتدرجة الفخمة (من الكحلي الداكن للبني العتيق) */
         background: linear-gradient(135deg, #161c26 0%, #423423 100%) !important;
-
-        /* الحدود والنصوص بلون الذهبي المضيء للمشروع */
         border: 2px solid var(--gold-glow, #d5a75c) !important;
         color: var(--gold-glow, #d5a75c) !important;
-
-        /* إعدادات الخط والوزن (الخط العريض للمشروع) */
         font-family: "Alexandria", sans-serif !important;
         font-weight: 700 !important;
         font-size: 0.8rem !important;
-
-        /* الحشو الداخلي والأبعاد */
         padding: 10px 14px !important;
         border-radius: 8px !important;
-        margin: 0 4px !important; /* تباعد أفقي لمنع الالتصاق بالعداد القضائي */
-
-        /* محاذاة النص والأيقونة في المنتصف تماماً */
+        margin: 0 4px !important;
         display: flex !important;
         align-items: center !important;
         justify-content: center !important;
         gap: 6px !important;
-
-        /* تأثيرات الظل والتوهج الذهبي الناعم */
         box-shadow: 0 4px 15px rgba(213, 167, 92, 0.25) !important;
         cursor: pointer !important;
         text-align: center !important;
         transition: all 0.2s ease-in-out !important;
     }
-
-    /* 2️⃣ إصلاح وتموضع رادار كشف الشبهات للمحامي وعزله تماماً لمنع حجب الأزرار */
     #btn-lawyer-radar-trigger-holder {
         position: fixed !important;
-        top: 120px !important; /* إزاحة رأسية آمنة أسفل الحقيبة تماماً لمنع التداخل */
+        top: 120px !important;
         left: 4% !important;
         width: auto !important;
         height: auto !important;
-        z-index: 9999998 !important; /* طبقة واقية تحت الحقيبة وفوق بقية الكراسي */
-        pointer-events: none !important; /* حظر اللمس عن الحاوية الشفافة المحيطة */
+        z-index: 9999998 !important;
+        pointer-events: none !important;
     }
-
-    /* إجبار زر رادار المحامي الداخلي على استقبال اللمس الفوري */
     #btn-lawyer-radar-trigger,
     .btn-court-lawyer-action {
-        pointer-events: auto !important; /* تفعيل اللمس للزر نفسه */
+        pointer-events: auto !important;
         cursor: pointer !important;
         display: block !important;
-        touch-action: manipulation !important; /* استجابة لمسية فائقة السرعة */
+        touch-action: manipulation !important;
         -webkit-tap-highlight-color: transparent !important;
     }
-
     #request-speak-trigger {
         position: fixed;
         top: 20px !important;
@@ -2102,36 +1700,28 @@ body.body3 #btn-verdict-trigger:active:not(:disabled) {
         gap: 8px;
         direction: rtl;
     }
-    /* ==========================================================================
-   تعديل حجم حقيبة الأدلة وتفعيل التمرير الداخلي (Evidence Modal Scroll UI)
-   ========================================================================== */
-
-    /* 1️⃣ استهداف حاوية المحتوى الداخلية للمودال عند فتحه لـ "حقيبة الأدلة" */
     #custom-alert-modal.modal-overlay-active #modal-alert-message {
-        max-height: 420px !important; /* تحديد أقصى ارتفاع ثابت للمحتوى لمنع التمدد */
-        overflow-y: auto !important; /* تفعيل السكرول الرأسي الداخلي لبقية الأدلة */
-        overflow-x: hidden !important; /* منع الاهتزاز أو السكرول الأفقي الجانبي */
-        padding: 8px 5px !important; /* توزيع مساحات داخلية ناعمة لعدم التزاحم */
+        max-height: 420px !important;
+        overflow-y: auto !important;
+        overflow-x: hidden !important;
+        padding: 8px 5px !important;
         width: 100% !important;
         display: flex !important;
         flex-direction: column !important;
-        gap: 12px !important; /* الحفاظ على التباعد المريح بين كروت الأدلة */
+        gap: 12px !important;
     }
-
-    /* 2️⃣ تخصيص وتنعيم السكرول بار الداخلي لحقيبة الأدلة ليطابق هوية اللعبة */
     #custom-alert-modal.modal-overlay-active #modal-alert-message::-webkit-scrollbar {
-        width: 5px !important; /* عرض نحيف جداً وأنيق يتناسب مع الموبايل */
+        width: 5px !important;
     }
-
     #custom-alert-modal.modal-overlay-active #modal-alert-message::-webkit-scrollbar-track {
-        background: rgba(5, 10, 18, 0.5) !important; /* أرضية المجرى بالأسود الحالك الشفاف */
+        background: rgba(5, 10, 18, 0.5) !important;
         border-radius: 3px !important;
     }
     #custom-alert-modal.modal-overlay-active #modal-alert-message::-webkit-scrollbar-thumb {
-        background: var(--gold-glow, #d5a75c) !important; /* لسان السكرول بالذهبي المضيء للمشروع */
+        background: var(--gold-glow, #d5a75c) !important;
         border-radius: 3px !important;
     }
     #custom-alert-modal.modal-overlay-active #modal-alert-message::-webkit-scrollbar-thumb:hover {
-        background: var(--text-white, #ffffff) !important; /* يضيء بالأبيض عند اللمس */
+        background: var(--text-white, #ffffff) !important;
     }
 }
