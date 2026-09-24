@@ -216,6 +216,75 @@
                 transform: scale(0.96);
                 background: rgba(213, 167, 92, 0.1);
             }
+
+            /* زر "حذف جميع الغرف" والحوار الخاص به */
+            .btn-delete-all {
+                width: 100%;
+                margin-top: 18px;
+                padding: 12px 0;
+                font-family: "Alexandria", sans-serif;
+                font-weight: 800;
+                font-size: 0.9rem;
+                color: #fff;
+                background: linear-gradient(180deg, #b30000 0%, #7a0000 100%);
+                border: 2px solid var(--gold-glow);
+                border-radius: 10px;
+                cursor: pointer;
+                box-shadow: 0 4px 14px rgba(139, 0, 0, 0.35);
+                transition: all 0.2s ease;
+            }
+            .btn-delete-all:active:not(:disabled) {
+                transform: scale(0.97);
+            }
+            .btn-delete-all:disabled {
+                opacity: 0.4;
+                cursor: not-allowed;
+                box-shadow: none;
+            }
+            .admin-status {
+                min-height: 22px;
+                margin: 10px 0 0;
+                font-family: "Alexandria", sans-serif;
+                font-size: 0.78rem;
+                font-weight: 700;
+                color: #6ee7a0;
+            }
+            .delete-all-label {
+                align-self: stretch;
+                text-align: right;
+                font-family: "Harmattan", sans-serif;
+                font-size: 1.25rem;
+                color: var(--text-white);
+            }
+            .delete-all-input {
+                width: 100%;
+                box-sizing: border-box;
+                padding: 10px;
+                background: var(--shadow-black);
+                color: var(--text-white);
+                border: 2px solid var(--gold-glow);
+                border-radius: 8px;
+                font-family: "Alexandria", sans-serif;
+                font-size: 1rem;
+                text-align: center;
+                outline: none;
+            }
+            .delete-all-input:focus {
+                border-color: #ff6b6b;
+            }
+            .delete-all-error {
+                min-height: 18px;
+                margin: 0;
+                font-family: "Alexandria", sans-serif;
+                font-size: 0.75rem;
+                font-weight: 700;
+                color: #ff8a8a;
+                line-height: 1.6;
+            }
+            .btn-confirm-delete:disabled {
+                opacity: 0.4;
+                cursor: not-allowed;
+            }
         </style>
     </head>
     <body>
@@ -235,6 +304,10 @@
                 </li>
             </ul>
 
+            <!-- حذف شامل لعقدة rooms بالكامل -->
+            <button id="btn-delete-all-rooms" class="btn-delete-all" type="button" disabled>🗑️ حذف جميع الغرف</button>
+            <p id="admin-status-line" class="admin-status" aria-live="polite"></p>
+
             <a href="rooms.html" class="btn-back">عودة للصفحة الرئيسية</a>
         </div>
 
@@ -250,6 +323,41 @@
                 <div class="modal-buttons-group">
                     <button id="btn-modal-cancel" class="btn-modal btn-cancel-delete">تراجع، إغلاق</button>
                     <button id="btn-modal-confirm" class="btn-modal btn-confirm-delete">نعم، حذف نهائي</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- مودال تأكيد الحذف الشامل (يتطلب كتابة كلمة التأكيد) -->
+        <div
+            id="delete-all-modal"
+            class="modal-overlay"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="delete-all-title">
+            <div class="confirm-alert-box">
+                <h2 id="delete-all-title" class="modal-title" style="color: #ff6b6b">⚠️ حذف شامل لكل الغرف</h2>
+                <div class="modal-message">
+                    سيتم حذف <b id="delete-all-count" style="color: var(--gold-glow)">0</b> غرفة نهائياً من السيرفر، وهي
+                    تشمل <b>غرف جميع المنشئين</b> وليست غرفك فقط <span id="delete-all-mine"></span>. سيُطرد كل اللاعبين
+                    المتواجدين فيها فوراً، ولا يمكن التراجع عن هذا الإجراء.
+                </div>
+                <label class="delete-all-label" for="delete-all-confirm-input">
+                    للتأكيد اكتب كلمة <b style="color: #ff6b6b">حذف</b> في الخانة:
+                </label>
+                <input
+                    id="delete-all-confirm-input"
+                    class="delete-all-input"
+                    type="text"
+                    autocomplete="off"
+                    placeholder="اكتب: حذف" />
+                <p id="delete-all-error" class="delete-all-error" role="alert"></p>
+                <div class="modal-buttons-group">
+                    <button id="btn-delete-all-cancel" class="btn-modal btn-cancel-delete" type="button">
+                        تراجع، إغلاق
+                    </button>
+                    <button id="btn-delete-all-confirm" class="btn-modal btn-confirm-delete" type="button" disabled>
+                        نعم، احذف الكل
+                    </button>
                 </div>
             </div>
         </div>
@@ -279,9 +387,70 @@
 
             let roomCodeToDelete = null; // مخزن مؤقت لكود الغرفة المستهدفة بالنسف
 
+            // ---------- عناصر وحالة الحذف الشامل ----------
+            const CONFIRM_WORD = "حذف";
+            const btnDeleteAll = document.getElementById("btn-delete-all-rooms");
+            const statusLine = document.getElementById("admin-status-line");
+            const deleteAllModal = document.getElementById("delete-all-modal");
+            const deleteAllCount = document.getElementById("delete-all-count");
+            const deleteAllMine = document.getElementById("delete-all-mine");
+            const deleteAllInput = document.getElementById("delete-all-confirm-input");
+            const deleteAllError = document.getElementById("delete-all-error");
+            const btnDeleteAllCancel = document.getElementById("btn-delete-all-cancel");
+            const btnDeleteAllConfirm = document.getElementById("btn-delete-all-confirm");
+
+            let totalRoomsInDb = 0; // كل الغرف في السيرفر
+            let myRoomsCount = 0; // الغرف المسجلة باسمي
+            let isDeletingAll = false; // قفل ضد الضغط المزدوج
+            let statusTimer = null;
+
+            const refreshDeleteAllButton = () => {
+                if (!btnDeleteAll) return;
+                btnDeleteAll.disabled = totalRoomsInDb === 0 || isDeletingAll;
+            };
+
+            const showStatus = (message) => {
+                if (!statusLine) return;
+                statusLine.textContent = message;
+                clearTimeout(statusTimer);
+                statusTimer = setTimeout(() => {
+                    statusLine.textContent = "";
+                }, 4500);
+            };
+
+            // إعادة الحوار لحالة السكون (Idle)
+            const resetDeleteAllDialog = () => {
+                isDeletingAll = false;
+                if (deleteAllInput) {
+                    deleteAllInput.value = "";
+                    deleteAllInput.disabled = false;
+                }
+                if (deleteAllError) deleteAllError.textContent = "";
+                if (btnDeleteAllConfirm) {
+                    btnDeleteAllConfirm.disabled = true;
+                    btnDeleteAllConfirm.textContent = "نعم، احذف الكل";
+                }
+                if (btnDeleteAllCancel) btnDeleteAllCancel.disabled = false;
+                refreshDeleteAllButton();
+            };
+
+            const closeDeleteAllDialog = () => {
+                if (isDeletingAll) return; // لا إغلاق أثناء تنفيذ الحذف
+                if (deleteAllModal) deleteAllModal.classList.remove("active");
+                resetDeleteAllDialog();
+            };
+
             if (mySecretUID && adminRoomsUl) {
                 // 1. الاستماع الحي والديناميكي لفرع الغرف بالكامل وعرض التابع لك
                 onValue(ref(db, "rooms"), (snapshot) => {
+                    // تحديث عدادات الحذف الشامل وحالة الزر مع كل تغيير حي في السيرفر
+                    totalRoomsInDb = snapshot.exists() ? snapshot.numChildren() : 0;
+                    myRoomsCount = 0;
+                    snapshot.forEach((child) => {
+                        if (child.val() && child.val().hostUID === mySecretUID) myRoomsCount++;
+                    });
+                    refreshDeleteAllButton();
+
                     if (snapshot.exists()) {
                         let listHTML = "";
                         let hasRooms = false;
@@ -330,6 +499,82 @@
                             deleteModal.classList.remove("active");
                             roomCodeToDelete = null;
                         }
+                    });
+                }
+
+                // ==========================================================================
+                // 5. الحذف الشامل: مسح عقدة rooms بالكامل بعملية remove واحدة
+                // ==========================================================================
+                if (btnDeleteAll) {
+                    btnDeleteAll.addEventListener("click", function () {
+                        if (totalRoomsInDb === 0 || isDeletingAll) return;
+                        deleteAllCount.textContent = totalRoomsInDb;
+                        deleteAllMine.textContent = myRoomsCount > 0 ? `(منها ${myRoomsCount} باسمك)` : "";
+                        resetDeleteAllDialog();
+                        deleteAllModal.classList.add("active");
+                        deleteAllInput.focus();
+                    });
+                }
+
+                // زر الحذف النهائي لا يُفعَّل إلا بعد كتابة كلمة التأكيد بالضبط
+                if (deleteAllInput) {
+                    deleteAllInput.addEventListener("input", function () {
+                        btnDeleteAllConfirm.disabled = isDeletingAll || deleteAllInput.value.trim() !== CONFIRM_WORD;
+                        deleteAllError.textContent = "";
+                    });
+                    deleteAllInput.addEventListener("keydown", function (e) {
+                        if (e.key === "Enter" && !btnDeleteAllConfirm.disabled) btnDeleteAllConfirm.click();
+                    });
+                }
+
+                if (btnDeleteAllCancel) btnDeleteAllCancel.addEventListener("click", closeDeleteAllDialog);
+
+                // النقر على الخلفية المعتمة أو زر Esc يلغي العملية (لا يؤكدها أبداً)
+                if (deleteAllModal) {
+                    deleteAllModal.addEventListener("click", function (e) {
+                        if (e.target === deleteAllModal) closeDeleteAllDialog();
+                    });
+                }
+                document.addEventListener("keydown", function (e) {
+                    if (e.key === "Escape") closeDeleteAllDialog();
+                });
+
+                if (btnDeleteAllConfirm) {
+                    btnDeleteAllConfirm.addEventListener("click", function () {
+                        if (isDeletingAll || deleteAllInput.value.trim() !== CONFIRM_WORD) return;
+
+                        isDeletingAll = true;
+                        const deletedCount = totalRoomsInDb;
+                        btnDeleteAllConfirm.disabled = true;
+                        btnDeleteAllCancel.disabled = true;
+                        deleteAllInput.disabled = true;
+                        btnDeleteAllConfirm.textContent = "جاري الحذف...";
+                        deleteAllError.textContent = "";
+
+                        remove(ref(db, "rooms"))
+                            .then(() => {
+                                console.log("[تطهير شامل ناجح]: تم مسح عقدة rooms بالكامل");
+                                isDeletingAll = false;
+                                deleteAllModal.classList.remove("active");
+                                resetDeleteAllDialog();
+                                // القائمة تتحدث تلقائياً عبر onValue وتعرض حالة "السيرفر فارغ"
+                                showStatus(`✅ تم حذف جميع الغرف (${deletedCount}) من السيرفر.`);
+                            })
+                            .catch((err) => {
+                                console.error("فشل الحذف الشامل:", err);
+                                isDeletingAll = false;
+                                deleteAllInput.disabled = false;
+                                btnDeleteAllCancel.disabled = false;
+                                btnDeleteAllConfirm.textContent = "نعم، احذف الكل";
+                                btnDeleteAllConfirm.disabled = deleteAllInput.value.trim() !== CONFIRM_WORD;
+                                const denied =
+                                    err &&
+                                    (err.code === "PERMISSION_DENIED" || /permission_denied/i.test(err.message || ""));
+                                deleteAllError.textContent = denied
+                                    ? "رفض Firebase العملية: راجع قواعد الأمان (Rules) للسماح بالحذف على المسار rooms."
+                                    : "تعذّر الحذف بسبب مشكلة في الشبكة، حاول مرة أخرى.";
+                                refreshDeleteAllButton();
+                            });
                     });
                 }
 
