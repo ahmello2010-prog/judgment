@@ -11,7 +11,9 @@ export default async function handler(req, res) {
     }
 
     const apiKey = process.env.GOOGLE_TTS_API_KEY;
-    if (!apiKey) return res.status(500).json({ error: "TTS key is not configured" });
+    if (!apiKey) {
+        return res.status(500).json({ error: "TTS key is not configured", detail: "GOOGLE_TTS_API_KEY is missing" });
+    }
 
     const body = typeof req.body === "string" ? safeParse(req.body) : req.body;
     const text = body && body.input && body.input.text;
@@ -45,7 +47,10 @@ export default async function handler(req, res) {
             }
         );
         const data = await upstream.json();
-        if (!upstream.ok) return res.status(upstream.status).json({ error: "Upstream TTS error" });
+        if (!upstream.ok) {
+            const detail = (data && data.error && data.error.message) || "Upstream TTS error";
+            return res.status(upstream.status).json({ error: "Upstream TTS error", detail });
+        }
         res.setHeader("Cache-Control", "no-store");
         return res.status(200).json({ audioContent: data.audioContent });
     } catch (err) {

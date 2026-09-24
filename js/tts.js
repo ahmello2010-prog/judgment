@@ -41,6 +41,7 @@ const state = {
 };
 
 const audioCache = new Map();
+let lastCloudError = null;
 const forbiddenSecrets = new Set();
 
 // ==========================================================================
@@ -148,7 +149,18 @@ async function requestAudio(url, body, parentSignal) {
             body: JSON.stringify(body),
             signal: ctrl.signal
         });
-        if (!res.ok) throw new Error("TTS HTTP " + res.status);
+        if (!res.ok) {
+            let detail = "";
+            try {
+                const errBody = await res.json();
+                detail = (errBody && (errBody.detail || errBody.error)) || "";
+            } catch (e) {
+                /* الاستجابة ليست JSON (مثلاً صفحة 404 من الاستضافة) */
+            }
+            const err = new Error("TTS HTTP " + res.status + (detail ? " — " + detail : ""));
+            err.httpStatus = res.status;
+            throw err;
+        }
         const data = await res.json();
         if (!data || !data.audioContent) throw new Error("TTS empty audio");
         return base64ToBlob(data.audioContent);
@@ -184,6 +196,7 @@ async function synthesizeChunk(text, signal) {
         } catch (err) {
             if (signal.aborted) throw err;
             lastErr = err;
+            lastCloudError = err;
         }
     }
     throw lastErr;
@@ -291,7 +304,7 @@ async function playChunks(chunks, token, signal, wrapper) {
     const pending = [];
     const fetchOrNull = (i) =>
         synthesizeChunk(chunks[i], signal).catch((err) => {
-            if (!signal.aborted) console.warn("⚠️ فشل المتحدث السحابي:", err && err.message);
+            if (!signal.aborted) console.error("❌ فشل المتحدث السحابي (Google TTS):", err && err.message);
             return null;
         });
 
@@ -320,7 +333,7 @@ async function playChunks(chunks, token, signal, wrapper) {
             useBrowser = true;
             if (!warned) {
                 warned = true;
-                showToast("تعذّر الاتصال بالمتحدث السحابي، جارٍ استخدام صوت المتصفح.");
+                showToast(describeCloudFailure(lastCloudError));
             }
         }
 
@@ -334,6 +347,40 @@ async function playChunks(chunks, token, signal, wrapper) {
         }
     }
 }
+
+function describeCloudFailure(err) {
+    const status = err && err.httpStatus;
+    const base = "تعذّر الوصول للمتحدث السحابي، جارٍ استخدام صوت المتصفح. ";
+    if (status === 404) return base + "(الخطأ 404: ملف api/tts.js غير منشور على الاستضافة)";
+    if (status === 405) return base + "(الخطأ 405: الاستضافة لا تنفّذ دوال الخادم)";
+    if (status === 500) return base + "(الخطأ 500: متغير GOOGLE_TTS_API_KEY غير مضبوط أو الدالة تعطلت)";
+    if (status === 403 || status === 400)
+        return base + "(الخطأ " + status + ": المفتاح مرفوض أو واجهة Text-to-Speech غير مفعّلة)";
+    if (status) return base + "(الخطأ " + status + ")";
+    if (err && err.name === "AbortError") return base + "(انتهت مهلة الاتصال)";
+    return base + "(افتح Console لمعرفة التفاصيل)";
+}
+
+// تشخيص سريع: اكتب ttsDiagnose() في Console المتصفح لتعرف سبب عدم عمل الصوت السحابي
+export async function diagnoseTts() {
+    const ctrl = new AbortController();
+    const report = {
+        proxyUrl: TTS_CONFIG.proxyUrl,
+        hasDirectKey: !!TTS_CONFIG.directApiKey,
+        voice: TTS_CONFIG.voiceName
+    };
+    try {
+        const blob = await synthesizeChunk("اختبار المتحدث الصوتي", ctrl.signal);
+        report.ok = true;
+        report.bytes = blob.size;
+    } catch (err) {
+        report.ok = false;
+        report.error = err && err.message;
+    }
+    console.log("🔎 تشخيص المتحدث الصوتي:", report);
+    return report;
+}
+if (HAS_DOM) window.ttsDiagnose = diagnoseTts;
 
 // ==========================================================================
 // 5️⃣ الدالة المركزية + الإيقاف الفوري
