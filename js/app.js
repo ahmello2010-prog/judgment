@@ -208,7 +208,7 @@ if (btnSearchJoin) {
     const resetJoinButtonState = () => {
         btnSearchJoin.disabled = false;
         btnSearchJoin.style.opacity = "1";
-        btnSearchJoin.textContent = "انضمام للغرفة";
+        btnSearchJoin.textContent = "انضمام";
     };
 
     btnSearchJoin.addEventListener("click", function () {
