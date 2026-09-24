@@ -720,7 +720,7 @@ body.body2::-webkit-scrollbar-thumb:hover {
     background-color: var(--inner-vintage, #1c2430);
     border: 3px solid var(--gold-glow, #d5a75c) !important;
     border-radius: 12px;
-    min-height: 180px;
+    min-height: 150px;
     display: flex;
     flex-direction: column;
     align-items: stretch;
@@ -809,7 +809,7 @@ body.body2::-webkit-scrollbar-thumb:hover {
     justify-content: center;
     font-family: "Alexandria", sans-serif;
     font-weight: 700;
-    font-size: 1.1rem;
+    font-size: 0.6rem;
     color: #ffffff;
     text-shadow:
         0 2px 8px #000000,
