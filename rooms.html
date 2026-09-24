@@ -2,9 +2,10 @@
 <html lang="ar" dir="rtl">
     <head>
         <meta charset="UTF-8" />
-        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+        <meta name="theme-color" content="#6b5236" />
         <title>محكمة الأدوار - إدارة الغرف</title>
-        <!-- الاحتفاظ بملف التنسيق الأصلي الخاص بك تماماً -->
+        <!-- الخطوط والقائمة الجانبية والمودال والشريط المتحرك تأتي من style.css ويُعاد تنسيقها هنا بشكل مسطّح -->
         <link rel="stylesheet" href="css/style.css" />
         <link rel="icon" type="image/png" href="/favicon-96x96.png" sizes="96x96" />
         <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
@@ -12,16 +13,309 @@
         <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
         <meta name="apple-mobile-web-app-title" content="المحكمة" />
         <link rel="manifest" href="/site.webmanifest" />
-    </head>
-    <body class="body2">
-        <!-- 1. القائمة الجانبية الأصلية الخاصة بك بدون تغيير مسمياتها -->
-        <button id="btn-hamburger" class="hamburger-menu">
-            <span class="bar"></span>
-            <span class="bar"></span>
-            <span class="bar"></span>
-        </button>
+        <style>
+            /* ==========================================================================
+               شاشة الغرف — أسلوب مسطّح هادئ (بدون توهّج): ظلال خفيفة وحدود رفيعة فقط
+               ========================================================================== */
+            :root {
+                --rm-gold: #c9a25a;
+                --rm-gold-soft: rgba(201, 162, 90, 0.35);
+                --rm-cream: #efe3c8;
+                --rm-muted: #a89f90;
+                --rm-surface: #34312d;
+                --rm-surface-2: #3f3423;
+                --rm-line: #5b5245;
+            }
+            html,
+            body.rm-body {
+                height: 100%;
+            }
+            body.rm-body {
+                margin: 0;
+                display: block;
+                overflow: hidden;
+                font-family: "Alexandria", system-ui, sans-serif;
+                background: #624c2c;
+                color: var(--rm-cream);
+            }
+            .rm-app {
+                position: relative;
+                display: flex;
+                flex-direction: column;
+                width: 100%;
+                max-width: 520px;
+                height: 100vh;
+                height: 100dvh;
+                margin: 0 auto;
+                background: linear-gradient(180deg, #111a2e 0%, #3e301d 50%, #05070c 100%);
 
-        <!-- القائمة الجانبية المنزلقة -->
+                box-shadow: 0 0 40px rgba(0, 0, 0, 0.4);
+            }
+            /* تنسيق الزر والأيقونة */
+            .settings-icon-btn {
+                background: transparent;
+                border: none;
+                cursor: pointer;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                padding: 8px;
+                outline: none;
+            }
+
+            .game-gear-icon {
+                width: 28px; /* يمكنك التحكم في حجم الترس من هنا */
+                height: 28px;
+                color: #e5c158; /* لون ذهبي نحاسي متناسق مع اللوجو الخاص بك */
+                transition: transform 0.4s ease; /* سرعة الدوران */
+            }
+
+            /* تأثير الدوران الفخم عند تمرير الماوس (Hover) */
+            .settings-icon-btn:hover .game-gear-icon {
+                transform: rotate(45deg);
+                color: #fff; /* يتحول للأبيض عند التمرير لمظهر تفاعلي */
+            }
+
+            /* ---------- الشريط العلوي ---------- */
+            .rm-header {
+                flex: none;
+                direction: ltr; /* القائمة يسار وعلامة الاستفهام يمين */
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                padding: calc(env(safe-area-inset-top, 0px) + 12px) 14px 12px;
+                background: linear-gradient(180deg, #7d5f3c 0%, #6b5236 100%);
+                border-bottom: 1px solid #4a3a26;
+            }
+            .rm-title {
+                margin: 0;
+                font-family: "Alexandria", sans-serif;
+                font-weight: 700;
+                font-size: 1.2rem;
+                color: var(--rm-cream);
+            }
+            /* زر الهمبرجر الأصلي (نفس الـ id) داخل الشريط بدل موضعه الثابت */
+            .rm-header .hamburger-menu {
+                position: static;
+                width: 40px;
+                height: 40px;
+                gap: 4px;
+                background: transparent;
+                border: 0;
+                border-radius: 8px;
+                box-shadow: none;
+            }
+            .rm-header .hamburger-menu .bar {
+                width: 22px;
+                height: 2.5px;
+                background-color: var(--rm-cream);
+            }
+            .rm-help {
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+                width: 36px;
+                height: 36px;
+                border: 1.5px solid rgba(239, 227, 200, 0.7);
+                border-radius: 50%;
+                color: var(--rm-cream);
+                text-decoration: none;
+                font-family: "Alexandria", sans-serif;
+                font-weight: 700;
+                font-size: 1.1rem;
+            }
+
+            /* القائمة الجانبية بنفس الأسلوب المسطّح */
+            body.rm-body #sidebar-drawer {
+                background-color: #262320;
+                border-right: 1px solid var(--rm-line);
+                box-shadow: 4px 0 14px rgba(0, 0, 0, 0.4);
+            }
+            body.rm-body .sidebar-link {
+                border-bottom: 1px solid rgba(201, 162, 90, 0.15);
+            }
+
+            /* ---------- المحتوى ---------- */
+            .rm-main {
+                flex: 1;
+                min-height: 0;
+                overflow-y: auto;
+                padding: 22px 16px 60px; /* مساحة أسفل للشريط المتحرك */
+            }
+            .rm-subtitle {
+                margin: 0 4px 18px;
+                font-family: "Harmattan", sans-serif;
+                font-weight: 600;
+                font-size: 1.35rem;
+                line-height: 1.5;
+                text-align: center;
+                color: var(--rm-muted);
+            }
+            .rm-list {
+                display: flex;
+                flex-direction: column;
+                gap: 14px;
+            }
+            .rm-row {
+                display: grid;
+                grid-template-columns: 1fr 1fr;
+                gap: 14px;
+            }
+
+            /* البطاقات */
+            .rm-card {
+                position: relative;
+                display: flex;
+                align-items: center;
+                gap: 14px;
+                padding: 12px;
+                background: var(--rm-surface);
+                border: 1px solid var(--rm-line);
+                border-radius: 14px;
+                box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+                cursor: pointer;
+                user-select: none;
+                -webkit-tap-highlight-color: transparent;
+                transition:
+                    background 0.18s ease,
+                    border-color 0.18s ease;
+            }
+            .rm-card:hover {
+                background: var(--rm-surface-2);
+                border-color: var(--rm-gold-soft);
+            }
+            .rm-card:active {
+                background: #2e2b27;
+            }
+            .rm-card:focus-visible {
+                outline: 2px solid var(--rm-gold);
+                outline-offset: 2px;
+            }
+
+            /* البطاقة الرئيسية: شريط ذهبي جانبي بدل التوهج */
+            .rm-card--primary {
+                padding-inline-start: 16px;
+                border-inline-start: 4px solid var(--rm-gold);
+            }
+            .rm-card--primary .rm-thumb {
+                width: 92px;
+                height: 92px;
+            }
+
+            /* بطاقتان متجاورتان بشكل عمودي */
+            .rm-card--tile {
+                flex-direction: column;
+                align-items: stretch;
+                gap: 10px;
+                padding: 10px 10px 14px;
+            }
+            .rm-card--tile .rm-thumb {
+                width: 100%;
+                aspect-ratio: 16 / 11;
+            }
+            .rm-card--tile .rm-card-body {
+                text-align: center;
+                align-items: center;
+            }
+
+            .rm-thumb {
+                flex: none;
+                overflow: hidden;
+                border-radius: 10px;
+                border: 1px solid var(--rm-line);
+                background: #26231f;
+            }
+            .rm-thumb img {
+                display: block;
+                width: 100%;
+                height: 100%;
+                object-fit: cover;
+            }
+            .rm-thumb--contain img {
+                object-fit: contain;
+                padding: 8px;
+            }
+
+            .rm-card-body {
+                flex: 1;
+                min-width: 0;
+                display: flex;
+                flex-direction: column;
+                gap: 4px;
+            }
+            .rm-card-title {
+                font-family: "Alexandria", sans-serif;
+                font-weight: 700;
+                font-size: 1.05rem;
+                color: var(--rm-cream);
+            }
+            .rm-card-desc {
+                font-family: "Harmattan", sans-serif;
+                font-weight: 600;
+                font-size: 1.1rem;
+                line-height: 1.35;
+                color: var(--rm-muted);
+            }
+            .rm-chevron {
+                flex: none;
+                font-family: "Alexandria", sans-serif;
+                font-size: 1.6rem;
+                line-height: 1;
+                color: var(--rm-gold);
+            }
+            .rm-badge {
+                align-self: center;
+                padding: 1px 8px;
+                border: 1px solid var(--rm-gold-soft);
+                border-radius: 20px;
+                font-family: "Alexandria", sans-serif;
+                font-weight: 600;
+                font-size: 0.6rem;
+                color: var(--rm-gold);
+            }
+
+            /* ---------- الشريط الإخباري المتحرك: مسطّح ---------- */
+            body.rm-body .cinematic-ticker-container {
+                bottom: 0;
+                height: 36px;
+                background-color: #211f1c;
+                border-top: 1px solid var(--rm-line);
+                border-bottom: 0;
+                box-shadow: none;
+            }
+            body.rm-body .ticker-marquee span {
+                color: var(--rm-cream);
+                text-shadow: none;
+            }
+
+            /* ---------- المودال الموحد ---------- */
+            body.rm-body #custom-alert-modal .modal-alert-box {
+                background: var(--rm-surface);
+                border: 1.5px solid var(--rm-gold);
+                border-radius: 14px;
+                box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+            }
+            body.rm-body #btn-modal-close {
+                background: var(--rm-gold);
+                color: #2a1f0e;
+                border: 0;
+                padding: 9px 26px;
+                font-family: "Alexandria", sans-serif;
+                font-weight: 700;
+                font-size: 0.9rem;
+                border-radius: 10px;
+                cursor: pointer;
+            }
+            body.rm-body #btn-modal-close:active {
+                transform: scale(0.97);
+            }
+        </style>
+    </head>
+    <body class="rm-body">
+        <!-- الحاوية المخفية الأصلية (تبقى كما هي) -->
+        <canvas id="courtCanvas" width="500" height="500" style="display: none"></canvas>
+
+        <!-- القائمة الجانبية المنزلقة (نفس المسميات الأصلية) -->
         <div id="sidebar-drawer" class="sidebar-drawer-hidden">
             <div class="sidebar-content">
                 <h3 id="sidebar-title">القائمة الجانبية</h3>
@@ -30,51 +324,70 @@
                 <a href="admin.html" class="sidebar-link" style="color: white; font-weight: bold">سجل الغرف</a>
             </div>
         </div>
-        <canvas id="courtCanvas" width="500" height="500" style="display: none"></canvas>
-        <!-- 2. حاوية اللوجو المصغّر في الأعلى -->
 
-        <!-- 3. الحاوية الرئيسية (نفس الكلاس القديم بتاعك تماماً عشان التنسيق ميتوهش) -->
-        <div class="room-container">
-            <h2 class="rooms-subtitle">اختر إنشاء جولة جديدة أو انضم لغرفة أصدقائك لبدء المحاكمة</h2>
+        <div class="rm-app">
+            <header class="rm-header">
+                <button
+                    id="btn-hamburger"
+                    class="hamburger-menu settings-icon-btn"
+                    type="button"
+                    aria-label="الإعدادات">
+                    <svg
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="2"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        class="game-gear-icon">
+                        <path
+                            d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.1a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"></path>
+                        <circle cx="12" cy="12" r="3"></circle>
+                    </svg>
+                </button>
 
-            <!-- 🔥 شبكة المربعات الثلاثة المطاطية الجديدة مدمجة بداخل حاويتك الأصلية -->
-            <div
-                class="rooms-grid-container"
-                style="
-                    display: grid;
-                    grid-template-columns: repeat(3, 1fr);
-                    gap: 20px;
-                    width: 100%;
-                    max-width: 800px;
-                    margin: 0 auto;
-                    padding: 10px;
-                ">
-                <!-- المربع الأول: إنشاء غرفة -->
-                <div class="room-grid-card" id="card-create-room">
-                    <div class="card-image-holder">
-                        <img src="img/create.jpg" alt="إنشاء غرفة" />
+                <h1 class="rm-title">محكمة الأدوار</h1>
+                <a href="guide.html" class="rm-help" aria-label="دليل المستخدم">?</a>
+            </header>
+
+            <main class="rm-main">
+                <p class="rm-subtitle">اختر إنشاء جولة جديدة أو انضم لغرفة أصدقائك لبدء المحاكمة</p>
+
+                <div class="rm-list">
+                    <!-- إنشاء غرفة -->
+                    <div class="rm-card rm-card--primary" id="card-create-room" role="button" tabindex="0">
+                        <div class="rm-thumb"><img src="img/create.jpg" alt="إنشاء غرفة" /></div>
+                        <div class="rm-card-body">
+                            <span class="rm-card-title">إنشاء غرفة</span>
+                            <span class="rm-card-desc">ابدأ محاكمة جديدة وشارك كود الغرفة مع أصدقائك.</span>
+                        </div>
+                        <span class="rm-chevron" aria-hidden="true">‹</span>
                     </div>
-                    <span class="card-caption">إنشاء غرفة</span>
-                </div>
 
-                <div class="room-grid-card" id="card-join-room">
-                    <div class="card-image-holder">
-                        <img src="img/join.jpg" alt="انضمام لغرفة" />
-                    </div>
-                    <span class="card-caption">انضمام لغرفة</span>
-                </div>
+                    <div class="rm-row">
+                        <!-- انضمام لغرفة -->
+                        <div class="rm-card rm-card--tile" id="card-join-room" role="button" tabindex="0">
+                            <div class="rm-thumb"><img src="img/join.jpg" alt="انضمام لغرفة" /></div>
+                            <div class="rm-card-body">
+                                <span class="rm-card-title">انضمام لغرفة</span>
+                                <span class="rm-card-desc">أدخل كود صديقك وادخل الجلسة.</span>
+                            </div>
+                        </div>
 
-                <!-- المربع الثالث: لعب أوف لاين -->
-                <div class="room-grid-card" id="card-offline-play">
-                    <div class="card-image-holder1">
-                        <img src="img/off.png" alt="لعب أوف لاين" />
+                        <!-- لعب أوف لاين -->
+                        <div class="rm-card rm-card--tile" id="card-offline-play" role="button" tabindex="0">
+                            <div class="rm-thumb rm-thumb--contain"><img src="img/off.png" alt="لعب أوف لاين" /></div>
+                            <div class="rm-card-body">
+                                <span class="rm-card-title">لعب أوف لاين</span>
+                                <span class="rm-badge">قريباً</span>
+                            </div>
+                        </div>
                     </div>
-                    <span class="card-caption">لعب أوف لاين</span>
                 </div>
-            </div>
+            </main>
         </div>
 
-        <!-- 4. نافذة الإنذارات والمودال الموحد (نفس الـ ID المعتمد في السكريبت) -->
+        <!-- نافذة الإنذارات والمودال الموحد (نفس الـ ID المعتمد في السكريبت) -->
         <div id="custom-alert-modal" class="modal-overlay-hidden">
             <div class="modal-alert-box">
                 <h3 id="modal-alert-title">تنبيه قضائي</h3>
@@ -82,7 +395,8 @@
                 <button id="btn-modal-close">حسناً</button>
             </div>
         </div>
-        <!-- شريط الأخبار السينمائي المتحرك والمثبت أسفل الواجهة -->
+
+        <!-- شريط الأخبار المتحرك المثبت أسفل الواجهة -->
         <div class="cinematic-ticker-container">
             <div class="ticker-text-wrapper">
                 <div class="ticker-marquee">
@@ -98,7 +412,7 @@
                         مريحة</span
                     >
                 </div>
-                <!-- تكرار نفس الكتلة بالظبط وراءها مباشرة لملء الفراغ ومنع اختفاء الشريط -->
+                <!-- تكرار نفس الكتلة لملء الفراغ ومنع اختفاء الشريط -->
                 <div class="ticker-marquee">
                     <span>اجتمع مع أصدقائك أو أحبابك لتحظى بتجربة لعب مميزة</span>
                     <span
@@ -115,7 +429,19 @@
             </div>
         </div>
 
-        <!-- 5. استدعاء ملف الجافا سكريبت الموحد -->
+        <script>
+            // تفعيل البطاقات بلوحة المفاتيح (Enter / Space) — النقر نفسه يعالجه app.js
+            document.querySelectorAll(".rm-card").forEach(function (card) {
+                card.addEventListener("keydown", function (e) {
+                    if (e.key === "Enter" || e.key === " ") {
+                        e.preventDefault();
+                        card.click();
+                    }
+                });
+            });
+        </script>
+
+        <!-- استدعاء ملف الجافا سكريبت الموحد -->
         <script type="module" src="js/app.js"></script>
     </body>
 </html>
