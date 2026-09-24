@@ -440,6 +440,18 @@ html {
     align-items: center;
     text-align: center;
 }
+.room-container {
+    overflow: hidden;
+    width: 100%;
+    max-width: 450px;
+    padding: 20px;
+    transform: translatey(80px);
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    align-items: center;
+    text-align: center;
+}
 
 .logo-image-box {
     width: 110px;
