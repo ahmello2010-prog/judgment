@@ -10,10 +10,10 @@
 // ==========================================================================
 
 export const TTS_CONFIG = {
-    // الموصى به: وسيط خادمي (api/tts.js) يخفي مفتاح Google عن المتصفح.
-    proxyUrl: "/api/tts",
-    // بديل مباشر (اختياري): مفتاح مقيّد بنطاق موقعك وبواجهة Text-to-Speech فقط + حد استهلاك في Google Cloud.
-    directApiKey: "",
+    // وسيط خادمي اختياري (api/tts.js). اتركه فارغاً لاستخدام المفتاح المباشر بدون باك اند.
+    proxyUrl: "",
+    // 🔑 ضع مفتاح Google Cloud هنا (بين علامتي التنصيص) للاتصال المباشر بدون باك اند.
+    directApiKey: "AIzaSyDFB8qTw1Zri54YJ_xF1awzEWbYCYEgzOg",
     directEndpoint: "https://texttospeech.googleapis.com/v1/text:synthesize",
     languageCode: "ar-XA",
     // أصوات عربية WaveNet: A/D أنثوية، B/C ذكورية. (Chirp3-HD متاحة أيضاً مثل ar-XA-Chirp3-HD-Charon)
@@ -183,7 +183,11 @@ async function synthesizeChunk(text, signal) {
     if (TTS_CONFIG.directApiKey) {
         endpoints.push(`${TTS_CONFIG.directEndpoint}?key=${encodeURIComponent(TTS_CONFIG.directApiKey)}`);
     }
-    if (endpoints.length === 0) throw new Error("no TTS endpoint configured");
+    if (endpoints.length === 0) {
+        const err = new Error("لم يُضبط directApiKey في TTS_CONFIG");
+        err.code = "NO_KEY";
+        throw err;
+    }
 
     const body = buildRequestBody(text);
     let lastErr = null;
@@ -351,6 +355,7 @@ async function playChunks(chunks, token, signal, wrapper) {
 function describeCloudFailure(err) {
     const status = err && err.httpStatus;
     const base = "تعذّر الوصول للمتحدث السحابي، جارٍ استخدام صوت المتصفح. ";
+    if (err && err.code === "NO_KEY") return base + "(لم يُضع مفتاح Google في TTS_CONFIG.directApiKey)";
     if (status === 404) return base + "(الخطأ 404: ملف api/tts.js غير منشور على الاستضافة)";
     if (status === 405) return base + "(الخطأ 405: الاستضافة لا تنفّذ دوال الخادم)";
     if (status === 500) return base + "(الخطأ 500: متغير GOOGLE_TTS_API_KEY غير مضبوط أو الدالة تعطلت)";
