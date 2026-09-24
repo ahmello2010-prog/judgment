@@ -2845,9 +2845,9 @@ function injectLawyerActionControls(
                 directHTML += `</div></div>`;
 
                 document.getElementById("modal-alert-message").innerHTML = directHTML;
-                // 🎧 الأدلة خاصة بالقاضي والمحامين: تُقرأ فقط بعد تأكيد السماعات
+                // 🔊 قراءة الأدلة مباشرة بدون نافذة تحذير
                 mountVoiceControlsAll(document.getElementById("modal-alert-message"), ".evidence-modal-item", {
-                    kind: "private"
+                    kind: "public"
                 });
                 modal.style.setProperty("display", "flex", "important");
                 modal.className = "modal-overlay-active";
@@ -2923,7 +2923,7 @@ function injectLawyerActionControls(
                     itemsHTML += `<p class="${glowClass}">${item.text}</p>`;
                 });
                 resultsArea.innerHTML = itemsHTML;
-                mountVoiceControlsAll(resultsArea, ".evidence-modal-item", { kind: "private" });
+                mountVoiceControlsAll(resultsArea, ".evidence-modal-item", { kind: "public" });
             });
 
             modal.style.setProperty("display", "flex", "important");
@@ -3438,9 +3438,9 @@ function renderImprovisedGuidance(responseType, promptData) {
         </div>
     `;
 
-    // 🎧 التوجيه مشتق من المصلحة السرية، فهو نص خاص: لا يُنطق إلا بعد تأكيد السماعات (والنص المنطوق لا يذكر السر)
+    // 🔊 النص المنطوق للتوجيه لا يتضمن المصلحة السرية ولا اسم الجريمة الجانبية إطلاقاً
     mountVoiceControls(document.getElementById("improv-guidance-text"), {
-        kind: "private",
+        kind: "public",
         getText: () => guidance.speechText
     });
 

@@ -4,9 +4,8 @@
 // ==========================================================================
 // قواعد السرية (مفروضة برمجياً وليست مجرد اتفاق):
 //  1) kind: "secret"  → مرفوض دائماً ولا يُبنى له زر أصلاً (المصلحة السرية لا تُقرأ أبداً).
-//  2) kind: "private" → لا يُقرأ إلا بعد تأكيد صريح بوضع السماعات.
-//  3) kind: "public"  → يُقرأ مباشرة (القصة العلنية، وصف القضية، الأسئلة المبثوثة للجميع).
-//  4) حارس إضافي: أي نص يتضمن المصلحة السرية للاعب الحالي يُمنع نطقه حتى لو مُرّر خطأً.
+//  2) أي نوع آخر (القصة العلنية، وصف القضية، الأسئلة، الأدلة، التوجيه) → يُقرأ مباشرة بدون نوافذ تحذير.
+//  3) حارس إضافي: أي نص يتضمن المصلحة السرية للاعب الحالي يُمنع نطقه حتى لو مُرّر خطأً.
 // ==========================================================================
 
 export const TTS_CONFIG = {
@@ -153,7 +152,9 @@ async function requestAudio(url, body, parentSignal) {
             let detail = "";
             try {
                 const errBody = await res.json();
-                detail = (errBody && (errBody.detail || errBody.error)) || "";
+                const rawErr = errBody && (errBody.detail || errBody.error);
+                // Google ترجع { error: { code, message, status } } بينما وسيطنا يرجع نصاً
+                detail = typeof rawErr === "object" && rawErr ? rawErr.message || rawErr.status || "" : rawErr || "";
             } catch (e) {
                 /* الاستجابة ليست JSON (مثلاً صفحة 404 من الاستضافة) */
             }
@@ -410,12 +411,6 @@ export async function speakText(rawText, options = {}) {
 
     stopSpeech(); // إلغاء أي كلام سابق قبل أي شيء
 
-    if (kind === "private") {
-        const confirmed = await confirmHeadphones();
-        if (!confirmed) return false;
-        stopSpeech();
-    }
-
     primeAudioElement();
 
     const token = ++state.token;
@@ -500,19 +495,10 @@ function injectStyles() {
         .tts-btn[disabled]{opacity:.6;cursor:progress}
         .tts-play[data-active="true"]{background:var(--gold-glow,#d5a75c);color:var(--shadow-black,#050a12);animation:ttsPulse 1.4s ease-in-out infinite}
         .tts-stop{border-color:#ff5252;color:#ff5252}
-        .tts-note{flex-basis:100%;margin:0;font-family:'Harmattan',sans-serif;font-size:1rem;color:#e2cba5;line-height:1.4}
-        .tts-compact{margin:6px 0 0;flex-basis:100%}
+                .tts-compact{margin:6px 0 0;flex-basis:100%}
         .tts-compact .tts-btn{font-size:.62rem;padding:6px 9px}
         @keyframes ttsPulse{0%,100%{box-shadow:0 0 0 0 rgba(213,167,92,.5)}50%{box-shadow:0 0 0 6px rgba(213,167,92,0)}}
         .tts-toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);max-width:88%;z-index:2147483600;background:rgba(5,10,18,.96);border:2px solid var(--gold-glow,#d5a75c);color:#fff;font-family:'Alexandria',sans-serif;font-size:.8rem;font-weight:600;line-height:1.7;padding:10px 16px;border-radius:10px;text-align:center;direction:rtl;box-shadow:0 6px 24px rgba(0,0,0,.6)}
-        .tts-overlay{position:fixed;inset:0;background:rgba(5,10,18,.9);display:flex;align-items:center;justify-content:center;z-index:2147483500;direction:rtl}
-        .tts-dialog{width:88%;max-width:380px;background:var(--inner-vintage,#423423);border:3px solid var(--gold-glow,#d5a75c);border-radius:16px;padding:26px 20px;text-align:center;box-shadow:0 15px 40px rgba(0,0,0,.7);display:flex;flex-direction:column;gap:14px;align-items:center}
-        .tts-dialog h3{margin:0;font-family:'Alexandria',sans-serif;font-size:1.2rem;font-weight:800;color:var(--gold-glow,#d5a75c)}
-        .tts-dialog p{margin:0;font-family:'Harmattan',sans-serif;font-size:1.3rem;line-height:1.5;color:#fff}
-        .tts-dialog-row{display:flex;gap:10px;width:100%}
-        .tts-dialog-row button{flex:1;padding:10px 6px;border-radius:10px;font-family:'Alexandria',sans-serif;font-weight:700;font-size:.8rem;cursor:pointer;-webkit-tap-highlight-color:transparent}
-        .tts-dialog-ok{background:var(--gold-glow,#d5a75c);color:#050a12;border:2px solid var(--gold-glow,#d5a75c)}
-        .tts-dialog-cancel{background:transparent;color:var(--gold-glow,#d5a75c);border:2px solid var(--gold-glow,#d5a75c)}
     `;
     document.head.appendChild(style);
 }
@@ -550,41 +536,6 @@ function showToast(message) {
     toastTimer = setTimeout(() => el.remove(), 3800);
 }
 
-function confirmHeadphones() {
-    return new Promise((resolve) => {
-        injectStyles();
-        const existing = document.getElementById("tts-headphones-overlay");
-        if (existing) existing.remove();
-
-        const overlay = document.createElement("div");
-        overlay.id = "tts-headphones-overlay";
-        overlay.className = "tts-overlay";
-        overlay.innerHTML = `
-            <div class="tts-dialog" role="alertdialog" aria-modal="true">
-                <h3>🎧 نص خاص — السماعات أولاً</h3>
-                <p>هذا النص خاص بك وحدك. ضع سماعات الأذن قبل التشغيل حتى لا يسمعه بقية الحاضرين في الغرفة.</p>
-                <div class="tts-dialog-row">
-                    <button type="button" class="tts-dialog-cancel">إلغاء</button>
-                    <button type="button" class="tts-dialog-ok">وضعتُ السماعات، شغّل</button>
-                </div>
-            </div>`;
-        const finish = (value) => {
-            overlay.remove();
-            resolve(value);
-        };
-        overlay.querySelector(".tts-dialog-ok").addEventListener("click", (e) => {
-            e.stopPropagation();
-            primeAudioElement(); // لمسة مستخدم صريحة لفتح قفل الصوت على الجوال
-            finish(true);
-        });
-        overlay.querySelector(".tts-dialog-cancel").addEventListener("click", (e) => {
-            e.stopPropagation();
-            finish(false);
-        });
-        document.body.appendChild(overlay);
-    });
-}
-
 const mounted = new WeakMap();
 
 function readTargetText(targetEl, options) {
@@ -611,13 +562,12 @@ export function mountVoiceControls(targetEl, options = {}) {
     wrapper.dataset.ttsKind = kind;
     wrapper.innerHTML = `
         <button type="button" class="tts-btn tts-play" aria-label="تشغيل المتحدث الصوتي">
-            <span aria-hidden="true">${kind === "private" ? "🎧" : "🔊"}</span>
+            <span aria-hidden="true">🔊</span>
             <span class="tts-play-label">تشغيل المتحدث الصوتي</span>
         </button>
         <button type="button" class="tts-btn tts-stop" aria-label="إيقاف الصوت">
             <span aria-hidden="true">⏹</span><span>إيقاف</span>
         </button>
-        ${kind === "private" ? '<p class="tts-note">🎧 نص خاص: سيُطلب منك تأكيد وضع السماعات قبل التشغيل.</p>' : ""}
     `;
 
     const entry = { wrapper, options };
