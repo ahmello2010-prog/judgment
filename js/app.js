@@ -1231,14 +1231,22 @@ function renderCircularSeats(playersList, assignments, gameState) {
                         // تنظيف اللوحة نفسها فقط لمرة واحدة عند البناء
                         judgePanel.innerHTML = "";
 
-                        // 1. زر استجواب لاعب (الزر الأصلي المستقر)
+                        // 1. زر الاستجواب التقليدي (اختيار كرسي مباشرة)
                         const btnToggle = document.createElement("button");
                         btnToggle.id = "btn-interrogate-toggle";
                         btnToggle.className = "btn-judge-action btn-interrogate-style";
                         btnToggle.textContent = isInterrogatingMode ? "اختر كرسياً..." : "استجواب لاعب";
                         judgePanel.appendChild(btnToggle);
 
-                        // 🌟 شرط الـ 3 و 4 لاعبين لحقن أدوات الرادار والكشف الاستكشافية المحدثة
+                        // 2. زر "الأسئلة" — نفس زر المودال الحقيقي لاختيار المستجوب.
+                        // يوضع هنا من البداية بدل الزر القديم + عداده، والوظيفة تُربط به أسفل الدالة.
+                        const btnJudgeQuestions = document.createElement("button");
+                        btnJudgeQuestions.id = "unified-questions-button-node";
+                        btnJudgeQuestions.className = "btn-judge-action btn-interrogate-style";
+                        btnJudgeQuestions.textContent = "🗨️ الأسئلة";
+                        judgePanel.appendChild(btnJudgeQuestions);
+
+                        // 🌟 شرط الـ 3 و 4 لاعبين لحقن أدوات الرادار
                         if (playersList.length < 5) {
                             // زر رادار الشبهات فقط. زر "الأسئلة" الذي يفتح مودال اختيار المستجوب
                             // يتم تركيبه لاحقاً داخل لوحة القاضي نفسها.
@@ -2913,54 +2921,59 @@ function injectLawyerActionControls(
     // 🌟 [الميكانيكية الموحدة الجديدة]: زر "الأسئلة" لكل أفراد المحكمة (قاضٍ/دفاع/ادعاء)
     // عند الضغط عليه يظهر مودال باختيار لاعب مستهدف أولاً، ثم عدد الأسئلة المخصصة له تحديداً، ثم زر سحب سؤال عشوائي
     // ==========================================================================
-    if (
-        (isJudgeMe || myRoleCard.role_type === "lawyer") &&
-        gameState.caseId &&
-        !document.getElementById("unified-questions-button-node")
-    ) {
+    if ((isJudgeMe || myRoleCard.role_type === "lawyer") && gameState.caseId) {
+        const isJudgeQuestionButtonAlreadyInPanel =
+            isJudgeMe && document.getElementById("unified-questions-button-node");
         const questionsHolder = document.createElement("div");
         questionsHolder.id = "btn-unified-questions-trigger-holder";
         questionsHolder.style.cssText =
             "position: fixed; top: 170px; left: 4%; z-index: 9999997 !important; pointer-events: none !important;";
 
-        const btnQuestions = document.createElement("button");
-        btnQuestions.id = "unified-questions-button-node";
+        const btnQuestions = isJudgeQuestionButtonAlreadyInPanel
+            ? isJudgeQuestionButtonAlreadyInPanel
+            : document.createElement("button");
 
-        if (isJudgeMe) {
-            // نفس زر الأسئلة الذي يفتح مودال اختيار المستجوب، لكن داخل لوحة القاضي.
-            btnQuestions.className = "btn-judge-action btn-interrogate-style";
-            btnQuestions.textContent = "🗨️ الأسئلة";
-        } else {
-            // الدفاع/الادعاء يحتفظان بالزر العائم الحالي كما هو.
-            btnQuestions.className = "btn-unified-questions-node";
-            btnQuestions.style.cssText = `all: unset !important; background: linear-gradient(135deg, #161c26 0%, #423423 100%) !important; border: 2px solid var(--gold-glow, #d5a75c) !important; color: var(--gold-glow, #d5a75c) !important; font-family: 'Alexandria', sans-serif !important; font-weight: 700 !important; font-size: 0.69rem !important; padding: 10px 14px !important; border-radius: 8px !important; cursor: pointer !important; display: flex !important; align-items: center !important; justify-content: center !important; gap: 6px !important; box-shadow: 0 4px 15px rgba(213, 167, 92, 0.25) !important; box-sizing: border-box !important; text-align: center !important; transition: all 0.2s ease-in-out !important; pointer-events: auto !important; -webkit-tap-highlight-color: transparent !important; touch-action: manipulation !important;`;
-            btnQuestions.textContent = "🗨️ الأسئلة";
+        if (!isJudgeQuestionButtonAlreadyInPanel) {
+            btnQuestions.id = "unified-questions-button-node";
+            if (isJudgeMe) {
+                btnQuestions.className = "btn-judge-action btn-interrogate-style";
+                btnQuestions.textContent = "🗨️ الأسئلة";
+            } else {
+                // الدفاع/الادعاء يحتفظان بالزر العائم الحالي كما هو.
+                btnQuestions.className = "btn-unified-questions-node";
+                btnQuestions.style.cssText = `all: unset !important; background: linear-gradient(135deg, #161c26 0%, #423423 100%) !important; border: 2px solid var(--gold-glow, #d5a75c) !important; color: var(--gold-glow, #d5a75c) !important; font-family: 'Alexandria', sans-serif !important; font-weight: 700 !important; font-size: 0.69rem !important; padding: 10px 14px !important; border-radius: 8px !important; cursor: pointer !important; display: flex !important; align-items: center !important; justify-content: center !important; gap: 6px !important; box-shadow: 0 4px 15px rgba(213, 167, 92, 0.25) !important; box-sizing: border-box !important; text-align: center !important; transition: all 0.2s ease-in-out !important; pointer-events: auto !important; -webkit-tap-highlight-color: transparent !important; touch-action: manipulation !important;`;
+                btnQuestions.textContent = "🗨️ الأسئلة";
+            }
         }
 
-        // 🌟 [مودال اختيار اللاعب المستهدف]: نفس فكرة مودال حقيبة الأدلة تماماً لضمان اتساق تجربة الاستخدام
-        const renderTargetedQuestionsPicker = (activeCase, latestPlayersData, latestAssignments) => {
-            const modal = document.getElementById("custom-alert-modal");
-            if (!modal) return;
-            const fullPool = activeCase.radar_questions_pool || [];
+        // منع تكرار المستمع إذا أعادت Firebase رسم اللوبي.
+        if (btnQuestions.dataset.questionsBound !== "1") {
+            btnQuestions.dataset.questionsBound = "1";
 
-            document.getElementById("modal-alert-title").textContent = "🗨️ استجواب لاعب محدد";
+            // 🌟 [مودال اختيار اللاعب المستهدف]: نفس فكرة مودال حقيبة الأدلة تماماً لضمان اتساق تجربة الاستخدام
+            const renderTargetedQuestionsPicker = (activeCase, latestPlayersData, latestAssignments) => {
+                const modal = document.getElementById("custom-alert-modal");
+                if (!modal) return;
+                const fullPool = activeCase.radar_questions_pool || [];
 
-            let pickerHTML = `
+                document.getElementById("modal-alert-title").textContent = "🗨️ استجواب لاعب محدد";
+
+                let pickerHTML = `
                 <div style="text-align: right; font-family: 'Alexandria', sans-serif; direction: rtl;">
                     <label style="color: var(--gold-glow); font-size: 0.8rem; font-weight: 700; display: block; margin-bottom: 8px;">اختر اللاعب الذي تريد استجوابه:</label>
                     <select id="questions-target-player" style="width: 100%; padding: 10px; background: #161c26; color: #fff; border: 1px solid var(--gold-glow); border-radius: 6px; font-family: 'Alexandria'; font-size: 0.85rem; outline: none; margin-bottom: 12px;">
                         <option value="">-- اختر لاعباً --</option>
             `;
 
-            Object.keys(latestPlayersData).forEach((key) => {
-                const p = latestPlayersData[key];
-                const card = latestAssignments[p.uid] || {};
-                if (card.role_type !== "judge" && card.role_type !== "lawyer") {
-                    pickerHTML += `<option value="${p.uid}">${p.name} (${card.role_name || "متهم"})</option>`;
-                }
-            });
+                Object.keys(latestPlayersData).forEach((key) => {
+                    const p = latestPlayersData[key];
+                    const card = latestAssignments[p.uid] || {};
+                    if (card.role_type !== "judge" && card.role_type !== "lawyer") {
+                        pickerHTML += `<option value="${p.uid}">${p.name} (${card.role_name || "متهم"})</option>`;
+                    }
+                });
 
-            pickerHTML += `
+                pickerHTML += `
                     </select>
                     <p id="questions-count-display" style="color: #cfd8e3; font-size: 0.85rem; text-align: center; min-height: 20px; margin: 0 0 12px;">بانتظار اختيار اللاعب المستهدف لعرض عدد أسئلته الخاصة...</p>
                     <button id="btn-pull-random-question" disabled style="width: 100%; padding: 12px; background: var(--gold-glow); color: #101820; border: none; border-radius: 8px; font-family: 'Alexandria'; font-weight: 700; font-size: 0.9rem; cursor: pointer; opacity: 0.5;">🎲 اسحب سؤالاً عشوائياً</button>
@@ -2968,112 +2981,114 @@ function injectLawyerActionControls(
                 </div>
             `;
 
-            document.getElementById("modal-alert-message").innerHTML = pickerHTML;
+                document.getElementById("modal-alert-message").innerHTML = pickerHTML;
 
-            const targetSelect = document.getElementById("questions-target-player");
-            const countDisplay = document.getElementById("questions-count-display");
-            const btnPull = document.getElementById("btn-pull-random-question");
-            const drawnResult = document.getElementById("questions-drawn-result");
+                const targetSelect = document.getElementById("questions-target-player");
+                const countDisplay = document.getElementById("questions-count-display");
+                const btnPull = document.getElementById("btn-pull-random-question");
+                const drawnResult = document.getElementById("questions-drawn-result");
 
-            // 🌟 مفتاح تخزين مستقل لكل (سائل + مستهدف) على هذا الجهاز تحديداً، بديلاً عن التسمية القديمة الحصرية بالادعاء فقط
-            const getStorageKey = (targetUID, caseId) =>
-                `remaining_questions_case_${caseId}_asker_${mySecretUID}_target_${targetUID}_${currentRoomCode}`;
+                // 🌟 مفتاح تخزين مستقل لكل (سائل + مستهدف) على هذا الجهاز تحديداً، بديلاً عن التسمية القديمة الحصرية بالادعاء فقط
+                const getStorageKey = (targetUID, caseId) =>
+                    `remaining_questions_case_${caseId}_asker_${mySecretUID}_target_${targetUID}_${currentRoomCode}`;
 
-            targetSelect.addEventListener("change", function () {
-                const targetUID = targetSelect.value;
-                drawnResult.textContent = "";
-                stopSpeech();
-                const staleVoice = drawnResult.nextElementSibling;
-                if (staleVoice && staleVoice.classList.contains("tts-controls")) staleVoice.hidden = true;
-                if (!targetUID) {
-                    countDisplay.textContent = "بانتظار اختيار اللاعب المستهدف لعرض عدد أسئلته الخاصة...";
-                    btnPull.disabled = true;
-                    btnPull.style.opacity = "0.5";
-                    return;
-                }
-
-                const targetCard = latestAssignments[targetUID] || {};
-                // 🌟 [استهداف بالمعرّف]: تصفية الأسئلة لتشمل فقط الأسئلة العامة أو المطابقة تحديداً لهوية هذا اللاعب المستهدف
-                const targetedPool = fullPool.filter(
-                    (q) => !q.target_role || resolveEvidenceItemMatchGlobal(q, targetCard)
-                );
-                const finalPool = targetedPool.length > 0 ? targetedPool : fullPool;
-
-                const storageKey = getStorageKey(targetUID, activeCase.id);
-                if (!sessionStorage.getItem(storageKey)) {
-                    // 🌟 [البند 2]: تخزين كائن السؤال كاملاً (النص + الإجابات الثلاث) بدل النص المجرد فقط
-                    const questionObjects = finalPool.filter((q) => q.text);
-                    sessionStorage.setItem(storageKey, JSON.stringify(questionObjects));
-                }
-                const remaining = JSON.parse(sessionStorage.getItem(storageKey));
-
-                countDisplay.innerHTML = `📋 الأسئلة المخصصة لهذا اللاعب: <b style="color: var(--gold-glow);">${finalPool.length}</b> من إجمالي ${fullPool.length} سؤال بالقضية — المتبقي لك: <b style="color: var(--gold-glow);">${remaining.length}</b>`;
-
-                btnPull.disabled = remaining.length === 0;
-                btnPull.style.opacity = remaining.length === 0 ? "0.5" : "1";
-
-                btnPull.onclick = () => {
-                    const storageKeyNow = getStorageKey(targetUID, activeCase.id);
-                    let remainingNow = JSON.parse(sessionStorage.getItem(storageKeyNow) || "[]");
-                    if (remainingNow.length === 0) return;
-
-                    const randomIndex = Math.floor(Math.random() * remainingNow.length);
-                    const selectedQuestion = remainingNow[randomIndex];
-                    remainingNow.splice(randomIndex, 1);
-                    sessionStorage.setItem(storageKeyNow, JSON.stringify(remainingNow));
-
-                    const targetPlayerKey = Object.keys(latestPlayersData).find(
-                        (k) => latestPlayersData[k].uid === targetUID
-                    );
-                    const targetName = targetPlayerKey ? latestPlayersData[targetPlayerKey].name : "اللاعب المستهدف";
-
-                    countDisplay.innerHTML = `📋 الأسئلة المخصصة لهذا اللاعب: <b style="color: var(--gold-glow);">${finalPool.length}</b> من إجمالي ${fullPool.length} سؤال بالقضية — المتبقي لك: <b style="color: var(--gold-glow);">${remainingNow.length}</b>`;
-                    drawnResult.textContent = `❓ ${selectedQuestion.text}`;
+                targetSelect.addEventListener("change", function () {
+                    const targetUID = targetSelect.value;
+                    drawnResult.textContent = "";
                     stopSpeech();
-                    // 🔊 السؤال المسحوب علني (يُبث للجميع)، فيُقرأ مباشرة
-                    mountVoiceControls(drawnResult, { kind: "public", getText: () => selectedQuestion.text });
-
-                    if (remainingNow.length === 0) {
+                    const staleVoice = drawnResult.nextElementSibling;
+                    if (staleVoice && staleVoice.classList.contains("tts-controls")) staleVoice.hidden = true;
+                    if (!targetUID) {
+                        countDisplay.textContent = "بانتظار اختيار اللاعب المستهدف لعرض عدد أسئلته الخاصة...";
                         btnPull.disabled = true;
                         btnPull.style.opacity = "0.5";
+                        return;
                     }
 
-                    // 🌟 [صندوق الردود الموقوتة]: بث السؤال والإجابات الثلاث الجاهزة سحابياً - سيلتقطه الجميع (Kill-Feed عام) والمستهدف تحديداً (أزرار الرد)
-                    update(gameStateRef, {
-                        active_question_prompt: {
-                            target_uid: targetUID,
-                            target_name: targetName,
-                            asker_uid: mySecretUID,
-                            asker_name: myRoleCard.role_name || "أحد أطراف المحكمة",
-                            question_text: selectedQuestion.text,
-                            answers: selectedQuestion.answers || null,
-                            timestamp: Date.now()
+                    const targetCard = latestAssignments[targetUID] || {};
+                    // 🌟 [استهداف بالمعرّف]: تصفية الأسئلة لتشمل فقط الأسئلة العامة أو المطابقة تحديداً لهوية هذا اللاعب المستهدف
+                    const targetedPool = fullPool.filter(
+                        (q) => !q.target_role || resolveEvidenceItemMatchGlobal(q, targetCard)
+                    );
+                    const finalPool = targetedPool.length > 0 ? targetedPool : fullPool;
+
+                    const storageKey = getStorageKey(targetUID, activeCase.id);
+                    if (!sessionStorage.getItem(storageKey)) {
+                        // 🌟 [البند 2]: تخزين كائن السؤال كاملاً (النص + الإجابات الثلاث) بدل النص المجرد فقط
+                        const questionObjects = finalPool.filter((q) => q.text);
+                        sessionStorage.setItem(storageKey, JSON.stringify(questionObjects));
+                    }
+                    const remaining = JSON.parse(sessionStorage.getItem(storageKey));
+
+                    countDisplay.innerHTML = `📋 الأسئلة المخصصة لهذا اللاعب: <b style="color: var(--gold-glow);">${finalPool.length}</b> من إجمالي ${fullPool.length} سؤال بالقضية — المتبقي لك: <b style="color: var(--gold-glow);">${remaining.length}</b>`;
+
+                    btnPull.disabled = remaining.length === 0;
+                    btnPull.style.opacity = remaining.length === 0 ? "0.5" : "1";
+
+                    btnPull.onclick = () => {
+                        const storageKeyNow = getStorageKey(targetUID, activeCase.id);
+                        let remainingNow = JSON.parse(sessionStorage.getItem(storageKeyNow) || "[]");
+                        if (remainingNow.length === 0) return;
+
+                        const randomIndex = Math.floor(Math.random() * remainingNow.length);
+                        const selectedQuestion = remainingNow[randomIndex];
+                        remainingNow.splice(randomIndex, 1);
+                        sessionStorage.setItem(storageKeyNow, JSON.stringify(remainingNow));
+
+                        const targetPlayerKey = Object.keys(latestPlayersData).find(
+                            (k) => latestPlayersData[k].uid === targetUID
+                        );
+                        const targetName = targetPlayerKey
+                            ? latestPlayersData[targetPlayerKey].name
+                            : "اللاعب المستهدف";
+
+                        countDisplay.innerHTML = `📋 الأسئلة المخصصة لهذا اللاعب: <b style="color: var(--gold-glow);">${finalPool.length}</b> من إجمالي ${fullPool.length} سؤال بالقضية — المتبقي لك: <b style="color: var(--gold-glow);">${remainingNow.length}</b>`;
+                        drawnResult.textContent = `❓ ${selectedQuestion.text}`;
+                        stopSpeech();
+                        // 🔊 السؤال المسحوب علني (يُبث للجميع)، فيُقرأ مباشرة
+                        mountVoiceControls(drawnResult, { kind: "public", getText: () => selectedQuestion.text });
+
+                        if (remainingNow.length === 0) {
+                            btnPull.disabled = true;
+                            btnPull.style.opacity = "0.5";
                         }
-                    });
-                };
-            });
 
-            modal.style.setProperty("display", "flex", "important");
-            modal.className = "modal-overlay-active";
-        };
+                        // 🌟 [صندوق الردود الموقوتة]: بث السؤال والإجابات الثلاث الجاهزة سحابياً - سيلتقطه الجميع (Kill-Feed عام) والمستهدف تحديداً (أزرار الرد)
+                        update(gameStateRef, {
+                            active_question_prompt: {
+                                target_uid: targetUID,
+                                target_name: targetName,
+                                asker_uid: mySecretUID,
+                                asker_name: myRoleCard.role_name || "أحد أطراف المحكمة",
+                                question_text: selectedQuestion.text,
+                                answers: selectedQuestion.answers || null,
+                                timestamp: Date.now()
+                            }
+                        });
+                    };
+                });
 
-        // 🎭 مودال الاستجواب الارتجالي: اختيار المتهم فقط، والسؤال يُطرح شفهياً (لا JSON إطلاقاً)
-        const renderImprovisedQuestionsPicker = (latestPlayersData, latestAssignments) => {
-            const modal = document.getElementById("custom-alert-modal");
-            if (!modal) return;
+                modal.style.setProperty("display", "flex", "important");
+                modal.className = "modal-overlay-active";
+            };
 
-            document.getElementById("modal-alert-title").textContent = "🎭 استجواب ارتجالي";
+            // 🎭 مودال الاستجواب الارتجالي: اختيار المتهم فقط، والسؤال يُطرح شفهياً (لا JSON إطلاقاً)
+            const renderImprovisedQuestionsPicker = (latestPlayersData, latestAssignments) => {
+                const modal = document.getElementById("custom-alert-modal");
+                if (!modal) return;
 
-            let optionsHTML = "";
-            Object.keys(latestPlayersData).forEach((key) => {
-                const p = latestPlayersData[key];
-                const card = latestAssignments[p.uid] || {};
-                if (card.role_type !== "judge" && card.role_type !== "lawyer") {
-                    optionsHTML += `<option value="${escapeHtml(p.uid)}">${escapeHtml(p.name)} (${escapeHtml(card.role_name || "متهم")})</option>`;
-                }
-            });
+                document.getElementById("modal-alert-title").textContent = "🎭 استجواب ارتجالي";
 
-            document.getElementById("modal-alert-message").innerHTML = `
+                let optionsHTML = "";
+                Object.keys(latestPlayersData).forEach((key) => {
+                    const p = latestPlayersData[key];
+                    const card = latestAssignments[p.uid] || {};
+                    if (card.role_type !== "judge" && card.role_type !== "lawyer") {
+                        optionsHTML += `<option value="${escapeHtml(p.uid)}">${escapeHtml(p.name)} (${escapeHtml(card.role_name || "متهم")})</option>`;
+                    }
+                });
+
+                document.getElementById("modal-alert-message").innerHTML = `
                 <div style="text-align: right; font-family: 'Alexandria', sans-serif; direction: rtl;">
                     <p style="color: #cfd8e3; font-family: 'Harmattan'; font-size: 1.15rem; line-height: 1.5; margin: 0 0 12px;">
                         وضع الارتجال القضائي: لا توجد أسئلة جاهزة. اختر اللاعب ثم اطرح سؤالك من خيالك بصوتك، وسيصله تنبيه ليختار أسلوب إجابته.
@@ -3088,104 +3103,104 @@ function injectLawyerActionControls(
                 </div>
             `;
 
-            const targetSelect = document.getElementById("improv-target-player");
-            const btnSend = document.getElementById("btn-send-improv-question");
-            const statusLine = document.getElementById("improv-question-status");
+                const targetSelect = document.getElementById("improv-target-player");
+                const btnSend = document.getElementById("btn-send-improv-question");
+                const statusLine = document.getElementById("improv-question-status");
 
-            targetSelect.addEventListener("change", function () {
-                const ready = !!targetSelect.value;
-                btnSend.disabled = !ready;
-                btnSend.style.opacity = ready ? "1" : "0.5";
-                statusLine.textContent = "";
-            });
+                targetSelect.addEventListener("change", function () {
+                    const ready = !!targetSelect.value;
+                    btnSend.disabled = !ready;
+                    btnSend.style.opacity = ready ? "1" : "0.5";
+                    statusLine.textContent = "";
+                });
 
-            btnSend.addEventListener("click", function () {
-                const targetUID = targetSelect.value;
-                if (!targetUID || btnSend.disabled) return;
+                btnSend.addEventListener("click", function () {
+                    const targetUID = targetSelect.value;
+                    if (!targetUID || btnSend.disabled) return;
 
-                const targetPlayerKey = Object.keys(latestPlayersData).find(
-                    (k) => latestPlayersData[k].uid === targetUID
-                );
-                const targetName = targetPlayerKey ? latestPlayersData[targetPlayerKey].name : "اللاعب المستهدف";
+                    const targetPlayerKey = Object.keys(latestPlayersData).find(
+                        (k) => latestPlayersData[k].uid === targetUID
+                    );
+                    const targetName = targetPlayerKey ? latestPlayersData[targetPlayerKey].name : "اللاعب المستهدف";
 
-                update(gameStateRef, {
-                    active_question_prompt: {
-                        target_uid: targetUID,
-                        target_name: targetName,
-                        asker_uid: mySecretUID,
-                        asker_name: myRoleCard.role_name || "أحد أطراف المحكمة",
-                        question_text: "",
-                        answers: null,
-                        improvised: true,
-                        timestamp: Date.now()
-                    }
-                })
-                    .then(() => {
-                        statusLine.textContent = `✅ تم تنبيه ${targetName}. اطرح سؤالك شفهياً الآن.`;
+                    update(gameStateRef, {
+                        active_question_prompt: {
+                            target_uid: targetUID,
+                            target_name: targetName,
+                            asker_uid: mySecretUID,
+                            asker_name: myRoleCard.role_name || "أحد أطراف المحكمة",
+                            question_text: "",
+                            answers: null,
+                            improvised: true,
+                            timestamp: Date.now()
+                        }
                     })
-                    .catch(() => {
-                        statusLine.textContent = "⚠️ تعذّر إرسال التنبيه، حاول مرة أخرى.";
-                    });
+                        .then(() => {
+                            statusLine.textContent = `✅ تم تنبيه ${targetName}. اطرح سؤالك شفهياً الآن.`;
+                        })
+                        .catch(() => {
+                            statusLine.textContent = "⚠️ تعذّر إرسال التنبيه، حاول مرة أخرى.";
+                        });
 
-                // منع الضغط المتكرر السريع الذي يُغرق اللاعب بتنبيهات
-                btnSend.disabled = true;
-                btnSend.style.opacity = "0.5";
-                setTimeout(() => {
-                    if (targetSelect.value) {
-                        btnSend.disabled = false;
-                        btnSend.style.opacity = "1";
-                    }
-                }, 4000);
-            });
+                    // منع الضغط المتكرر السريع الذي يُغرق اللاعب بتنبيهات
+                    btnSend.disabled = true;
+                    btnSend.style.opacity = "0.5";
+                    setTimeout(() => {
+                        if (targetSelect.value) {
+                            btnSend.disabled = false;
+                            btnSend.style.opacity = "1";
+                        }
+                    }, 4000);
+                });
 
-            const globalCloseBtn = document.getElementById("btn-modal-close");
-            if (globalCloseBtn) globalCloseBtn.style.setProperty("display", "block", "important");
-            modal.style.setProperty("display", "flex", "important");
-            modal.className = "modal-overlay-active";
-        };
+                const globalCloseBtn = document.getElementById("btn-modal-close");
+                if (globalCloseBtn) globalCloseBtn.style.setProperty("display", "block", "important");
+                modal.style.setProperty("display", "flex", "important");
+                modal.className = "modal-overlay-active";
+            };
 
-        const openQuestionsPickerHandler = (e) => {
-            if (e) {
-                e.preventDefault();
-                e.stopPropagation();
-            }
-
-            get(ref(db, "rooms/" + currentRoomCode)).then((roomSnapshot) => {
-                if (!roomSnapshot.exists()) return;
-                const roomData = roomSnapshot.val();
-                const latestPlayersData = roomData.players || {};
-                const latestGameState = roomData.game_state || {};
-                const latestAssignments = latestGameState.assignments || {};
-
-                if (isImprovisationMode(latestGameState)) {
-                    renderImprovisedQuestionsPicker(latestPlayersData, latestAssignments);
-                    return;
+            const openQuestionsPickerHandler = (e) => {
+                if (e) {
+                    e.preventDefault();
+                    e.stopPropagation();
                 }
 
-                fetch("cases.json")
-                    .then((res) => {
-                        if (!res.ok) throw new Error("فشل في تحميل ملف القضايا");
-                        return res.json();
-                    })
-                    .then((allCases) => {
-                        const activeCase = allCases.find((c) => c.id == latestGameState.caseId);
-                        if (!activeCase) return;
-                        renderTargetedQuestionsPicker(activeCase, latestPlayersData, latestAssignments);
-                    })
-                    .catch((err) => console.error("خطأ في تحميل مسبح الأسئلة:", err));
-            });
-        };
+                get(ref(db, "rooms/" + currentRoomCode)).then((roomSnapshot) => {
+                    if (!roomSnapshot.exists()) return;
+                    const roomData = roomSnapshot.val();
+                    const latestPlayersData = roomData.players || {};
+                    const latestGameState = roomData.game_state || {};
+                    const latestAssignments = latestGameState.assignments || {};
 
-        btnQuestions.addEventListener("touchstart", openQuestionsPickerHandler, { passive: false });
-        btnQuestions.addEventListener("click", openQuestionsPickerHandler);
+                    if (isImprovisationMode(latestGameState)) {
+                        renderImprovisedQuestionsPicker(latestPlayersData, latestAssignments);
+                        return;
+                    }
+
+                    fetch("cases.json")
+                        .then((res) => {
+                            if (!res.ok) throw new Error("فشل في تحميل ملف القضايا");
+                            return res.json();
+                        })
+                        .then((allCases) => {
+                            const activeCase = allCases.find((c) => c.id == latestGameState.caseId);
+                            if (!activeCase) return;
+                            renderTargetedQuestionsPicker(activeCase, latestPlayersData, latestAssignments);
+                        })
+                        .catch((err) => console.error("خطأ في تحميل مسبح الأسئلة:", err));
+                });
+            };
+
+            btnQuestions.addEventListener("touchstart", openQuestionsPickerHandler, { passive: false });
+            btnQuestions.addEventListener("click", openQuestionsPickerHandler);
+        }
 
         if (isJudgeMe) {
             const judgePanelForQuestions = document.getElementById("judge-control-panel");
-            if (judgePanelForQuestions) {
-                // وضع الزر في نفس خانة زر الأسئلة القديم داخل لوحة القاضي.
+            if (judgePanelForQuestions && btnQuestions.parentElement !== judgePanelForQuestions) {
                 judgePanelForQuestions.appendChild(btnQuestions);
             }
-        } else {
+        } else if (!btnQuestions.parentElement) {
             questionsHolder.appendChild(btnQuestions);
             appArena.appendChild(questionsHolder);
         }
