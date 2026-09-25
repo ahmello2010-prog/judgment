@@ -1240,58 +1240,8 @@ function renderCircularSeats(playersList, assignments, gameState) {
 
                         // 🌟 شرط الـ 3 و 4 لاعبين لحقن أدوات الرادار والكشف الاستكشافية المحدثة
                         if (playersList.length < 5) {
-                            // حاوية عمودية واقية لزر كشف الشبهة والعداد المدمج أسفله مباشرة
-                            const revealContainer = document.createElement("div");
-                            revealContainer.style.cssText =
-                                "display: flex; flex-direction: column; align-items: center; justify-content: center; flex: 1; margin: 0 4px;";
-
-                            // زر كشف الشبهة (يسحب كود القضية حياً من السيرفر ويقفل التكرار)
-                            const btnRevealSuspect = document.createElement("button");
-                            btnRevealSuspect.id = "btn-judge-reveal-suspect";
-                            btnRevealSuspect.className = "btn-judge-action btn-interrogate-style";
-                            btnRevealSuspect.style.width = "100%";
-                            btnRevealSuspect.textContent = "الأسئة";
-
-                            btnRevealSuspect.addEventListener("click", function (e) {
-                                e.preventDefault();
-                                e.stopPropagation();
-
-                                // 🌟 جلب كود القضية حياً ومباشرة من السيرفر لحظة النقر لمنع مشكلة عدم الظهور
-                                get(ref(db, "rooms/" + currentRoomCode + "/game_state")).then((gameStateSnapshot) => {
-                                    if (!gameStateSnapshot.exists()) return;
-                                    const currentGameState = gameStateSnapshot.val();
-                                    const activeCaseId = currentGameState.caseId || "none";
-
-                                    // 🎭 وضع الارتجال: تعطيل الأسئلة الجاهزة نهائياً
-                                    if (isImprovisationMode(currentGameState)) {
-                                        triggerKillFeedAlert(
-                                            "🎭 وضع الارتجال: لا توجد أسئلة جاهزة، اطرح سؤالك من خيالك شفهياً.",
-                                            true
-                                        );
-                                        return;
-                                    }
-
-                                    if (activeCaseId !== "none") {
-                                        // تمرير كود القضية الفعلي المستقر للدالة الفرعية
-                                        triggerUniqueJudgeQuestion(activeCaseId);
-                                    } else {
-                                        console.log("⚠️ انتظار استقرار مزامنة كود القضية السحابي...");
-                                    }
-                                });
-                            });
-                            revealContainer.appendChild(btnRevealSuspect);
-
-                            // ب. 🌟 [النص الصغير المطور]: عداد الأسئلة الجنائية المتبقية أسفل الزر
-                            const questionsCounterDisplay = document.createElement("span");
-                            questionsCounterDisplay.id = "judge-questions-remaining-counter";
-                            questionsCounterDisplay.style.cssText =
-                                "font-family: 'Alexandria', sans-serif; font-size: 0.65rem; color: var(--gold-glow); font-weight: 600; margin-top: 4px; text-shadow: 0 1px 3px #000; direction: rtl;";
-                            questionsCounterDisplay.textContent = "جاري حساب الأسئلة...";
-                            revealContainer.appendChild(questionsCounterDisplay);
-
-                            judgePanel.appendChild(revealContainer);
-
-                            // زر رادار الشبهات (يفتح المودال البوكس الخاص بالقاضي للفحص)
+                            // زر رادار الشبهات فقط. زر "الأسئلة" الذي يفتح مودال اختيار المستجوب
+                            // يتم تركيبه لاحقاً داخل لوحة القاضي نفسها.
                             const btnRadarTrigger = document.createElement("button");
                             btnRadarTrigger.id = "btn-judge-radar-trigger";
                             btnRadarTrigger.className = "btn-judge-action btn-interrogate-style";
@@ -1337,14 +1287,6 @@ function renderCircularSeats(playersList, assignments, gameState) {
                         liveVerdictBtn.disabled = currentInterrogationsCount < 2;
                         liveVerdictBtn.style.opacity = currentInterrogationsCount >= 2 ? "1" : "0.4";
                         liveVerdictBtn.style.cursor = currentInterrogationsCount >= 2 ? "pointer" : "not-allowed";
-                    }
-
-                    // 🌟 تحديث العداد الرقمي للأسئلة المتبقية حياً ومنع تعليق واجهة القاضي
-                    if (isImprovisationMode(gameState)) {
-                        const improvCounter = document.getElementById("judge-questions-remaining-counter");
-                        if (improvCounter) improvCounter.textContent = "🎭 وضع الارتجال";
-                    } else {
-                        updateQuestionsCounterText(gameState.caseId);
                     }
                 } else {
                     judgePanel.style.setProperty("display", "none", "important");
@@ -2974,7 +2916,7 @@ function injectLawyerActionControls(
     if (
         (isJudgeMe || myRoleCard.role_type === "lawyer") &&
         gameState.caseId &&
-        !document.getElementById("btn-unified-questions-trigger-holder")
+        !document.getElementById("unified-questions-button-node")
     ) {
         const questionsHolder = document.createElement("div");
         questionsHolder.id = "btn-unified-questions-trigger-holder";
@@ -2982,10 +2924,18 @@ function injectLawyerActionControls(
             "position: fixed; top: 170px; left: 4%; z-index: 9999997 !important; pointer-events: none !important;";
 
         const btnQuestions = document.createElement("button");
-        btnQuestions.className = "btn-unified-questions-node";
         btnQuestions.id = "unified-questions-button-node";
-        btnQuestions.style.cssText = `all: unset !important; background: linear-gradient(135deg, #161c26 0%, #423423 100%) !important; border: 2px solid var(--gold-glow, #d5a75c) !important; color: var(--gold-glow, #d5a75c) !important; font-family: 'Alexandria', sans-serif !important; font-weight: 700 !important; font-size: 0.69rem !important; padding: 10px 14px !important; border-radius: 8px !important; cursor: pointer !important; display: flex !important; align-items: center !important; justify-content: center !important; gap: 6px !important; box-shadow: 0 4px 15px rgba(213, 167, 92, 0.25) !important; box-sizing: border-box !important; text-align: center !important; transition: all 0.2s ease-in-out !important; pointer-events: auto !important; -webkit-tap-highlight-color: transparent !important; touch-action: manipulation !important;`;
-        btnQuestions.textContent = "🗨️ الأسئلة";
+
+        if (isJudgeMe) {
+            // نفس زر الأسئلة الذي يفتح مودال اختيار المستجوب، لكن داخل لوحة القاضي.
+            btnQuestions.className = "btn-judge-action btn-interrogate-style";
+            btnQuestions.textContent = "🗨️ الأسئلة";
+        } else {
+            // الدفاع/الادعاء يحتفظان بالزر العائم الحالي كما هو.
+            btnQuestions.className = "btn-unified-questions-node";
+            btnQuestions.style.cssText = `all: unset !important; background: linear-gradient(135deg, #161c26 0%, #423423 100%) !important; border: 2px solid var(--gold-glow, #d5a75c) !important; color: var(--gold-glow, #d5a75c) !important; font-family: 'Alexandria', sans-serif !important; font-weight: 700 !important; font-size: 0.69rem !important; padding: 10px 14px !important; border-radius: 8px !important; cursor: pointer !important; display: flex !important; align-items: center !important; justify-content: center !important; gap: 6px !important; box-shadow: 0 4px 15px rgba(213, 167, 92, 0.25) !important; box-sizing: border-box !important; text-align: center !important; transition: all 0.2s ease-in-out !important; pointer-events: auto !important; -webkit-tap-highlight-color: transparent !important; touch-action: manipulation !important;`;
+            btnQuestions.textContent = "🗨️ الأسئلة";
+        }
 
         // 🌟 [مودال اختيار اللاعب المستهدف]: نفس فكرة مودال حقيبة الأدلة تماماً لضمان اتساق تجربة الاستخدام
         const renderTargetedQuestionsPicker = (activeCase, latestPlayersData, latestAssignments) => {
@@ -3229,8 +3179,16 @@ function injectLawyerActionControls(
         btnQuestions.addEventListener("touchstart", openQuestionsPickerHandler, { passive: false });
         btnQuestions.addEventListener("click", openQuestionsPickerHandler);
 
-        questionsHolder.appendChild(btnQuestions);
-        appArena.appendChild(questionsHolder);
+        if (isJudgeMe) {
+            const judgePanelForQuestions = document.getElementById("judge-control-panel");
+            if (judgePanelForQuestions) {
+                // وضع الزر في نفس خانة زر الأسئلة القديم داخل لوحة القاضي.
+                judgePanelForQuestions.appendChild(btnQuestions);
+            }
+        } else {
+            questionsHolder.appendChild(btnQuestions);
+            appArena.appendChild(questionsHolder);
+        }
     }
 
     setTimeout(() => {
@@ -3810,90 +3768,6 @@ function openJudgeRadarModal(playersList, assignments, gameStateRef) {
                 });
             });
     });
-}
-// ==========================================================================
-// دالة إدارة الأسئلة الفرعية للقاضي ومنع التكرار وحساب المتبقي حياً (النسخة المطهرة)
-// ==========================================================================
-function triggerUniqueJudgeQuestion(caseId) {
-    if (!caseId || caseId === "none") return;
-
-    fetch("cases.json")
-        .then((res) => {
-            if (!res.ok) throw new Error("فشل في تحميل ملف القضايا");
-            return res.json();
-        })
-        .then((allCases) => {
-            const activeCase = allCases.find((c) => c.id == caseId);
-            if (!activeCase) {
-                console.log("⚠️ لم يتم العثور على تفاصيل القضية رقم: " + caseId);
-                return;
-            }
-
-            const storageKey = `remaining_questions_case_${caseId}_${currentRoomCode}`;
-
-            // 🌟 [تعديل حاسم]: فحص لو كانت هذه أول نقرة بعد الريفرش، نقوم بمسح القديم وإعادة التهيئة إجبارياً
-            if (!window.hasJudgeQuestionsRefreshedInCurrentSession) {
-                window.hasJudgeQuestionsRefreshedInCurrentSession = true; // قفل لمنع التصفير أثناء الضغط المتتالي
-                sessionStorage.removeItem(storageKey); // مسح الذاكرة القديمة العالقة قبل الريفرش
-            }
-
-            // إذا تم مسحها بالسطر السابق، سيقوم السيرفر بسحب المسبح كاملاً وجديداً بنسبة 100% من الجيسون
-            if (!sessionStorage.getItem(storageKey)) {
-                const rawPool = activeCase.radar_questions_pool || [];
-                // 🌟 [فصل الأوضاع]: هذا الزر عام وغير موجه لأي لاعب بعينه (خلاف الرادار)، فيُقصر على الأسئلة العامة غير المستهدفة
-                // لمنع تسريب أسئلة خاصة بمشتبه أو بالجاني الحقيقي بشكل عشوائي قد يكشف الهوية بالخطأ
-                const genericPool = rawPool.filter((q) => !q.target_role);
-                const finalPool = genericPool.length > 0 ? genericPool : rawPool;
-                const questionTexts = finalPool.map((q) => q.text).filter((t) => t);
-                sessionStorage.setItem(storageKey, JSON.stringify(questionTexts));
-            }
-
-            let remainingQuestions = JSON.parse(sessionStorage.getItem(storageKey));
-
-            if (remainingQuestions.length === 0) {
-                triggerKillFeedAlert("🚨 تنبيه: لقد نفدت جميع الأسئلة المتاحة في حقيبة التحقيقات لهذه القضية!", true);
-                const counterTxt = document.getElementById("judge-questions-remaining-counter");
-                if (counterTxt) counterTxt.textContent = "المتبقي: 0 أسئلة";
-                return;
-            }
-
-            const randomIndex = Math.floor(Math.random() * remainingQuestions.length);
-            const selectedQuestion = remainingQuestions[randomIndex];
-
-            remainingQuestions.splice(randomIndex, 1);
-            sessionStorage.setItem(storageKey, JSON.stringify(remainingQuestions));
-
-            const counterTxt = document.getElementById("judge-questions-remaining-counter");
-            if (counterTxt) counterTxt.textContent = `المتبقي: ${remainingQuestions.length} أسئلة`;
-
-            triggerKillFeedAlert("سؤال المحكمة: " + selectedQuestion, true, {
-                speakable: true,
-                speechText: "سؤال المحكمة: " + selectedQuestion
-            });
-        })
-        .catch((err) => console.error("عطل في جلب الأسئلة العشوائية:", err));
-}
-
-// دالة تحديث نص عداد الأسئلة المتبقية دورياً لمنع حدوث ومضات فارغة في الواجهة
-function updateQuestionsCounterText(caseId) {
-    const counterTxt = document.getElementById("judge-questions-remaining-counter");
-    if (!counterTxt || !caseId) return;
-
-    const storageKey = `remaining_questions_case_${caseId}_${currentRoomCode}`;
-    if (sessionStorage.getItem(storageKey)) {
-        const remainingQuestions = JSON.parse(sessionStorage.getItem(storageKey));
-        counterTxt.textContent = `المتبقي: ${remainingQuestions.length} أسئلة`;
-    } else {
-        // فحص أولي سريع لجلب العدد الكلي من ملف الجيسون قبل الضغط
-        fetch("cases.json")
-            .then((res) => res.json())
-            .then((allCases) => {
-                const activeCase = allCases.find((c) => c.id == caseId);
-                const totalCount =
-                    activeCase && activeCase.radar_questions_pool ? activeCase.radar_questions_pool.length : 0;
-                counterTxt.textContent = `المتبقي: ${totalCount} أسئلة`;
-            });
-    }
 }
 // دالة الاستماع والعرض الحي للرصيد التراكمي في شاشة اللاعب (Personal Score Card)
 function runLiveCloudScoreTracker() {
