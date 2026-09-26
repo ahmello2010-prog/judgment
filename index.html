@@ -14,82 +14,6 @@
         <meta name="apple-mobile-web-app-title" content="المحكمة" />
         <link rel="manifest" href="/site.webmanifest" />
         <link rel="stylesheet" href="css/style.css" />
-        <style>
-            /* ==========================================================================
-   صندوق معلومات الإصدار الأول في شاشة الترحيب (Version Info Box)
-   ========================================================================== */
-            .version-info-box {
-                margin-top: 25px;
-                margin-bottom: 45px; /* إعطاء مساحة قبل شريط الأخبار السفلي */
-                text-align: center;
-                padding: 12px 20px;
-                background: rgba(5, 10, 18, 0.6); /* ممتزج مع الأسود الحالك للعبة */
-                border: 1px dashed rgba(213, 167, 92, 0.3); /* إطار مقطع بلون الذهبي المضيء */
-                border-radius: 8px;
-                max-width: 340px;
-                margin-left: auto;
-                margin-right: auto;
-                direction: rtl;
-                box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4);
-                animation: smoothPanelReveal 0.8s ease-in-out forwards;
-            }
-
-            .version-badge {
-                display: inline-block;
-                font-family: "Alexandria", sans-serif;
-                font-weight: 700;
-                font-size: 0.7rem;
-                color: var(--shadow-black, #050a12);
-                background-color: var(--gold-glow, #d5a75c); /* لون المطرقة الذهبي */
-                padding: 3px 8px;
-                border-radius: 4px;
-                margin-bottom: 8px;
-                box-shadow: 0 2px 8px rgba(213, 167, 92, 0.3);
-            }
-
-            .version-disclaimer {
-                font-family: "Harmattan", sans-serif;
-                font-weight: 490;
-                font-size: 1.1rem; /* خط هرماتان يحتاج حجم أكبر ليكون مقروءاً */
-                color: #cccccc; /* رمادي هادئ لا يشتت الانتباه عن زر البدء */
-                line-height: 1.4;
-                margin: 0;
-                text-shadow: 0 1px 3px rgba(0, 0, 0, 0.8);
-            }
-            .version-info {
-                transform: translateY(220px);
-                position: absolute;
-                text-align: center;
-                font-family: "Alexandria", sans-serif;
-                padding: 15px;
-                width: 90%;
-                background: rgba(255, 255, 255, 0.03);
-                border: 1px solid rgba(213, 167, 92, 0.1); /* لمسة ذهبية خفيفة متناسقة مع كودك */
-                border-radius: 8px;
-                max-width: 320px;
-                margin-left: auto;
-                margin-right: auto;
-            }
-
-            .version-tag {
-                display: inline-block;
-                font-size: 0.8rem;
-                font-weight: 700;
-                color: var(--gold-glow, #d5a75c);
-                background: rgba(213, 167, 92, 0.1);
-                padding: 4px 10px;
-                border-radius: 4px;
-                margin-bottom: 8px;
-            }
-
-            .version-note {
-                font-size: 0.75rem;
-                color: #b3b3b3;
-                line-height: 1.5;
-                margin: 0;
-                direction: rtl;
-            }
-        </style>
     </head>
     <body class="body1">
         <!-- فيديو الخلفية السينمائي الطولي بعد تأمينه وحجب البوستر الافتراضي -->
@@ -117,12 +41,6 @@
 
                 <!-- الزر مخفي افتراضياً بانتهاء النص وسيهبط سينمائياً -->
                 <a id="btn-start-game-index" class="btn-main btn-hidden" href="rooms.html">ابدأ اللعبة</a>
-            </div>
-            <div class="version-info">
-                <span class="version-tag">النسخة التجريبية الثانية v1.0.2</span>
-                <p class="version-note">
-                    ⚠️ هذا هو الإصدار الثاني من اللعبة نعمل جاهدين على تطوير اللعبة في التحديثات القادمة!
-                </p>
             </div>
         </div>
 
