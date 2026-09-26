@@ -26,6 +26,13 @@
             }
 
             body.results-body {
+                /* 🌟 [إصلاح القصّ العلوي]: القاعدة العمومية في style.css تجعل body فليكس ممركز
+                   عمودياً بارتفاع 100vh وoverflow:hidden، فحين يكبر المحتوى (بعد تحميل الجدول)
+                   يُقصّ نصفه العلوي (رسمة القاضي) بدل أن يظهر. نُلغي التمركز الفليكسي هنا صريحاً
+                   ونسمح بتدفق طبيعي وتمرير عمودي حقيقي بدلاً منه. */
+                display: block !important;
+                height: auto !important;
+                overflow-y: auto !important;
                 background: radial-gradient(
                     ellipse at top,
                     var(--inner-vintage) 0%,
@@ -502,9 +509,33 @@
                 );
             }
 
+            // 🌟 [تطهير احتياطي فوري]: مسح أي أثر متبقٍ من جولة سابقة بمجرد الوصول لشاشة النتائج،
+            // حتى لا تُحسب أسئلة أو أقفال قديمة على الجولة الجديدة القادمة
+            function purgeStaleRoundMemory() {
+                Object.keys(sessionStorage).forEach((key) => {
+                    if (
+                        key.startsWith("remaining_questions_case_") ||
+                        key.startsWith("remaining_prosecutor_questions_case_")
+                    ) {
+                        sessionStorage.removeItem(key);
+                    }
+                });
+                Object.keys(localStorage).forEach((key) => {
+                    if (
+                        key.startsWith("locked_target_") ||
+                        key.startsWith("locked_accuse_target_") ||
+                        key.startsWith("locked_radar_target_")
+                    ) {
+                        localStorage.removeItem(key);
+                    }
+                });
+            }
+
             // ==========================================================================
             // 🌟 التحميل الأولي: قراءة بيانات الغرفة كاملة وحقن الجدول والسرد القصصي والزر الحصري للأدمن
             // ==========================================================================
+            purgeStaleRoundMemory();
+
             get(roomRef).then(async (snapshot) => {
                 if (!snapshot.exists()) {
                     window.location.href = "game.html";
@@ -582,6 +613,9 @@
                         btnReturn.disabled = true;
                         btnReturn.textContent = "جاري نقل جميع اللاعبين...";
 
+                        // 🌟 [تطهير قبل البث]: نضمن نظافة ذاكرة هذا الجهاز أولاً قبل إعلام بقية الأجهزة بالرجوع
+                        purgeStaleRoundMemory();
+
                         // 🌟 [تحويل سحابي جماعي متزامن]: تصفير حالة الغرفة بالكامل وإعادة الجميع لموسوعة القضايا معاً
                         update(gameStateRef, {
                             status: "lobby",
@@ -604,6 +638,9 @@
             onValue(gameStateRef, (snapshot) => {
                 const gs = snapshot.val() || {};
                 if (gs.status === "lobby") {
+                    // 🌟 [تطهير قبل المغادرة]: كل جهاز (أدمن أو لاعب) ينظّف ذاكرته المحلية
+                    // بمجرد استقبال أمر الرجوع، قبل أن ينتقل لموسوعة القضايا لجولة جديدة
+                    purgeStaleRoundMemory();
                     window.location.href = "game.html";
                 }
             });
