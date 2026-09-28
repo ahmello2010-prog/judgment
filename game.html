@@ -53,14 +53,14 @@
             .modal-alert-box {
                 width: 88%;
                 max-width: 380px;
-                background-color: var(--inner-vintage, #4c3e2d); /* البني العتيق من هويتك البصرية */
+                background-color: var(--inner-vintage, #423423); /* البني العتيق من هويتك البصرية */
                 border: 3px solid var(--gold-glow, #d5a75c); /* إطار ذهبي مضيء يحاكي منصة القضاء */
                 border-radius: 16px;
                 padding: 30px 20px;
                 text-align: center;
                 box-shadow:
                     0 15px 40px rgba(0, 0, 0, 0.7),
-                    0 0 25px rgba(162, 133, 85, 0.1);
+                    0 0 25px rgba(213, 167, 92, 0.1);
                 display: flex;
                 flex-direction: column;
                 align-items: center;
@@ -89,7 +89,7 @@
             /* زر إغلاق التنبيه التفاعلي الفاخر */
             #btn-modal-close {
                 background-color: var(--gold-glow, #d5a75c);
-                color: #bbab52; /* خط أسود حاد داخل الكتلة الذهبية الفاخرة للتباين */
+                color: #050a12; /* خط أسود حاد داخل الكتلة الذهبية الفاخرة للتباين */
                 border: none;
                 padding: 10px 28px;
                 font-family: "Alexandria", sans-serif;
@@ -176,16 +176,17 @@
                 justify-content: center;
                 width: 38px;
                 height: 38px;
-                border: 1.5px solid rgba(255, 255, 255, 0.5);
+                border: 1.5px solid rgba(255, 255, 255, 0.65);
                 border-radius: 50%;
-                background: rgba(0, 0, 0, 0.18);
+                background: linear-gradient(180deg, #c0392b 0%, #922b21 100%);
                 color: #fff;
                 cursor: pointer;
                 flex: none;
+                box-shadow: 0 2px 8px rgba(0, 0, 0, 0.35);
             }
             .gc-header-exit svg {
-                width: 20px;
-                height: 20px;
+                width: 18px;
+                height: 18px;
             }
             .gc-header-title {
                 margin: 0;
@@ -358,15 +359,16 @@
                         viewBox="0 0 24 24"
                         fill="none"
                         stroke="currentColor"
-                        stroke-width="2.6"
+                        stroke-width="2.3"
                         stroke-linecap="round"
                         stroke-linejoin="round"
                         aria-hidden="true">
-                        <path d="M20 12H5" />
-                        <path d="M11 6l-6 6 6 6" />
+                        <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+                        <path d="M16 17l5-5-5-5" />
+                        <path d="M21 12H9" />
                     </svg>
                 </button>
-                <h1 class="gc-header-title" id="game-main-title">موسوعة القضايا</h1>
+
                 <button
                     id="btn-open-shop"
                     type="button"

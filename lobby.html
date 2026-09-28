@@ -258,6 +258,104 @@
             /* ==========================================================================
    التجاوب مع الشاشات الصغيرة والهواتف (Responsive)
    ========================================================================== */
+
+            /* ==========================================================================
+   🎨 [إعادة تصميم اللوبي حسب الدور]: كل دور بهويته اللونية الخاصة، بلا لمس لملف style.css
+   المشترك مع باقي الصفحات — كل التعديلات محصورة هنا فقط لمنع أي أثر جانبي على صفحات أخرى.
+   قاضي = ذهبي (سلطة) / محامي = أزرق بارد (منطق ومهنية) / متهم = أحمر خافت (ضغط وتوتر)
+   ========================================================================== */
+            :root {
+                --role-judge: #d5a75c;
+                --role-lawyer: #5aa0e6;
+                --role-suspect: #e05c5c;
+            }
+
+            /* شارة هوية الدور — تظهر أعلى الشاشة فوق أي شيء آخر */
+            #role-identity-badge {
+                position: fixed;
+                top: calc(env(safe-area-inset-top, 0px) + 10px);
+                right: 50%;
+                transform: translateX(50%);
+                z-index: 999995;
+                padding: 5px 16px;
+                border-radius: 999px;
+                font-family: "Alexandria", sans-serif;
+                font-weight: 700;
+                font-size: 0.7rem;
+                letter-spacing: 0.3px;
+                backdrop-filter: blur(6px);
+                border: 1px solid transparent;
+                box-shadow: 0 4px 14px rgba(0, 0, 0, 0.45);
+            }
+            body.role-judge #role-identity-badge {
+                background: rgba(66, 52, 35, 0.75);
+                border-color: var(--role-judge);
+                color: var(--role-judge);
+            }
+            body.role-lawyer #role-identity-badge {
+                background: rgba(15, 32, 48, 0.75);
+                border-color: var(--role-lawyer);
+                color: var(--role-lawyer);
+            }
+            body.role-suspect #role-identity-badge {
+                background: rgba(48, 18, 18, 0.75);
+                border-color: var(--role-suspect);
+                color: var(--role-suspect);
+            }
+
+            /* توهج الطاولة المركزية بحسب الدور */
+            body.role-judge #court-table {
+                box-shadow:
+                    0 0 0 3px rgba(213, 167, 92, 0.55),
+                    0 0 40px rgba(213, 167, 92, 0.35);
+            }
+            body.role-lawyer #court-table {
+                box-shadow:
+                    0 0 0 3px rgba(90, 160, 230, 0.55),
+                    0 0 40px rgba(90, 160, 230, 0.3);
+            }
+            body.role-suspect #court-table {
+                box-shadow:
+                    0 0 0 3px rgba(224, 92, 92, 0.4),
+                    0 0 30px rgba(224, 92, 92, 0.2);
+            }
+
+            /* لوحة القاضي: طابع "منصة القضاء" — حواف أوضح وتوهج ذهبي أعمق */
+            body.role-judge .judge-panel-container,
+            body.role-judge #judge-control-panel {
+                border-color: var(--role-judge) !important;
+                box-shadow:
+                    0 8px 30px rgba(0, 0, 0, 0.6),
+                    0 0 25px rgba(213, 167, 92, 0.25) !important;
+            }
+            body.role-judge .btn-verdict-style {
+                background: linear-gradient(180deg, var(--role-judge) 0%, #b8860b 100%) !important;
+            }
+
+            /* أزرار المحامي العائمة: أزرق بارد بدل الذهبي الافتراضي لتمييزها بصرياً عن أدوات القاضي */
+            body.role-lawyer .btn-evidence-bag-custom-node,
+            body.role-lawyer .btn-objection-card,
+            body.role-lawyer .btn-request-speak {
+                border-color: var(--role-lawyer) !important;
+                color: var(--role-lawyer) !important;
+                background: linear-gradient(135deg, #0f2030 0%, #16324a 100%) !important;
+                box-shadow: 0 4px 15px rgba(90, 160, 230, 0.25) !important;
+            }
+
+            /* صندوق رد المتهم: نبضة حمراء خافتة تعكس ضغط الاستجواب لحظة ظهوره */
+            body.role-suspect #automated-response-box,
+            body.role-suspect #evidence-response-box {
+                border-color: var(--role-suspect) !important;
+                animation: suspectBoxPulse 1.6s ease-out;
+            }
+            @keyframes suspectBoxPulse {
+                0% {
+                    box-shadow: 0 0 0 0 rgba(224, 92, 92, 0.55);
+                }
+                100% {
+                    box-shadow: 0 6px 25px rgba(224, 92, 92, 0.15);
+                }
+            }
         </style>
     </head>
     <body class="body3">
@@ -393,6 +491,9 @@
                 </div>
             </div>
         </div>
+
+        <!-- 🎨 شارة هوية الدور الحالي (يملؤها app.js) -->
+        <span id="role-identity-badge" style="display: none"></span>
 
         <!-- ساحة اللعبة الرئيسية التي تضم الطاولة المحاطة بالكراسي دائرية الشكل -->
         <div id="court-arena">
