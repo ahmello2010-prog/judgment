@@ -739,7 +739,11 @@ function activateCasesClickEngine() {
                                     public_story: card.public_story,
                                     secret_interest: card.secret_interest,
                                     is_guilty: false,
-                                    role_type: "suspect"
+                                    role_type: "suspect",
+                                    // 🌟 [شبكة المعرفة]: تُنقل خاماً هنا فقط لتُحل لاحقاً بعد اكتمال التوزيع، ثم تُحذف
+                                    linked_to: card.linked_to || null,
+                                    link_type: card.link_type || null,
+                                    link_hint: card.link_hint || null
                                 }));
 
                                 // خلط المشتبه بهم العاديين بصورة عشوائية
@@ -774,7 +778,11 @@ function activateCasesClickEngine() {
                                             ? characterCard.secret_interest
                                             : "إثبات البراءة النزيهة.",
                                         is_guilty: false, // جميع المتبقين أبرياء قطعياً
-                                        role_type: "suspect"
+                                        role_type: "suspect",
+                                        // 🌟 [شبكة المعرفة]: تُنقل خاماً هنا فقط لتُحل لاحقاً بعد اكتمال التوزيع، ثم تُحذف
+                                        linked_to: characterCard ? characterCard.linked_to || null : null,
+                                        link_type: characterCard ? characterCard.link_type || null : null,
+                                        link_hint: characterCard ? characterCard.link_hint || null : null
                                     });
                                 }
                             }
@@ -783,6 +791,29 @@ function activateCasesClickEngine() {
                             finalRolesToDistribute.sort(() => Math.random() - 0.5);
                             playersList.forEach((player, index) => {
                                 assignments[player.id] = finalRolesToDistribute[index];
+                            });
+
+                            // 🌟 [شبكة المعرفة]: يُفعَّل الرابط فقط إذا وقع الطرفان فعلاً على لاعبين حقيقيين في هذه الجولة
+                            Object.keys(assignments).forEach((uid) => {
+                                const card = assignments[uid];
+                                if (card && card.linked_to) {
+                                    const targetUID = Object.keys(assignments).find(
+                                        (otherUid) =>
+                                            otherUid !== uid && assignments[otherUid].role_name === card.linked_to
+                                    );
+                                    if (targetUID) {
+                                        card.network_link = {
+                                            target_uid: targetUID,
+                                            target_name: assignments[targetUID].role_name,
+                                            link_type: card.link_type || "",
+                                            link_hint: card.link_hint || ""
+                                        };
+                                    }
+                                    // تنظيف الحقول الخام دائماً (استُخدمت أم لم يقع الطرف الآخر في هذه الجولة)
+                                    delete card.linked_to;
+                                    delete card.link_type;
+                                    delete card.link_hint;
+                                }
                             });
 
                             // 🌟 [البند 3]: اختيار موكل عشوائي واحد وثابت لمحامي الدفاع من بين كل المشتبه بهم (شامل الجاني الحقيقي)
@@ -1044,6 +1075,39 @@ function listenToFinalLobby() {
                 }
             }
 
+            // ==========================================================================
+            // 🌟 [شبكة المعرفة]: رصد بث "تواصل سري" — لا يظهر إلا للاعب المستهدف تحديداً، بصمت
+            // ==========================================================================
+            if (
+                gameState.private_network_message &&
+                gameState.private_network_message.timestamp &&
+                gameState.private_network_message.timestamp !== window.lastProcessedPrivateNetworkMessageTimestamp
+            ) {
+                window.lastProcessedPrivateNetworkMessageTimestamp = gameState.private_network_message.timestamp;
+                const whisper = gameState.private_network_message;
+                if (whisper.to_uid === mySecretUID) {
+                    injectPrivateWhisperBox(whisper);
+                }
+            }
+
+            // ==========================================================================
+            // 🌟 [شبكة المعرفة]: رصد بث "كشف للمحكمة" — يظهر للجميع عبر Kill-Feed مع مخاطرة فضح الكاشف نفسه
+            // ==========================================================================
+            if (
+                gameState.network_reveal &&
+                gameState.network_reveal.timestamp &&
+                gameState.network_reveal.timestamp !== window.lastProcessedNetworkRevealTimestamp
+            ) {
+                window.lastProcessedNetworkRevealTimestamp = gameState.network_reveal.timestamp;
+                const reveal = gameState.network_reveal;
+                const spokenReveal = `${reveal.from_name || "أحد اللاعبين"} يكشف للمحكمة أن ${reveal.target_name || "أحد الحاضرين"} ${reveal.link_type || "مرتبط بمعرفة سرية"}: ${reveal.link_hint}`;
+                triggerKillFeedAlert(
+                    `⚡ ${reveal.from_name || "أحد اللاعبين"} يكشف للمحكمة عن (${reveal.target_name || "أحد الحاضرين"}): ${reveal.link_hint}`,
+                    true,
+                    { speakable: true, speechText: spokenReveal }
+                );
+            }
+
             // جدار حماية وتوهج كرسي المحامي المعترض قسرياً عند الجميع - كودك الأصلي
             if (gameState.status === "objection_active" && gameState.activeSpeakerUID) {
                 const objectorUID = gameState.activeSpeakerUID;
@@ -1292,12 +1356,18 @@ function renderCircularSeats(playersList, assignments, gameState) {
                             btnQuestions.id = "unified-questions-button-node";
                             btnQuestions.className = "btn-judge-action btn-interrogate-style";
                             btnQuestions.textContent = "🗨️ الأسئلة";
+                            // 🌟 [تعديل نظامي]: معطّل إلى أن يستجوب القاضي لاعباً فعلياً عبر "استجواب لاعب"
+                            btnQuestions.disabled = activeSpeakerUID === "none";
+                            btnQuestions.style.opacity = activeSpeakerUID === "none" ? "0.4" : "1";
+                            btnQuestions.style.cursor = activeSpeakerUID === "none" ? "not-allowed" : "pointer";
 
-                            // 🌟 [مودال اختيار اللاعب المستهدف]: نفس فكرة مودال حقيبة الأدلة تماماً لضمان اتساق تجربة الاستخدام
+                            // 🌟 [تعديل نظامي]: القاضي لم يعد يفتح مودال اختيار لاعب هنا إطلاقاً — الأسئلة تُوجَّه
+                            // إلزامياً لمن اختاره فعلاً بزر "استجواب لاعب" (activeSpeakerUID)، فلا مجال لتخادع نظام النقاط
                             const renderTargetedQuestionsPicker = (
                                 activeCase,
                                 latestPlayersData,
-                                latestAssignments
+                                latestAssignments,
+                                fixedTargetUID
                             ) => {
                                 const modal = document.getElementById("custom-alert-modal");
                                 if (!modal) return;
@@ -1305,24 +1375,40 @@ function renderCircularSeats(playersList, assignments, gameState) {
 
                                 document.getElementById("modal-alert-title").textContent = "🗨️ استجواب لاعب محدد";
 
-                                let pickerHTML = `
-                                <div style="text-align: right; font-family: 'Alexandria', sans-serif; direction: rtl;">
+                                const fixedTargetKey = fixedTargetUID
+                                    ? Object.keys(latestPlayersData).find(
+                                          (k) => latestPlayersData[k].uid === fixedTargetUID
+                                      )
+                                    : null;
+                                const fixedTargetName = fixedTargetKey ? latestPlayersData[fixedTargetKey].name : "";
+
+                                let pickerHTML = `<div style="text-align: right; font-family: 'Alexandria', sans-serif; direction: rtl;">`;
+
+                                if (fixedTargetUID) {
+                                    // 🎯 القاضي مقفول على اللاعب الذي اختاره فعلاً — لا قائمة اختيار بعد الآن
+                                    pickerHTML += `<p style="color: var(--gold-glow); font-size: 0.85rem; font-weight: 700; margin: 0 0 12px; line-height: 1.6;">🎯 الأسئلة موجّهة حصرياً للاعب المستجوَب حالياً: <b>${fixedTargetName || "اللاعب المحدد"}</b></p>`;
+                                } else {
+                                    pickerHTML += `
                                     <label style="color: var(--gold-glow); font-size: 0.8rem; font-weight: 700; display: block; margin-bottom: 8px;">اختر اللاعب الذي تريد استجوابه:</label>
                                     <select id="questions-target-player" style="width: 100%; padding: 10px; background: #161c26; color: #fff; border: 1px solid var(--gold-glow); border-radius: 6px; font-family: 'Alexandria'; font-size: 0.85rem; outline: none; margin-bottom: 12px;">
                                         <option value="">-- اختر لاعباً --</option>
-                            `;
-
-                                Object.keys(latestPlayersData).forEach((key) => {
-                                    const p = latestPlayersData[key];
-                                    const card = latestAssignments[p.uid] || {};
-                                    if (card.role_type !== "judge" && card.role_type !== "lawyer") {
-                                        pickerHTML += `<option value="${p.uid}">${p.name} (${card.role_name || "متهم"})</option>`;
-                                    }
-                                });
+                                `;
+                                    Object.keys(latestPlayersData).forEach((key) => {
+                                        const p = latestPlayersData[key];
+                                        const card = latestAssignments[p.uid] || {};
+                                        if (card.role_type !== "judge" && card.role_type !== "lawyer") {
+                                            pickerHTML += `<option value="${p.uid}">${p.name} (${card.role_name || "متهم"})</option>`;
+                                        }
+                                    });
+                                    pickerHTML += `</select>`;
+                                }
 
                                 pickerHTML += `
-                                    </select>
-                                    <p id="questions-count-display" style="color: #cfd8e3; font-size: 0.85rem; text-align: center; min-height: 20px; margin: 0 0 12px;">بانتظار اختيار اللاعب المستهدف لعرض عدد أسئلته الخاصة...</p>
+                                    <p id="questions-count-display" style="color: #cfd8e3; font-size: 0.85rem; text-align: center; min-height: 20px; margin: 0 0 12px;">${
+                                        fixedTargetUID
+                                            ? "جاري تحضير أسئلة هذا اللاعب..."
+                                            : "بانتظار اختيار اللاعب المستهدف لعرض عدد أسئلته الخاصة..."
+                                    }</p>
                                     <button id="btn-pull-random-question" disabled style="width: 100%; padding: 12px; background: var(--gold-glow); color: #101820; border: none; border-radius: 8px; font-family: 'Alexandria'; font-weight: 700; font-size: 0.9rem; cursor: pointer; opacity: 0.5;">🎲 اسحب سؤالاً عشوائياً</button>
                                     <p id="questions-drawn-result" style="color: #ffe9b3; font-size: 0.85rem; text-align: center; margin-top: 12px; min-height: 20px;"></p>
                                 </div>
@@ -1330,17 +1416,15 @@ function renderCircularSeats(playersList, assignments, gameState) {
 
                                 document.getElementById("modal-alert-message").innerHTML = pickerHTML;
 
-                                const targetSelect = document.getElementById("questions-target-player");
                                 const countDisplay = document.getElementById("questions-count-display");
                                 const btnPull = document.getElementById("btn-pull-random-question");
                                 const drawnResult = document.getElementById("questions-drawn-result");
 
-                                // 🌟 مفتاح تخزين مستقل لكل (سائل + مستهدف) على هذا الجهاز تحديداً، بديلاً عن التسمية القديمة الحصرية بالادعاء فقط
+                                // 🌟 مفتاح تخزين مستقل لكل (سائل + مستهدف) على هذا الجهاز تحديداً
                                 const getStorageKey = (targetUID, caseId) =>
                                     `remaining_questions_case_${caseId}_asker_${mySecretUID}_target_${targetUID}_${currentRoomCode}`;
 
-                                targetSelect.addEventListener("change", function () {
-                                    const targetUID = targetSelect.value;
+                                const loadQuestionsForTarget = (targetUID) => {
                                     drawnResult.textContent = "";
                                     stopSpeech();
                                     const staleVoice = drawnResult.nextElementSibling;
@@ -1355,7 +1439,6 @@ function renderCircularSeats(playersList, assignments, gameState) {
                                     }
 
                                     const targetCard = latestAssignments[targetUID] || {};
-                                    // 🌟 [استهداف بالمعرّف]: تصفية الأسئلة لتشمل فقط الأسئلة العامة أو المطابقة تحديداً لهوية هذا اللاعب المستهدف
                                     const targetedPool = fullPool.filter(
                                         (q) => !q.target_role || resolveEvidenceItemMatchGlobal(q, targetCard)
                                     );
@@ -1363,7 +1446,6 @@ function renderCircularSeats(playersList, assignments, gameState) {
 
                                     const storageKey = getStorageKey(targetUID, activeCase.id);
                                     if (!sessionStorage.getItem(storageKey)) {
-                                        // 🌟 [البند 2]: تخزين كائن السؤال كاملاً (النص + الإجابات الثلاث) بدل النص المجرد فقط
                                         const questionObjects = finalPool.filter((q) => q.text);
                                         sessionStorage.setItem(storageKey, JSON.stringify(questionObjects));
                                     }
@@ -1405,7 +1487,7 @@ function renderCircularSeats(playersList, assignments, gameState) {
                                             btnPull.style.opacity = "0.5";
                                         }
 
-                                        // 🌟 [صندوق الردود الموقوتة]: بث السؤال والإجابات الثلاث الجاهزة سحابياً - سيلتقطه الجميع (Kill-Feed عام) والمستهدف تحديداً (أزرار الرد)
+                                        // 🌟 بث السؤال والإجابات الثلاث الجاهزة سحابياً - Kill-Feed عام + صندوق ردّ خاص للمستهدف
                                         update(gameStateRef, {
                                             active_question_prompt: {
                                                 target_uid: targetUID,
@@ -1418,39 +1500,68 @@ function renderCircularSeats(playersList, assignments, gameState) {
                                             }
                                         });
                                     };
-                                });
+                                };
+
+                                if (fixedTargetUID) {
+                                    loadQuestionsForTarget(fixedTargetUID);
+                                } else {
+                                    document
+                                        .getElementById("questions-target-player")
+                                        .addEventListener("change", function () {
+                                            loadQuestionsForTarget(this.value);
+                                        });
+                                }
 
                                 modal.style.setProperty("display", "flex", "important");
                                 modal.className = "modal-overlay-active";
                             };
 
-                            // 🎭 مودال الاستجواب الارتجالي: اختيار المتهم فقط، والسؤال يُطرح شفهياً (لا JSON إطلاقاً)
-                            const renderImprovisedQuestionsPicker = (latestPlayersData, latestAssignments) => {
+                            // 🎭 مودال الاستجواب الارتجالي: القاضي مقفول على اللاعب الذي اختاره فعلاً (fixedTargetUID)، والسؤال يُطرح شفهياً
+                            const renderImprovisedQuestionsPicker = (
+                                latestPlayersData,
+                                latestAssignments,
+                                fixedTargetUID
+                            ) => {
                                 const modal = document.getElementById("custom-alert-modal");
                                 if (!modal) return;
 
                                 document.getElementById("modal-alert-title").textContent = "🎭 استجواب ارتجالي";
 
-                                let optionsHTML = "";
-                                Object.keys(latestPlayersData).forEach((key) => {
-                                    const p = latestPlayersData[key];
-                                    const card = latestAssignments[p.uid] || {};
-                                    if (card.role_type !== "judge" && card.role_type !== "lawyer") {
-                                        optionsHTML += `<option value="${escapeHtml(p.uid)}">${escapeHtml(p.name)} (${escapeHtml(card.role_name || "متهم")})</option>`;
-                                    }
-                                });
+                                const fixedTargetKey = fixedTargetUID
+                                    ? Object.keys(latestPlayersData).find(
+                                          (k) => latestPlayersData[k].uid === fixedTargetUID
+                                      )
+                                    : null;
+                                const fixedTargetName = fixedTargetKey ? latestPlayersData[fixedTargetKey].name : "";
 
-                                document.getElementById("modal-alert-message").innerHTML = `
-                <div style="text-align: right; font-family: 'Alexandria', sans-serif; direction: rtl;">
-                    <p style="color: #cfd8e3; font-family: 'Harmattan'; font-size: 1.15rem; line-height: 1.5; margin: 0 0 12px;">
-                        وضع الارتجال القضائي: لا توجد أسئلة جاهزة. اختر اللاعب ثم اطرح سؤالك من خيالك بصوتك، وسيصله تنبيه ليختار أسلوب إجابته.
-                    </p>
+                                let selectorHTML = "";
+                                if (fixedTargetUID) {
+                                    selectorHTML = `<p style="color: var(--gold-glow); font-size: 0.85rem; font-weight: 700; margin: 0 0 12px; line-height: 1.6;">🎯 موجَّه حصرياً للاعب المستجوَب حالياً: <b>${escapeHtml(fixedTargetName || "اللاعب المحدد")}</b></p>`;
+                                } else {
+                                    let optionsHTML = "";
+                                    Object.keys(latestPlayersData).forEach((key) => {
+                                        const p = latestPlayersData[key];
+                                        const card = latestAssignments[p.uid] || {};
+                                        if (card.role_type !== "judge" && card.role_type !== "lawyer") {
+                                            optionsHTML += `<option value="${escapeHtml(p.uid)}">${escapeHtml(p.name)} (${escapeHtml(card.role_name || "متهم")})</option>`;
+                                        }
+                                    });
+                                    selectorHTML = `
                     <label style="color: var(--gold-glow); font-size: 0.8rem; font-weight: 700; display: block; margin-bottom: 8px;">اختر اللاعب الذي تريد استجوابه:</label>
                     <select id="improv-target-player" style="width: 100%; padding: 10px; background: #161c26; color: #fff; border: 1px solid var(--gold-glow); border-radius: 6px; font-family: 'Alexandria'; font-size: 0.85rem; outline: none; margin-bottom: 12px;">
                         <option value="">-- اختر لاعباً --</option>
                         ${optionsHTML}
                     </select>
-                    <button id="btn-send-improv-question" disabled style="width: 100%; padding: 12px; background: var(--gold-glow); color: #101820; border: none; border-radius: 8px; font-family: 'Alexandria'; font-weight: 700; font-size: 0.9rem; cursor: pointer; opacity: 0.5;">📣 وجّه سؤالك الآن</button>
+                `;
+                                }
+
+                                document.getElementById("modal-alert-message").innerHTML = `
+                <div style="text-align: right; font-family: 'Alexandria', sans-serif; direction: rtl;">
+                    <p style="color: #cfd8e3; font-family: 'Harmattan'; font-size: 1.15rem; line-height: 1.5; margin: 0 0 12px;">
+                        وضع الارتجال القضائي: لا توجد أسئلة جاهزة. اطرح سؤالك من خيالك بصوتك، وسيصله تنبيه ليختار أسلوب إجابته.
+                    </p>
+                    ${selectorHTML}
+                    <button id="btn-send-improv-question" ${fixedTargetUID ? "" : "disabled"} style="width: 100%; padding: 12px; background: var(--gold-glow); color: #101820; border: none; border-radius: 8px; font-family: 'Alexandria'; font-weight: 700; font-size: 0.9rem; cursor: pointer; opacity: ${fixedTargetUID ? "1" : "0.5"};">📣 وجّه سؤالك الآن</button>
                     <p id="improv-question-status" style="color: #ffe9b3; font-size: 0.8rem; text-align: center; margin: 12px 0 0; min-height: 20px; line-height: 1.7;"></p>
                 </div>
             `;
@@ -1459,15 +1570,17 @@ function renderCircularSeats(playersList, assignments, gameState) {
                                 const btnSend = document.getElementById("btn-send-improv-question");
                                 const statusLine = document.getElementById("improv-question-status");
 
-                                targetSelect.addEventListener("change", function () {
-                                    const ready = !!targetSelect.value;
-                                    btnSend.disabled = !ready;
-                                    btnSend.style.opacity = ready ? "1" : "0.5";
-                                    statusLine.textContent = "";
-                                });
+                                if (targetSelect) {
+                                    targetSelect.addEventListener("change", function () {
+                                        const ready = !!targetSelect.value;
+                                        btnSend.disabled = !ready;
+                                        btnSend.style.opacity = ready ? "1" : "0.5";
+                                        statusLine.textContent = "";
+                                    });
+                                }
 
                                 btnSend.addEventListener("click", function () {
-                                    const targetUID = targetSelect.value;
+                                    const targetUID = fixedTargetUID || (targetSelect ? targetSelect.value : "");
                                     if (!targetUID || btnSend.disabled) return;
 
                                     const targetPlayerKey = Object.keys(latestPlayersData).find(
@@ -1500,7 +1613,7 @@ function renderCircularSeats(playersList, assignments, gameState) {
                                     btnSend.disabled = true;
                                     btnSend.style.opacity = "0.5";
                                     setTimeout(() => {
-                                        if (targetSelect.value) {
+                                        if (fixedTargetUID || (targetSelect && targetSelect.value)) {
                                             btnSend.disabled = false;
                                             btnSend.style.opacity = "1";
                                         }
@@ -1526,8 +1639,22 @@ function renderCircularSeats(playersList, assignments, gameState) {
                                     const latestGameState = roomData.game_state || {};
                                     const latestAssignments = latestGameState.assignments || {};
 
+                                    // 🌟 [تعديل نظامي]: الزر مرفوض تماماً إلا إذا كان القاضي يستجوب لاعباً فعلاً حالياً،
+                                    // حتى لا يُستخدم لسحب أسئلة دون استجواب رسمي (تخادع على نظام النقاط)
+                                    const activeTargetUID = latestGameState.activeSpeakerUID || "none";
+                                    if (activeTargetUID === "none") {
+                                        showLocalToast(
+                                            "🔒 اختر لاعباً للاستجواب أولاً بالضغط على زر 'استجواب لاعب' قبل استخدام الأسئلة."
+                                        );
+                                        return;
+                                    }
+
                                     if (isImprovisationMode(latestGameState)) {
-                                        renderImprovisedQuestionsPicker(latestPlayersData, latestAssignments);
+                                        renderImprovisedQuestionsPicker(
+                                            latestPlayersData,
+                                            latestAssignments,
+                                            activeTargetUID
+                                        );
                                         return;
                                     }
 
@@ -1542,7 +1669,8 @@ function renderCircularSeats(playersList, assignments, gameState) {
                                             renderTargetedQuestionsPicker(
                                                 activeCase,
                                                 latestPlayersData,
-                                                latestAssignments
+                                                latestAssignments,
+                                                activeTargetUID
                                             );
                                         })
                                         .catch((err) => console.error("خطأ في تحميل مسبح الأسئلة:", err));
@@ -1574,6 +1702,13 @@ function renderCircularSeats(playersList, assignments, gameState) {
                         counterDiv.innerHTML = `الاستجوابات <strong id="interrogation-count-number">${currentInterrogationsCount}</strong>`;
                         judgePanel.appendChild(counterDiv);
 
+                        // 🌟 [تحذير عقوبة تشتيت الجلسة]: نص أحمر فوق زر إصدار الحكم، يظهر فقط قبل الوصول لمضاعف 15 القادم مباشرة
+                        const penaltyWarning = document.createElement("p");
+                        penaltyWarning.id = "interrogation-penalty-warning";
+                        penaltyWarning.style.cssText =
+                            "width: 100%; margin: 4px 0 0; color: #ff5252; font-family: 'Alexandria', sans-serif; font-weight: 700; font-size: 0.68rem; text-align: center; line-height: 1.6; display: none;";
+                        judgePanel.appendChild(penaltyWarning);
+
                         // 4. زر إصدار الحكم النهائي (الزر الأصلي)
                         const btnVerdict = document.createElement("button");
                         btnVerdict.id = "btn-verdict-trigger";
@@ -1598,6 +1733,32 @@ function renderCircularSeats(playersList, assignments, gameState) {
 
                     const liveCounter = document.getElementById("interrogation-count-number");
                     if (liveCounter) liveCounter.textContent = currentInterrogationsCount;
+
+                    // 🌟 [تعديل نظامي]: تفعيل/تعطيل زر "🗨️ الأسئلة" حياً تبعاً لوجود لاعب مستجوَب حالياً من عدمه
+                    const liveQuestionsBtn = document.getElementById("unified-questions-button-node");
+                    if (liveQuestionsBtn) {
+                        const hasActiveTarget = activeSpeakerUID !== "none";
+                        liveQuestionsBtn.disabled = !hasActiveTarget;
+                        liveQuestionsBtn.style.opacity = hasActiveTarget ? "1" : "0.4";
+                        liveQuestionsBtn.style.cursor = hasActiveTarget ? "pointer" : "not-allowed";
+                    }
+
+                    // 🌟 [تحذير عقوبة تشتيت الجلسة]: يظهر عند الاقتراب (بحد 3) من أي مضاعف قادم لـ 15
+                    const livePenaltyWarning = document.getElementById("interrogation-penalty-warning");
+                    if (livePenaltyWarning) {
+                        const remainderToNextPenalty = 15 - (currentInterrogationsCount % 15);
+                        const nextPenaltyMilestone = currentInterrogationsCount + remainderToNextPenalty;
+                        if (
+                            remainderToNextPenalty > 0 &&
+                            remainderToNextPenalty <= 3 &&
+                            currentInterrogationsCount > 0
+                        ) {
+                            livePenaltyWarning.textContent = `⚠️ تحذير: عند بلوغ الاستجواب ${nextPenaltyMilestone} سيتم خصم 5 نقاط من رصيدك فوراً!`;
+                            livePenaltyWarning.style.display = "block";
+                        } else {
+                            livePenaltyWarning.style.display = "none";
+                        }
+                    }
 
                     const liveVerdictBtn = document.getElementById("btn-verdict-trigger");
                     if (liveVerdictBtn) {
@@ -2478,18 +2639,32 @@ if (!window.hasJudgeInterrogationEngineAttached) {
                         }, 1000);
                     }
 
-                    // 🌟 [تعديل مستمع نقر كراسي الحضور للقاضي - دمج عقوبة مضاعفات 9]
+                    // 🌟 [تعديل مستمع نقر كراسي الحضور للقاضي - دمج عقوبة مضاعفات 15]
                     const nextCount = currentInterrogationsCount + 1;
 
-                    // 🔨 جدار حماية عقوبة تشتيت الجلسة: إذا وصل العداد للرقم 9 ومضاعفاتها، يخصم 5 نقاط فوراً من القاضي
-                    if (nextCount > 0 && nextCount % 9 === 0) {
-                        const judgeScoreRef = ref(db, `rooms/${currentRoomCode}/players_scores/${mySecretUID}`);
-                        get(judgeScoreRef).then((scoreSnap) => {
-                            const currentScore = scoreSnap.exists() ? scoreSnap.val() : 0;
-                            set(judgeScoreRef, currentScore - 5);
-                            console.log(
-                                `⚠️ عقوبة تشتيت الجلسة! العداد المركزي وصل إلى (${nextCount})، تم خصم 5 نقاط من رصيد القاضي.`
-                            );
+                    // 🔨 جدار حماية عقوبة تشتيت الجلسة: إذا وصل العداد للرقم 15 ومضاعفاته، يخصم 5 نقاط فوراً من القاضي
+                    if (nextCount > 0 && nextCount % 15 === 0) {
+                        // 🛒 [متجر - صمام أمان]: يُستهلك صمام واحد إن وُجد فتُلغى هذه الخصمة تحديداً بلا أي تغيير
+                        // في جدول العقوبة نفسه (لا يزال يُفحص عند كل مضاعف 15 قادم: 30، 45...)
+                        const valveRef = ref(db, `rooms/${currentRoomCode}/shop_purchases/${mySecretUID}/safety_valve`);
+                        get(valveRef).then((valveSnap) => {
+                            const valveCount = valveSnap.exists() ? valveSnap.val() : 0;
+                            const judgeScoreRef = ref(db, `rooms/${currentRoomCode}/players_scores/${mySecretUID}`);
+                            if (valveCount > 0) {
+                                set(valveRef, valveCount - 1);
+                                showLocalToast(
+                                    `🛡️ استُهلك صمام أمان لتفادي عقوبة الاستجواب رقم ${nextCount}! المتبقي لديك: ${valveCount - 1}.`
+                                );
+                                console.log(`🛡️ [صمام أمان]: تم إلغاء عقوبة الاستجواب رقم ${nextCount}.`);
+                            } else {
+                                get(judgeScoreRef).then((scoreSnap) => {
+                                    const currentScore = scoreSnap.exists() ? scoreSnap.val() : 0;
+                                    set(judgeScoreRef, currentScore - 5);
+                                    console.log(
+                                        `⚠️ عقوبة تشتيت الجلسة! العداد المركزي وصل إلى (${nextCount})، تم خصم 5 نقاط من رصيد القاضي.`
+                                    );
+                                });
+                            }
                         });
                     }
 
@@ -3256,6 +3431,14 @@ function injectLawyerActionControls(
                 const latestGameState = roomData.game_state || {};
                 const latestAssignments = latestGameState.assignments || {};
 
+                // 🌟 [تعديل نظامي]: المحامي لا يفتح الأدلة إلا وهو صاحب الكلمة فعلياً (طلب الكلمة أو اعتراض قسري وأعطاه القاضي الفرصة)
+                if (myRoleCard.role_type === "lawyer" && (latestGameState.activeSpeakerUID || "none") !== mySecretUID) {
+                    showLocalToast(
+                        "🔒 يجب طلب الكلمة أو استخدام الاعتراض القسري أولاً، والحصول على فرصة التحدث من القاضي."
+                    );
+                    return;
+                }
+
                 fetch("cases.json")
                     .then((response) => {
                         if (!response.ok) throw new Error("فشل في تحميل ملف القضايا");
@@ -3519,6 +3702,14 @@ function injectLawyerActionControls(
                 const latestGameState = roomData.game_state || {};
                 const latestAssignments = latestGameState.assignments || {};
 
+                // 🌟 [تعديل نظامي]: المحامي لا يفتح الأسئلة إلا وهو صاحب الكلمة فعلياً (طلب الكلمة أو اعتراض قسري وأعطاه القاضي الفرصة)
+                if (myRoleCard.role_type === "lawyer" && (latestGameState.activeSpeakerUID || "none") !== mySecretUID) {
+                    showLocalToast(
+                        "🔒 يجب طلب الكلمة أو استخدام الاعتراض القسري أولاً، والحصول على فرصة التحدث من القاضي."
+                    );
+                    return;
+                }
+
                 if (isImprovisationMode(latestGameState)) {
                     renderImprovisedQuestionsPicker(latestPlayersData, latestAssignments);
                     return;
@@ -3660,6 +3851,65 @@ function injectLawyerActionControls(
         radarHolder.appendChild(btnRadar);
         appArena.appendChild(radarHolder);
     }
+}
+
+// ==========================================================================
+// 🌟 [شبكة المعرفة]: صندوق الهمس السري الخاص — يظهر فقط للاعب المستهدف بالتواصل، ولا يُبث لأي جهاز آخر
+// ==========================================================================
+function injectPrivateWhisperBox(promptData) {
+    const old = document.getElementById("private-whisper-box");
+    if (old) old.remove();
+
+    const box = document.createElement("div");
+    box.id = "private-whisper-box";
+    box.style.cssText = `
+        position: fixed !important; bottom: 90px !important; left: 50% !important; transform: translateX(-50%) !important;
+        z-index: 9999999 !important; display: flex !important; flex-direction: column !important; gap: 8px !important;
+        background: rgba(5, 10, 18, 0.97) !important; border: 2px solid #6ee7a0 !important;
+        border-radius: 14px !important; padding: 14px !important; width: 92% !important; max-width: 380px !important;
+        box-shadow: 0 6px 25px rgba(110, 231, 160, 0.4) !important; direction: rtl !important; box-sizing: border-box !important;
+        animation: smoothPanelReveal 0.4s ease-out;
+    `;
+
+    const label = document.createElement("p");
+    label.style.cssText =
+        "color: #fff; font-family: 'Alexandria', sans-serif; font-size: 0.8rem; text-align: center; margin: 0 0 6px; font-weight: 700; line-height: 1.6;";
+    label.textContent = `🤫 ${promptData.from_name || "أحد اللاعبين"} يهمس لك بصمت (${promptData.link_type || "معرفة سرية"}): ${promptData.message}`;
+    box.appendChild(label);
+
+    const btnClose = document.createElement("button");
+    btnClose.textContent = "فهمت، إغلاق";
+    btnClose.style.cssText =
+        "padding: 8px; background: rgba(255,255,255,0.05); border: 1px solid #6ee7a0; color: #6ee7a0; font-family: 'Alexandria', sans-serif; font-weight: 700; font-size: 0.78rem; border-radius: 8px; cursor: pointer;";
+    btnClose.addEventListener("click", () => box.remove());
+    box.appendChild(btnClose);
+
+    document.body.appendChild(box);
+    setTimeout(() => {
+        if (box.isConnected) box.remove();
+    }, 15000);
+}
+
+// ==========================================================================
+// 🌟 [إشعار عائم محلي]: رسالة قصيرة تظهر فقط على جهاز صاحبها ثم تتلاشى تلقائياً، تُستخدم لرفض
+// إجراء غير مسموح مؤقتاً (مثل محاولة فتح الأسئلة/الأدلة قبل الحصول على فرصة التحدث)
+// ==========================================================================
+function showLocalToast(message) {
+    const old = document.getElementById("local-floating-toast");
+    if (old) old.remove();
+
+    const toast = document.createElement("div");
+    toast.id = "local-floating-toast";
+    toast.style.cssText = `
+        position: fixed !important; bottom: 24px !important; left: 50% !important; transform: translateX(-50%) !important;
+        max-width: 88% !important; z-index: 2147483600 !important; background: rgba(5, 10, 18, 0.96) !important;
+        border: 2px solid var(--gold-glow, #d5a75c) !important; color: #fff !important; font-family: 'Alexandria', sans-serif !important;
+        font-size: 0.8rem !important; font-weight: 600 !important; line-height: 1.7 !important; padding: 10px 16px !important;
+        border-radius: 10px !important; text-align: center !important; direction: rtl !important; box-shadow: 0 6px 24px rgba(0,0,0,0.6) !important;
+    `;
+    toast.textContent = message;
+    document.body.appendChild(toast);
+    setTimeout(() => toast.remove(), 3800);
 }
 
 // ==========================================================================
@@ -4210,6 +4460,168 @@ function runLiveCloudScoreTracker() {
 document.addEventListener("DOMContentLoaded", () => {
     runLiveCloudScoreTracker();
 });
+
+// ==========================================================================
+// 🛒 [متجر المشتريات القضائي]: مشتريات مربوطة بالغرفة الحالية فقط (rooms/{code}/shop_purchases/{uid}/{item} = عدد)
+// وتُصفَّر تلقائياً بإنشاء غرفة جديدة. كل ميزة مربوطة بدورها (role) فلا تعمل إلا عند حمل هذا الدور.
+// السحب على المكشوف مسموح: يمكن الشراء برصيد أقل من السعر فينزل الرصيد بالسالب.
+// ==========================================================================
+const SHOP_CATALOG = [
+    {
+        id: "safety_valve",
+        role: "judge",
+        roleLabel: "القاضي",
+        icon: "🛡️",
+        name: "صمام أمان",
+        price: 20,
+        active: true,
+        desc: "يلغي خصم عقوبة تشتيت الجلسة مرة واحدة عند بلوغ مضاعف 15 (يُشترى منه أكثر من واحد)."
+    },
+    {
+        id: "prosecutor_reveal",
+        role: "judge",
+        roleLabel: "القاضي / محامي الادعاء",
+        icon: "🕵️",
+        name: "كشف المصلحة السرية",
+        price: 60,
+        active: false,
+        desc: "أغلى ميزة: تكشف المصلحة السرية لمتهم تختاره."
+    },
+    {
+        id: "third_objection",
+        role: "lawyer",
+        roleLabel: "المحامي",
+        icon: "🛑",
+        name: "كارت اعتراض ثالث",
+        price: 25,
+        active: false,
+        desc: "اعتراض قضائي إضافي."
+    },
+    {
+        id: "short_justification",
+        role: "lawyer",
+        roleLabel: "المحامي",
+        icon: "⏱️",
+        name: "تقصير وقت التبرير",
+        price: 30,
+        active: false,
+        desc: "يقلّص مهلة تبرير المتهم إلى 15 ثانية."
+    },
+    {
+        id: "silence_ticket",
+        role: "suspect",
+        roleLabel: "المتهم",
+        icon: "🤐",
+        name: "تذكرة الصمت",
+        price: 15,
+        active: false,
+        desc: "رد آلي بدون كلام."
+    },
+    {
+        id: "false_witness",
+        role: "suspect",
+        roleLabel: "المتهم",
+        icon: "📜",
+        name: "شهادة زور",
+        price: 30,
+        active: false,
+        desc: "ثغرة دفاع إضافية."
+    },
+    {
+        id: "camera_jam",
+        role: "suspect",
+        roleLabel: "المتهم",
+        icon: "📵",
+        name: "تشويش الكاميرات",
+        price: 35,
+        active: false,
+        desc: "يحجب رادار القاضي لجولة واحدة."
+    }
+];
+
+function openShopModal() {
+    if (!currentRoomCode || !mySecretUID) return;
+    const old = document.getElementById("shop-overlay");
+    if (old) old.remove();
+
+    const overlay = document.createElement("div");
+    overlay.id = "shop-overlay";
+    overlay.style.cssText =
+        "position: fixed; inset: 0; z-index: 2147483000; background: rgba(0,0,0,0.7); display: flex; align-items: center; justify-content: center; direction: rtl; font-family: 'Alexandria', sans-serif;";
+    overlay.innerHTML = `
+        <div style="width: 92%; max-width: 420px; max-height: 86vh; overflow-y: auto; background: #101820; border: 1px solid rgba(213,167,92,0.6); border-radius: 14px; padding: 16px; color: #fff;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+                <strong style="color: #d5a75c; font-size: 1rem;">🛒 متجر المشتريات القضائي</strong>
+                <button id="shop-close" type="button" style="background: none; border: none; color: #cfd8e3; font-size: 1.2rem; cursor: pointer;">✕</button>
+            </div>
+            <p style="margin: 0 0 10px; font-size: 0.72rem; color: #cfd8e3; line-height: 1.7;">رصيدك: <b id="shop-balance" style="color: #d5a75c;">0</b> — يُسمح بالشراء بالسالب. مشترياتك تخص هذه الغرفة فقط وتعمل حين تحمل الدور المناسب.</p>
+            <div id="shop-items"></div>
+            <p id="shop-status" style="margin: 8px 0 0; min-height: 16px; font-size: 0.72rem; color: #ffe9b3; text-align: center;"></p>
+        </div>`;
+    document.body.appendChild(overlay);
+    overlay.addEventListener("click", (e) => {
+        if (e.target === overlay) overlay.remove();
+    });
+    overlay.querySelector("#shop-close").addEventListener("click", () => overlay.remove());
+
+    const scoreRef = ref(db, `rooms/${currentRoomCode}/players_scores/${mySecretUID}`);
+    const purchasesRef = ref(db, `rooms/${currentRoomCode}/shop_purchases/${mySecretUID}`);
+    const status = overlay.querySelector("#shop-status");
+
+    const render = (score, owned) => {
+        overlay.querySelector("#shop-balance").textContent = score;
+        overlay.querySelector("#shop-items").innerHTML = SHOP_CATALOG.map(
+            (it) => `
+            <div style="border: 1px solid rgba(255,255,255,0.12); border-radius: 10px; padding: 10px; margin-bottom: 8px; opacity: ${it.active ? 1 : 0.55};">
+                <div style="display: flex; justify-content: space-between; align-items: center; gap: 8px;">
+                    <b style="font-size: 0.85rem;">${it.icon} ${it.name}</b>
+                    <span style="font-size: 0.65rem; color: #8d99a8;">${it.roleLabel}</span>
+                </div>
+                <p style="margin: 4px 0 8px; font-size: 0.72rem; color: #cfd8e3; line-height: 1.6;">${it.desc}</p>
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <span style="font-size: 0.72rem; color: #d5a75c;">${it.price} نقطة${owned[it.id] ? ` — تملك: ${owned[it.id]}` : ""}</span>
+                    <button type="button" data-buy="${it.id}" ${it.active ? "" : "disabled"} style="padding: 6px 12px; background: ${it.active ? "#d5a75c" : "transparent"}; color: ${it.active ? "#101820" : "#8d99a8"}; border: 1px solid ${it.active ? "#d5a75c" : "#8d99a8"}; border-radius: 8px; font-family: 'Alexandria', sans-serif; font-weight: 700; font-size: 0.72rem; cursor: ${it.active ? "pointer" : "not-allowed"};">${it.active ? "شراء" : "قريباً"}</button>
+                </div>
+            </div>`
+        ).join("");
+    };
+
+    const refresh = () =>
+        Promise.all([get(scoreRef), get(purchasesRef)]).then(([sSnap, pSnap]) =>
+            render(sSnap.exists() ? sSnap.val() : 0, pSnap.exists() ? pSnap.val() : {})
+        );
+    refresh();
+
+    overlay.querySelector("#shop-items").addEventListener("click", (e) => {
+        const btn = e.target.closest("[data-buy]");
+        if (!btn || btn.disabled) return;
+        const item = SHOP_CATALOG.find((i) => i.id === btn.getAttribute("data-buy"));
+        if (!item || !item.active) return;
+        btn.disabled = true;
+        Promise.all([get(scoreRef), get(ref(db, `rooms/${currentRoomCode}/shop_purchases/${mySecretUID}/${item.id}`))])
+            .then(([sSnap, cSnap]) => {
+                const score = sSnap.exists() ? sSnap.val() : 0;
+                const count = cSnap.exists() ? cSnap.val() : 0;
+                // الخصم والتفعيل معاً: الميزة تُزرع فوراً في السحابة ويقرؤها منطق اللعب مباشرة
+                return Promise.all([
+                    set(scoreRef, score - item.price),
+                    set(ref(db, `rooms/${currentRoomCode}/shop_purchases/${mySecretUID}/${item.id}`), count + 1)
+                ]);
+            })
+            .then(() => {
+                status.textContent = `✅ تم شراء "${item.name}".`;
+                return refresh();
+            })
+            .catch(() => {
+                status.textContent = "⚠️ تعذّر إتمام الشراء، حاول مرة أخرى.";
+            });
+    });
+}
+
+document.addEventListener("DOMContentLoaded", () => {
+    const shopBtn = document.getElementById("btn-open-shop");
+    if (shopBtn) shopBtn.addEventListener("click", openShopModal);
+});
 // ==========================================================================
 // الجزء الثالث: شجرة المعادلات الحسابية الكبرى وقوانين النقاط القضائية المتقاطعة
 // ==========================================================================
@@ -4658,6 +5070,26 @@ function openSecretRoleSecondModal(roleCard, defenseClientName) {
             </p>
             <p style="color: #8d99a8; font-family: 'Alexandria'; font-size: 0.68rem; margin: 6px 0 0;">🔒 المصلحة السرية لا تُقرأ صوتياً حفاظاً على سرية اللعبة.</p>
         `;
+
+        // 🌟 [شبكة المعرفة]: قسم إضافي نادر يظهر فقط لمن يملك معرفة سرية عن لاعب آخر حقيقي في هذه الجولة
+        if (roleCard.network_link) {
+            const link = roleCard.network_link;
+            registerForbiddenSpeech(link.link_hint || "");
+            const usedKey = "network_link_used_" + currentRoomCode;
+            const alreadyUsed = sessionStorage.getItem(usedKey) === "true";
+            modalHTML += `
+                <span style="color: #6ee7a0; font-weight: bold; font-size: 0.85rem; display: block; margin-top: 16px;">🤝 معرفة خاصة (${escapeHtml(link.link_type || "")}):</span>
+                <p data-tts-block="secret" style="background: #10231b; padding: 12px; border-radius: 6px; border: 1px dashed #6ee7a0; color: #fff; font-family: 'Harmattan'; font-size: 1rem; line-height: 1.5; margin-top: 6px;">
+                    ${escapeHtml(link.link_hint || "")}
+                </p>
+                <p style="color: #8d99a8; font-family: 'Alexandria'; font-size: 0.68rem; margin: 6px 0 10px;">🔒 هذه المعرفة سرية أيضاً ولا تُقرأ صوتياً.</p>
+                <div style="display: flex; gap: 8px;">
+                    <button id="btn-network-whisper" ${alreadyUsed ? "disabled" : ""} style="flex: 1; padding: 10px 4px; background: rgba(255,255,255,0.05); border: 1px solid #6ee7a0; color: #6ee7a0; font-family: 'Alexandria', sans-serif; font-weight: 700; font-size: 0.78rem; border-radius: 8px; cursor: ${alreadyUsed ? "not-allowed" : "pointer"}; opacity: ${alreadyUsed ? "0.4" : "1"};">🤝 تواصل سري</button>
+                    <button id="btn-network-reveal" ${alreadyUsed ? "disabled" : ""} style="flex: 1; padding: 10px 4px; background: rgba(255,255,255,0.05); border: 1px solid #ff9b3d; color: #ff9b3d; font-family: 'Alexandria', sans-serif; font-weight: 700; font-size: 0.78rem; border-radius: 8px; cursor: ${alreadyUsed ? "not-allowed" : "pointer"}; opacity: ${alreadyUsed ? "0.4" : "1"};">⚡ كشف للمحكمة</button>
+                </div>
+                <p id="network-link-status" style="color: #ffe9b3; font-size: 0.72rem; text-align: center; margin: 8px 0 0; min-height: 16px;">${alreadyUsed ? "✅ سبق استخدام هذه المعرفة." : ""}</p>
+            `;
+        }
     } else {
         modalHTML += `
             <div style="background: rgba(213, 167, 92, 0.1); padding: 14px; border-radius: 6px; border: 1px solid var(--gold-glow); color: var(--gold-glow); text-align: center; font-size: 0.85rem; font-weight: 700; margin-top: 10px; box-shadow: inset 0 0 10px rgba(213, 167, 92, 0.15); line-height: 1.4;">
@@ -4675,4 +5107,68 @@ function openSecretRoleSecondModal(roleCard, defenseClientName) {
 
     // 🔊 زر المتحدث الصوتي بجوار القصة العلنية فقط — لا زر ولا نطق للمصلحة السرية
     mountVoiceControls(document.getElementById("public-story-text"), { kind: "public" });
+
+    // 🌟 [شبكة المعرفة]: ربط زرّي "تواصل سري" و"كشف للمحكمة" ببث السحابة (يُستخدمان مرة واحدة فقط لكل جولة)
+    if (roleCard.network_link) {
+        const link = roleCard.network_link;
+        const usedKey = "network_link_used_" + currentRoomCode;
+        const gsRef = ref(db, "rooms/" + currentRoomCode + "/game_state");
+        const statusLine = document.getElementById("network-link-status");
+        const btnWhisper = document.getElementById("btn-network-whisper");
+        const btnReveal = document.getElementById("btn-network-reveal");
+
+        const disableBoth = () => {
+            if (btnWhisper) btnWhisper.disabled = true;
+            if (btnReveal) btnReveal.disabled = true;
+        };
+
+        if (btnWhisper) {
+            btnWhisper.addEventListener("click", () => {
+                if (btnWhisper.disabled) return;
+                update(gsRef, {
+                    private_network_message: {
+                        from_uid: mySecretUID,
+                        from_name: roleCard.role_name,
+                        to_uid: link.target_uid,
+                        message: link.link_hint,
+                        link_type: link.link_type,
+                        timestamp: Date.now()
+                    }
+                })
+                    .then(() => {
+                        sessionStorage.setItem(usedKey, "true");
+                        if (statusLine) statusLine.textContent = "✅ تم إرسال التواصل السري بصمت.";
+                        disableBoth();
+                    })
+                    .catch(() => {
+                        if (statusLine) statusLine.textContent = "⚠️ تعذّر الإرسال، حاول مرة أخرى.";
+                    });
+            });
+        }
+
+        if (btnReveal) {
+            btnReveal.addEventListener("click", () => {
+                if (btnReveal.disabled) return;
+                update(gsRef, {
+                    network_reveal: {
+                        from_uid: mySecretUID,
+                        from_name: roleCard.role_name,
+                        target_uid: link.target_uid,
+                        target_name: link.target_name,
+                        link_type: link.link_type,
+                        link_hint: link.link_hint,
+                        timestamp: Date.now()
+                    }
+                })
+                    .then(() => {
+                        sessionStorage.setItem(usedKey, "true");
+                        if (statusLine) statusLine.textContent = "⚡ تم الكشف علناً أمام المحكمة!";
+                        disableBoth();
+                    })
+                    .catch(() => {
+                        if (statusLine) statusLine.textContent = "⚠️ تعذّر الكشف، حاول مرة أخرى.";
+                    });
+            });
+        }
+    }
 }
