@@ -1023,6 +1023,7 @@ function listenToFinalLobby() {
                     roleBadge.style.display = "block";
                 }
             }
+            applyCourtTheme(myRoleCard);
             if (myRoleCard.secret_interest) registerForbiddenSpeech(myRoleCard.secret_interest);
 
             if (myRoleCard.role_type === "judge") {
@@ -5366,3 +5367,99 @@ function openSecretRoleSecondModal(roleCard, defenseClientName) {
         }
     }
 }
+
+// ==========================================================================
+// 🎬 [جسر الهوية السينمائية] — يحوّل بطاقة الدور إلى class التصميم الجديد دون لمس منطق اللعبة
+// judge / prosecutor / defense / guilty / conflicted / liar  (مع إبقاء role-judge/lawyer/suspect القديمة)
+// ==========================================================================
+function applyCourtTheme(card) {
+    if (!card) return;
+    const all = [
+        "role-judge",
+        "role-lawyer",
+        "role-suspect",
+        "role-prosecutor",
+        "role-defense",
+        "role-guilty",
+        "role-conflicted",
+        "role-liar"
+    ];
+    const t = card.role_type;
+    const n = card.role_name || "";
+    let r = null;
+    const legacy = [];
+    if (t === "judge") {
+        r = "judge";
+        legacy.push("role-judge");
+    } else if (t === "lawyer") {
+        r = n.includes("دفاع") ? "defense" : "prosecutor";
+        legacy.push("role-lawyer");
+    } else if (t === "suspect") {
+        r = card.is_guilty === true ? "guilty" : card.secret_interest ? "conflicted" : "liar";
+        legacy.push("role-suspect");
+    } else if (t === "innocent_impostor") {
+        r = "liar";
+        legacy.push("role-suspect");
+    }
+    if (!r) return;
+    document.body.classList.remove(...all);
+    document.body.classList.add("role-" + r, ...legacy);
+
+    const meta = {
+        judge: ["⚖ القاضي — الهيبة والعدالة", "ملف القضية", "توجيهك للمحاكمة"],
+        prosecutor: ["⚔ محامي الادعاء", "قائمة الأدلة", "هدفك في الادعاء"],
+        defense: ["🛡 محامي الدفاع", "خطة الدفاع", "هدفك في الدفاع"],
+        guilty: ["🩸 المتهم — الجاني", "🩸 تفاصيل الجريمة", "حجتك الكاذبة"],
+        conflicted: ["🕯 متهم بريء — مصلحة سرية", "🕯 مصلحتك السرية", "كيف توجّه المحاكمة"],
+        liar: ["⚠ متهم بريء كاذب", "⚠ أكاذيبك المسجّلة", "ما قلته للمحكمة"]
+    }[r];
+    const badge = document.getElementById("role-identity-badge");
+    if (badge) {
+        badge.textContent = meta[0];
+        badge.style.display = "block";
+    }
+
+    const esc = (s) =>
+        String(s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]);
+    const panel = document.getElementById("secret-panel");
+    const body = document.getElementById("secret-panel-body");
+    if (panel && body) {
+        let html = `<h3>${meta[1]} <span class="x" id="secret-panel-x">إخفاء ✕</span></h3>`;
+        if (n) html += `<p><b>دورك:</b> ${esc(n)}</p>`;
+        if (card.public_story) html += `<p><b>القصة العلنية:</b> ${esc(card.public_story)}</p>`;
+        if (card.secret_interest) html += `<p><b>${meta[2]}:</b> ${esc(card.secret_interest)}</p>`;
+        body.innerHTML = html;
+        panel.classList.add("on");
+        panel.classList.remove("min");
+        document.getElementById("secret-panel-x").onclick = () => panel.classList.add("min");
+    }
+    window.pushCourtTicker && window.pushCourtTicker("تم توزيع الأدوار السرية — الجلسة على وشك البدء");
+}
+
+window.courtFlash = function (title, sub) {
+    const f = document.getElementById("court-flash");
+    if (!f) return;
+    document.getElementById("court-flash-t").textContent = title;
+    document.getElementById("court-flash-p").textContent = sub || "";
+    f.classList.add("on");
+    setTimeout(() => f.classList.remove("on"), 1700);
+};
+
+window.pushCourtTicker = function (text) {
+    const bar = document.getElementById("court-ticker");
+    const track = document.getElementById("court-ticker-track");
+    if (!bar || !track) return;
+    window._courtNews = (window._courtNews || []).concat(text).slice(-8);
+    const items = window._courtNews.concat(window._courtNews);
+    track.innerHTML = items.map((x) => `<span>${String(x).replace(/</g, "&lt;")}</span>`).join("");
+    bar.style.display = "flex";
+};
+
+(function wireCourtFlash() {
+    const ob = document.getElementById("btn-defense-objection");
+    if (ob) ob.addEventListener("click", () => window.courtFlash("اعتراض!", "محامي الدفاع يستخدم الاعتراض القسري"));
+    const vd = document.getElementById("btn-verdict-trigger");
+    if (vd) vd.addEventListener("click", () => window.courtFlash("الحكم", "المحكمة ترفع الجلسة…"));
+    const tg = document.getElementById("secret-toggle");
+    if (tg) tg.addEventListener("click", () => document.getElementById("secret-panel").classList.remove("min"));
+})();

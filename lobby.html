@@ -5,10 +5,10 @@
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
         <title>قاعة المحاكمة - محكمة الأدوار</title>
         <!-- استدعاء الخطوط المعتمدة بمشروعك لتنسيق النصوص -->
-        <link rel="preconnect" href="https://googleapis.com" />
-        <link rel="preconnect" href="https://gstatic.com" crossorigin />
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
         <link
-            href="https://googleapis.com/css2?family=Alexandria:wght@400;700;800&family=Harmattan:wght@500;600;700&display=swap"
+            href="https://fonts.googleapis.com/css2?family=Alexandria:wght@400;700;800&family=Harmattan:wght@500;600;700&family=Reem+Kufi:wght@500;700&display=swap"
             rel="stylesheet" />
         <link rel="stylesheet" href="css/style.css" />
         <link rel="icon" type="image/png" href="/favicon-96x96.png" sizes="96x96" />
@@ -578,6 +578,20 @@
         </style>
     </head>
     <body class="body3">
+        <!-- 🎬 عناصر الهوية السينمائية الجديدة -->
+        <div id="court-frame"></div>
+        <aside id="secret-panel"><div id="secret-panel-body"></div></aside>
+        <button id="secret-toggle">فتح اللوحة السرية</button>
+        <div id="court-flash">
+            <div>
+                <h1 id="court-flash-t"></h1>
+                <p id="court-flash-p"></p>
+            </div>
+        </div>
+        <div id="court-ticker" style="display: none">
+            <div class="tag">مباشر</div>
+            <div class="track" id="court-ticker-track"></div>
+        </div>
         <!-- الحاوية العلوية السيادية الموحدة (The Ultimate Top Navbar) -->
         <nav class="court-sovereign-navbar">
             <!-- الجهة اليسرى: الأزرار التنفيذية (المايك يمين زر إنهاء المحاكمة ليكون أمامه برمجياً جهة اليسار) -->

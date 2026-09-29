@@ -1724,3 +1724,442 @@ body.body3 #btn-verdict-trigger:active:not(:disabled) {
         background: var(--text-white, #ffffff) !important;
     }
 }
+
+/* ==========================================================================
+   🎬 محكمة الأدوار — الهوية السينمائية الجديدة (مدمجة)
+   كل التعديلات بادئة بـ "html" لرفع الأولوية فوق كتلة <style> المضمّنة في lobby.html
+   الدور = class على body → يغيّر 4 متغيرات فقط
+   ========================================================================== */
+:root {
+    --accent: #d5a75c;
+    --glow: 213, 167, 92;
+    --ambient: 213, 167, 92;
+    --pulse-speed: 6s;
+    --f-display: "Reem Kufi", "Alexandria", serif;
+}
+body.role-judge {
+    --accent: #f3d28f;
+    --glow: 243, 210, 143;
+    --ambient: 213, 167, 92;
+    --pulse-speed: 5s;
+}
+body.role-prosecutor {
+    --accent: #e0344f;
+    --glow: 224, 52, 79;
+    --ambient: 170, 20, 45;
+    --pulse-speed: 3.2s;
+}
+body.role-defense {
+    --accent: #5b86f0;
+    --glow: 91, 134, 240;
+    --ambient: 50, 80, 200;
+    --pulse-speed: 4.5s;
+}
+body.role-guilty {
+    --accent: #ff2a2a;
+    --glow: 255, 42, 42;
+    --ambient: 120, 0, 0;
+    --pulse-speed: 1.6s;
+}
+body.role-conflicted {
+    --accent: #a86bff;
+    --glow: 168, 107, 255;
+    --ambient: 100, 40, 170;
+    --pulse-speed: 4s;
+}
+body.role-liar {
+    --accent: #ff9a2e;
+    --glow: 255, 154, 46;
+    --ambient: 190, 90, 0;
+    --pulse-speed: 1.1s;
+}
+
+html body.body3 {
+    background: radial-gradient(ellipse 60% 50% at 50% 42%, rgba(var(--ambient), 0.2), transparent 70%),
+        radial-gradient(circle at 50% 45%, #171208 0%, #0a0e16 50%, #05070c 100%) !important;
+    background-attachment: fixed !important;
+    transition: background 1s;
+}
+html body.body3::before {
+    background: conic-gradient(
+        from 180deg at 50% -10%,
+        transparent 40%,
+        rgba(var(--glow), 0.1) 50%,
+        transparent 60%
+    ) !important;
+    background-size: auto !important;
+    animation: courtSway 9s ease-in-out infinite alternate;
+}
+@keyframes courtSway {
+    to {
+        transform: translateX(6%);
+    }
+}
+
+#court-frame {
+    position: fixed;
+    inset: 8px;
+    border: 1px solid rgba(var(--glow), 0.35);
+    border-radius: 22px;
+    z-index: 3;
+    pointer-events: none;
+    box-shadow: inset 0 0 40px rgba(var(--glow), 0.1);
+    animation: courtBreathe var(--pulse-speed) ease-in-out infinite;
+}
+body.role-judge #court-frame {
+    border: 3px double var(--gold-glow);
+    box-shadow:
+        inset 0 0 60px rgba(var(--glow), 0.22),
+        0 0 30px rgba(var(--glow), 0.25);
+}
+body.role-guilty #court-frame,
+body.role-liar #court-frame {
+    animation-name: courtFlicker;
+}
+@keyframes courtBreathe {
+    50% {
+        box-shadow:
+            inset 0 0 70px rgba(var(--glow), 0.22),
+            0 0 24px rgba(var(--glow), 0.18);
+    }
+}
+@keyframes courtFlicker {
+    0%,
+    100% {
+        opacity: 1;
+    }
+    42% {
+        opacity: 0.5;
+    }
+    44% {
+        opacity: 1;
+    }
+    70% {
+        opacity: 0.75;
+    }
+}
+
+html body #role-identity-badge {
+    font-family: var(--f-display);
+    font-size: 0.85rem;
+    padding: 6px 22px;
+    background: rgba(10, 14, 22, 0.6) !important;
+    color: var(--accent) !important;
+    border: 1px solid var(--accent) !important;
+    box-shadow: 0 0 18px rgba(var(--glow), 0.35) !important;
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+}
+
+html body.body3 #court-table {
+    border: 4px solid var(--accent) !important;
+    box-shadow:
+        inset 0 0 40px #000,
+        0 0 50px rgba(var(--glow), 0.3) !important;
+    animation: courtBreathe var(--pulse-speed) ease-in-out infinite;
+}
+html body.body3 #court-table span {
+    color: var(--accent);
+    font-family: var(--f-display);
+    text-shadow: 0 0 14px rgba(var(--glow), 0.7);
+}
+html body.body3 .court-seat-node {
+    border-color: #2a3547;
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+    transition:
+        transform 0.25s,
+        box-shadow 0.3s,
+        border-color 0.3s;
+}
+html body.body3 .court-seat-node::before {
+    background: linear-gradient(90deg, transparent, var(--accent), transparent);
+}
+html body.body3 .court-seat-node:hover {
+    box-shadow: 0 0 22px rgba(var(--glow), 0.5);
+    border-color: var(--accent);
+}
+
+/* ---- القاضي: منصة سلطة، أزرار كبيرة وعدّاد مسيطر ---- */
+html body.role-judge #judge-control-panel {
+    background: rgba(10, 14, 22, 0.7) !important;
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+    border: 1px solid rgba(var(--glow), 0.6) !important;
+    border-radius: 20px !important;
+    box-shadow: 0 -6px 40px rgba(var(--glow), 0.25) !important;
+}
+html body .btn-judge-action {
+    font-family: var(--f-display);
+    padding: 16px 8px;
+    font-size: 1rem;
+    border-radius: 12px;
+    border: 1.5px solid rgba(var(--glow), 0.7);
+    color: var(--accent);
+    background: rgba(var(--glow), 0.08);
+    transition: 0.2s;
+}
+html body .btn-judge-action:hover:not(:disabled) {
+    box-shadow: 0 0 20px rgba(var(--glow), 0.5);
+    background: rgba(var(--glow), 0.2);
+}
+html body.role-judge .btn-verdict-style {
+    background: linear-gradient(180deg, var(--accent), #b8860b) !important;
+    color: #170f04 !important;
+    animation: courtPulse var(--pulse-speed) ease-in-out infinite;
+}
+html body.role-judge .btn-verdict-style:disabled {
+    animation: none;
+}
+html body .judge-counter-display strong {
+    font-family: var(--f-display);
+    font-size: 2.4rem;
+    color: var(--accent);
+    text-shadow: 0 0 16px rgba(var(--glow), 0.8);
+}
+@keyframes courtPulse {
+    50% {
+        box-shadow: 0 0 28px rgba(var(--glow), 0.85);
+    }
+}
+
+/* ---- المحامون: ادعاء = قرمزي هجومي / دفاع = أزرق ملكي ---- */
+html body.role-prosecutor .btn-evidence-bag-custom-node,
+html body.role-prosecutor .btn-objection-card,
+html body.role-prosecutor .btn-request-speak,
+html body.role-defense .btn-evidence-bag-custom-node,
+html body.role-defense .btn-objection-card,
+html body.role-defense .btn-request-speak {
+    border-color: var(--accent) !important;
+    color: var(--accent) !important;
+    background: linear-gradient(135deg, rgba(var(--ambient), 0.35), #0a0e16) !important;
+    box-shadow: 0 4px 18px rgba(var(--glow), 0.35) !important;
+}
+html body.role-prosecutor .btn-objection-card,
+html body.role-prosecutor .btn-evidence-bag-custom-node {
+    clip-path: polygon(0 0, 100% 0, 100% 85%, 90% 100%, 0 100%);
+}
+html body.role-defense #defense-lawyer-panel {
+    background: rgba(10, 14, 22, 0.7) !important;
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+    border: 1px solid rgba(var(--glow), 0.6) !important;
+    border-radius: 20px !important;
+    box-shadow: 0 -6px 40px rgba(var(--glow), 0.25) !important;
+}
+html body.role-defense #btn-defense-objection {
+    background: linear-gradient(180deg, #7fa3ff, #2c47b8) !important;
+    border-color: #7fa3ff !important;
+    animation: courtPulse var(--pulse-speed) ease-in-out infinite;
+}
+html body #defense-objection-counter {
+    font-family: var(--f-display);
+    color: var(--accent) !important;
+}
+
+/* ---- الشريط السينمائي لأدلة الدفاع والأخبار ---- */
+html body #defense-evidence-ticker {
+    background: linear-gradient(#0a0e16, #05070c) !important;
+    border-top: 1px solid rgba(var(--glow), 0.6) !important;
+    border-bottom: none !important;
+    box-shadow: 0 -4px 22px rgba(var(--glow), 0.2) !important;
+    color: #d9cfb8;
+}
+#court-ticker {
+    position: fixed;
+    z-index: 99997;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: 34px;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    background: linear-gradient(#0a0e16, #05070c);
+    border-top: 1px solid rgba(var(--glow), 0.6);
+    box-shadow: 0 -4px 22px rgba(var(--glow), 0.2);
+}
+#court-ticker .tag {
+    flex: none;
+    height: 100%;
+    padding: 0 14px;
+    display: grid;
+    place-items: center;
+    font: 700 0.72rem var(--f-display);
+    color: #170f04;
+    background: var(--accent);
+    animation: courtPulse var(--pulse-speed) infinite;
+}
+#court-ticker .track {
+    display: flex;
+    width: max-content;
+    animation: courtScroll 38s linear infinite;
+    font:
+        500 0.8rem "Alexandria",
+        sans-serif;
+    color: #d9cfb8;
+}
+#court-ticker .track span {
+    padding: 0 28px;
+    white-space: nowrap;
+}
+#court-ticker .track span::before {
+    content: "⚖";
+    color: var(--accent);
+    margin-inline-end: 10px;
+}
+@keyframes courtScroll {
+    to {
+        transform: translateX(50%);
+    }
+}
+
+/* ---- زجاجية النوافذ المنبثقة ---- */
+html body .modal-overlay-active {
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+}
+html body.body3 .modal-alert-box {
+    background: rgba(12, 17, 26, 0.72) !important;
+    backdrop-filter: blur(16px) saturate(1.3);
+    -webkit-backdrop-filter: blur(16px) saturate(1.3);
+    border: 1px solid rgba(var(--glow), 0.55) !important;
+    box-shadow:
+        0 25px 60px #000,
+        0 0 30px rgba(var(--glow), 0.22) !important;
+}
+html body.body3 .modal-alert-box h2 {
+    font-family: var(--f-display);
+    color: var(--accent);
+    border-bottom-color: rgba(var(--glow), 0.3);
+}
+html body .btn-secondary {
+    background: linear-gradient(180deg, var(--accent), color-mix(in srgb, var(--accent) 60%, #000));
+    font-family: var(--f-display);
+}
+
+/* ---- اللوحة السرية الزجاجية (تُملأ من app.js) ---- */
+#secret-panel {
+    position: fixed;
+    z-index: 99990;
+    top: calc(env(safe-area-inset-top, 0px) + 56px);
+    inset-inline-start: 14px;
+    width: min(290px, 82vw);
+    padding: 14px 16px;
+    border-radius: 16px;
+    background: rgba(10, 14, 22, 0.62);
+    backdrop-filter: blur(16px) saturate(1.3);
+    -webkit-backdrop-filter: blur(16px) saturate(1.3);
+    border: 1px solid rgba(var(--glow), 0.55);
+    box-shadow:
+        0 20px 50px #000,
+        0 0 30px rgba(var(--glow), 0.22);
+    transition: 0.4s;
+    display: none;
+    color: #f4ecdc;
+    font-family: "Alexandria", sans-serif;
+}
+#secret-panel.on {
+    display: block;
+}
+#secret-panel.min {
+    transform: translateX(-130%);
+    opacity: 0;
+    pointer-events: none;
+}
+html[dir="rtl"] #secret-panel.min {
+    transform: translateX(130%);
+}
+#secret-panel h3 {
+    font: 700 1rem var(--f-display);
+    color: var(--accent);
+    padding-bottom: 8px;
+    margin: 0 0 8px;
+    border-bottom: 1px solid rgba(var(--glow), 0.3);
+    display: flex;
+    justify-content: space-between;
+}
+#secret-panel h3 .x {
+    cursor: pointer;
+    color: #8d99a8;
+    font:
+        500 0.7rem "Alexandria",
+        sans-serif;
+}
+#secret-panel p {
+    font-size: 0.78rem;
+    line-height: 1.8;
+    margin: 6px 0;
+    padding-bottom: 6px;
+    border-bottom: 1px dashed rgba(255, 255, 255, 0.08);
+}
+#secret-panel p b {
+    color: var(--accent);
+}
+#secret-toggle {
+    position: fixed;
+    z-index: 99991;
+    top: calc(env(safe-area-inset-top, 0px) + 56px);
+    inset-inline-start: 14px;
+    display: none;
+    padding: 7px 14px;
+    border-radius: 99px;
+    background: rgba(10, 14, 22, 0.7);
+    border: 1px solid var(--accent);
+    color: var(--accent);
+    font:
+        700 0.7rem "Alexandria",
+        sans-serif;
+    cursor: pointer;
+}
+#secret-panel.on.min ~ #secret-toggle {
+    display: block;
+}
+
+/* ---- إشعار سينمائي كامل الشاشة (اعتراض / حكم) ---- */
+#court-flash {
+    position: fixed;
+    inset: 0;
+    z-index: 2147483300;
+    display: none;
+    place-items: center;
+    text-align: center;
+    background: radial-gradient(rgba(var(--glow), 0.35), rgba(0, 0, 0, 0.88));
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+    pointer-events: none;
+}
+#court-flash.on {
+    display: grid;
+    animation: courtFade 0.3s;
+}
+#court-flash h1 {
+    font: 700 clamp(3rem, 16vw, 7rem) var(--f-display);
+    color: var(--accent);
+    text-shadow: 0 0 40px rgba(var(--glow), 0.9);
+    margin: 0;
+    animation: courtSlam 0.5s cubic-bezier(0.2, 1.6, 0.4, 1);
+}
+#court-flash p {
+    color: #f4ecdc;
+    font-family: "Alexandria", sans-serif;
+    margin-top: 8px;
+}
+@keyframes courtSlam {
+    from {
+        transform: scale(3);
+        opacity: 0;
+    }
+}
+@keyframes courtFade {
+    from {
+        opacity: 0;
+    }
+}
+@media (prefers-reduced-motion: reduce) {
+    #court-frame,
+    #court-table,
+    #court-ticker * {
+        animation: none !important;
+    }
+}
