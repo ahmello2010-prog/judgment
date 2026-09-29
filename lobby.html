@@ -3,237 +3,255 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>قاعة المحكمة</title>
-<link href="https://fonts.googleapis.com/css2?family=Alexandria:wght@400;600;700;800&family=Harmattan:wght@400;700&family=Amiri:wght@700&family=Changa:wght@700;800&family=Readex+Pro:wght@500;700&family=Lalezar&family=Aref+Ruqaa:wght@700&family=Rakkas&display=swap" rel="stylesheet">
+<title>المحكمة</title>
+<link href="https://fonts.googleapis.com/css2?family=Alexandria:wght@400;600;800&family=Harmattan:wght@500;700&display=swap" rel="stylesheet">
 <style>
-/* ============ الأساس: متغيّرات يقرؤها app.js مباشرة (var(--gold-glow) ...) ============ */
-:root{--gold-glow:#d5a75c;--shadow-black:#050a12;--deep-navy:#0d192b;--inner-vintage:#161c26;--text-white:#f4efe6;
---bg:#070d18;--bg2:#13223a;--fh:'Amiri',serif;--seat-r:50%;--pan:rgba(8,14,26,.82)}
-*{box-sizing:border-box}
-html,body{margin:0;height:100%;background:var(--bg);color:var(--text-white);font-family:'Alexandria',sans-serif;overflow:hidden;-webkit-tap-highlight-color:transparent}
-body{background:radial-gradient(ellipse at 50% 0,var(--bg2),var(--bg) 70%);transition:background .8s}
-body::before,body::after{content:"";position:fixed;inset:0;pointer-events:none;z-index:2}
-h1,h2,h3,.fh{font-family:var(--fh)}
-#lobby-loading-screen{position:fixed;inset:0;z-index:99999;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;background:radial-gradient(circle,#13223a,#04070d)}
-#lobby-loading-screen .seal{font-size:4rem;animation:pulse 2s infinite}
-.bar{width:70%;max-width:300px;height:6px;border-radius:9px;background:rgba(255,255,255,.1);overflow:hidden}
-#progress-bar-fill{height:100%;width:0;background:var(--gold-glow);box-shadow:0 0 12px var(--gold-glow)}
-#progress-counter-text{font-weight:800;color:var(--gold-glow)}
-#loading-dynamic-hint{font-family:'Harmattan';font-size:1.3rem;transition:opacity .2s}
-#loading-screen{position:fixed;inset:0;display:none;align-items:center;justify-content:center}
-#court-arena{display:none;position:relative;width:100%;height:100vh;overflow:hidden;z-index:3}
-#seats-container{position:absolute;inset:0;z-index:5}
-#stage{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:36vmin;height:36vmin;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12vmin;opacity:.9;border:1px dashed color-mix(in srgb,var(--gold-glow) 50%,transparent);background:radial-gradient(circle,color-mix(in srgb,var(--gold-glow) 18%,transparent),transparent 70%);z-index:1}
-.court-seat-node{border:2px solid #222c3c;border-radius:var(--seat-r);background:var(--inner-vintage);display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;z-index:5}
-.court-seat-node.objection-glow-active{animation:pulse .6s infinite;border-color:#ff5252!important}
-.court-seat-node.aimed{outline:3px solid #ff2d3d;outline-offset:4px}
-/* شريط علوي */
-#topbar{position:fixed;top:0;left:0;right:0;height:48px;z-index:30;display:flex;align-items:center;gap:8px;padding:0 10px;background:var(--pan);border-bottom:1px solid color-mix(in srgb,var(--gold-glow) 50%,transparent);backdrop-filter:blur(8px)}
-#role-identity-badge{display:none;font-family:var(--fh);font-size:1rem;color:var(--gold-glow);font-weight:700;white-space:nowrap}
-.chip{margin-inline-start:auto;font-size:.72rem;padding:5px 10px;border-radius:99px;border:1px solid var(--gold-glow);color:var(--gold-glow)}
-.chip b{font-size:.9rem}
-.tb{all:unset;cursor:pointer;font-size:.72rem;font-weight:700;padding:6px 10px;border:1px solid var(--gold-glow);color:var(--gold-glow);border-radius:8px}
-#btn-end-trial{display:none;border-color:#ff5252;color:#ff5252}
-#court-ticker{display:none;position:fixed;top:48px;left:0;right:0;height:24px;z-index:29;align-items:center;overflow:hidden;background:rgba(0,0,0,.55);font-size:.72rem}
-#court-ticker-track{display:flex;gap:48px;white-space:nowrap;animation:tk 40s linear infinite}
-#court-ticker-track span::before{content:"◆ ";color:var(--gold-glow)}
-@keyframes tk{to{transform:translateX(50%)}}
-#court-flash{display:none;position:fixed;inset:0;z-index:2147483000;align-items:center;justify-content:center;flex-direction:column;background:rgba(0,0,0,.72);text-align:center}
-#court-flash.on{display:flex;animation:flash .3s}
-#court-flash-t{font-family:var(--fh);font-size:22vw;margin:0;color:var(--gold-glow);text-shadow:0 0 40px var(--gold-glow)}
-#court-flash-p{margin:0;font-size:1rem}
-/* لوحة السر */
-#secret-panel{display:none;position:fixed;top:56px;right:3%;width:min(300px,64vw);max-height:44vh;overflow:auto;z-index:31;padding:12px 14px;border-radius:14px;background:var(--pan);border:1.5px solid var(--gold-glow);box-shadow:0 8px 30px rgba(0,0,0,.6);font-family:'Harmattan';font-size:1.1rem;line-height:1.5}
-#secret-panel.on{display:block}#secret-panel.min{display:none}
-#secret-panel h3{margin:0 0 6px;color:var(--gold-glow);font-size:1.1rem;display:flex;justify-content:space-between}
-#secret-panel .x{font-family:'Alexandria';font-size:.65rem;cursor:pointer;opacity:.8}
-#secret-panel p{margin:4px 0}
-/* لوحة القاضي التي يبنيها app.js */
-#judge-control-panel{display:none;position:fixed;bottom:0;left:0;right:0;z-index:30;flex-wrap:wrap;gap:8px;justify-content:center;align-items:center;padding:10px 10px calc(10px + env(safe-area-inset-bottom));background:linear-gradient(0deg,var(--pan),transparent)}
-.btn-judge-action{all:unset;cursor:pointer;font-weight:700;font-size:.78rem;padding:11px 14px;border-radius:10px;border:1.5px solid var(--gold-glow);color:var(--text-white);background:var(--inner-vintage)}
-.btn-verdict-style{background:var(--gold-glow);color:#141008;box-shadow:0 0 18px color-mix(in srgb,var(--gold-glow) 55%,transparent)}
-.judge-counter-display{font-size:.72rem;color:var(--gold-glow);padding:0 6px}
-.btn-objection-holder{position:fixed;bottom:100px;right:3%;z-index:999999}
-.btn-objection-card{all:unset;cursor:pointer;font-weight:800;font-size:.72rem;padding:10px 12px;background:#a5121f;border:2px solid #fff;color:#fff;border-radius:8px;box-shadow:0 0 16px #ff2d3d99}
-/* المودال الموحد */
-#custom-alert-modal,#host-exit-modal,#kick-confirm-modal,#player-kick-modal{display:none;position:fixed;inset:0;z-index:2147482000;align-items:center;justify-content:center;background:rgba(0,0,0,.72);backdrop-filter:blur(5px)}
-.modal-overlay-active,.host-overlay-active{display:flex!important}.modal-overlay-hidden,.host-overlay-hidden{display:none!important}
-.modal-box{width:92%;max-width:420px;max-height:88vh;overflow:auto;padding:18px;border-radius:var(--mr,16px);background:var(--pan);border:2px solid var(--gold-glow);box-shadow:0 0 40px color-mix(in srgb,var(--gold-glow) 30%,transparent)}
-#modal-alert-title{margin:0 0 10px;text-align:center;color:var(--gold-glow);font-size:1.3rem}
-#modal-alert-message{font-size:.9rem;line-height:1.8}
-#btn-modal-close{all:unset;display:block;margin:14px auto 0;cursor:pointer;padding:9px 22px;border:1.5px solid var(--gold-glow);color:var(--gold-glow);border-radius:9px;font-weight:700;font-size:.8rem}
-.evidence-modal-item{padding:10px;border-radius:8px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.12);margin:0;font-family:'Harmattan';font-size:1.05rem}
-.active-evidence-glow{border-color:var(--gold-glow);box-shadow:0 0 14px var(--gold-glow)}
-/* هياكل الأدوار (مخفية افتراضياً) */
-.shell{display:none;position:fixed;z-index:20}
-.shell ul{margin:0;padding:0;list-style:none}
-@keyframes pulse{50%{transform:scale(1.06);opacity:.85}}
-@keyframes flash{from{opacity:0;transform:scale(1.2)}}
-@keyframes flick{0%,100%{opacity:1}47%{opacity:1}50%{opacity:.35}53%{opacity:1}}
-@keyframes wob{0%,100%{transform:rotate(-1.2deg)}50%{transform:rotate(1.4deg) translateY(-1px)}}
-@keyframes twitch{0%,92%,100%{transform:none}94%{transform:translate(2px,-1px)}97%{transform:translate(-2px,1px)}}
+:root{
+  --gold-glow:rgb(213,167,92);
+  --deep-navy:rgb(13,25,43);
+  --inner-vintage:rgb(66,52,35);
+  --shadow-black:rgb(5,10,18);
+  --text-white:rgb(255,255,255);
+  --gold-dim:rgba(213,167,92,.35);
+  --safe-t:env(safe-area-inset-top,0px);
+  --safe-b:env(safe-area-inset-bottom,0px);
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{height:100%;margin:0}
+body{background:var(--shadow-black);color:var(--text-white);font-family:'Harmattan','Alexandria',sans-serif;font-size:1.1rem;overflow:hidden;direction:rtl}
+button{font-family:'Alexandria',sans-serif}
+:focus-visible{outline:2px solid var(--gold-glow);outline-offset:2px}
 
-/* ============ 1) القاضي — الهيبة: رخام أزرق ليلي + ذهب + بقعة ضوء من الأعلى ============ */
-body.role-judge{--gold-glow:#e0b465;--fh:'Amiri',serif}
-body.role-judge::before{background:radial-gradient(ellipse 60% 55% at 50% -5%,rgba(255,225,150,.28),transparent 70%)}
-body.role-judge::after{background:repeating-linear-gradient(90deg,transparent 0 58px,rgba(224,180,101,.05) 58px 60px)}
-body.role-judge #stage::after{content:"⚖";}
-body.role-judge #jd-card{display:block;top:78px;right:3%;width:150px;padding:10px;border-radius:12px;background:var(--pan);border:1px solid var(--gold-glow);font-size:.7rem}
-body.role-judge #jd-card h4{margin:0 0 6px;font-family:'Amiri';color:var(--gold-glow);font-size:.95rem;border-bottom:1px solid var(--gold-glow);padding-bottom:4px}
-body.role-judge #jd-roster-list li{padding:3px 0;border-bottom:1px dotted rgba(255,255,255,.15)}
-body.role-judge .court-seat-node{background:linear-gradient(160deg,#1c2b47,#0b1424);border-width:3px}
+/* ===== شاشة التحميل (الإطار المعتمد) ===== */
+.modern-loading-overlay{position:fixed;inset:0;z-index:100000;align-items:center;justify-content:center}
+.loading-blurred-backdrop{position:absolute;inset:0;background:rgba(5,10,18,.9);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px)}
+.loading-card-content{position:relative;width:min(88vw,380px);text-align:center;display:flex;flex-direction:column;align-items:center;gap:6px}
+.gavel-glow-animation{width:190px;height:190px;filter:drop-shadow(0 0 26px rgba(213,167,92,.4))}
+.gavel-emoji{display:block;width:100%;height:100%}
+.loading-main-title{margin:0;font-family:'Alexandria',sans-serif;font-weight:800;font-size:2.8rem;color:var(--gold-glow)}
+.loading-subtitle-hint{margin:0;min-height:1.6em;color:var(--text-white);opacity:.75;transition:opacity .15s}
+.modern-progress-wrapper{width:100%;height:6px;margin-top:14px;border-radius:6px;background:var(--inner-vintage);overflow:hidden}
+.modern-progress-fill{height:100%;width:0;background:var(--gold-glow)}
+.modern-percentage-text{margin-top:6px;font-family:'Alexandria',sans-serif;color:var(--gold-glow);font-variant-numeric:tabular-nums}
 
-/* ============ 2) الادعاء — حاد وهجومي: أسود فحمي + أحمر قانٍ + شبكة مسح وكروت إدانة مائلة ============ */
-body.role-prosecutor{--gold-glow:#ff3b47;--bg:#0a0508;--bg2:#210a10;--fh:'Changa',sans-serif;--seat-r:4px 22px 4px 22px;--inner-vintage:#1a0d11;--mr:4px}
-body.role-prosecutor::before{background:repeating-linear-gradient(135deg,transparent 0 22px,rgba(255,59,71,.045) 22px 24px)}
-body.role-prosecutor::after{background:linear-gradient(transparent 50%,rgba(0,0,0,.28) 50%);background-size:100% 4px}
-body.role-prosecutor #topbar{border-bottom:3px solid #ff3b47}
-body.role-prosecutor .court-seat-node{transform:skewX(-6deg);border-width:2px}
-body.role-prosecutor #pr-dock{display:block;left:0;right:0;bottom:0;padding:8px 8px calc(8px + env(safe-area-inset-bottom));background:linear-gradient(0deg,#000d,transparent)}
-body.role-prosecutor #pr-cards{display:flex;gap:10px;overflow-x:auto;padding:10px 4px 4px}
-.pr-card{flex:0 0 130px;padding:8px;font-size:.66rem;line-height:1.5;background:#150a0d;border:2px solid #ff3b47;border-top-width:6px;transform:rotate(var(--r,0));transition:.2s;cursor:pointer}
-.pr-card b{display:block;color:#ff3b47;font-family:'Changa';font-size:.8rem}
-.pr-card.armed{transform:translateY(-14px) scale(1.06);box-shadow:0 0 22px #ff3b47;background:#3a0f16}
-body.role-prosecutor #pr-evidence-wrap{position:fixed;top:78px;right:3%;width:170px;max-height:34vh;overflow:auto;padding:8px;border:1px solid #ff3b47;background:var(--pan);font-size:.66rem}
-body.role-prosecutor #pr-evidence-wrap h4{margin:0 0 4px;color:#ff3b47;font-family:'Changa'}
-body.role-prosecutor #pr-evidence li{padding:3px 0;border-bottom:1px solid #ff3b4740}
+/* ===== أرضية القاعة: حلقات نحاسية تحت المقاعد ===== */
+#court-arena{position:fixed;inset:0;background:radial-gradient(90% 70% at 50% 0%,var(--deep-navy),var(--shadow-black))}
+.floor{position:fixed;left:50%;top:50%;width:min(96vmin,760px);aspect-ratio:1;translate:-50% -50%;border-radius:50%;pointer-events:none;
+  background:repeating-radial-gradient(circle,transparent 0 46px,rgba(213,167,92,.10) 46px 47px),radial-gradient(circle,var(--inner-vintage) 0,transparent 42%);opacity:.9}
+#seats-container{position:fixed;inset:0;z-index:2}
 
-/* ============ 3) الدفاع — حماية وأمان: أزرق مائي هادئ + مقاعد على شكل درع + كروت دفاع ناعمة ============ */
-body.role-defense{--gold-glow:#5fd3c4;--bg:#06171f;--bg2:#0f3b47;--fh:'Readex Pro',sans-serif;--seat-r:46% 46% 50% 50%/22% 22% 78% 78%;--inner-vintage:#0c2a35;--accent:#5fd3c4}
-body.role-defense::before{background:radial-gradient(circle at 50% 110%,rgba(95,211,196,.22),transparent 60%)}
-body.role-defense::after{background:radial-gradient(circle at 20% 30%,rgba(255,255,255,.05),transparent 25%),radial-gradient(circle at 80% 60%,rgba(95,211,196,.06),transparent 30%)}
-body.role-defense #stage::after{content:"🛡"}
-body.role-defense #df-dock{display:block;left:0;right:0;bottom:0;padding:10px 10px calc(10px + env(safe-area-inset-bottom));background:linear-gradient(0deg,rgba(6,23,31,.95),transparent)}
-body.role-defense #df-cards{display:flex;gap:10px;overflow-x:auto;scroll-snap-type:x mandatory;padding:6px 2px}
-.df-card{flex:0 0 78%;scroll-snap-align:center;padding:12px;border-radius:18px;font-size:.72rem;line-height:1.7;background:rgba(95,211,196,.09);border:1px solid #5fd3c480;transition:.25s}
-.df-card.armed{background:rgba(95,211,196,.22);box-shadow:0 0 0 3px #5fd3c455,0 8px 24px rgba(95,211,196,.3);transform:translateY(-6px)}
-body.role-defense #btn-defense-objection{position:fixed;bottom:118px;right:3%;z-index:25;all:unset;cursor:pointer;padding:10px 14px;border-radius:99px;background:#5fd3c4;color:#052029;font-weight:800;font-size:.75rem;box-shadow:0 4px 18px rgba(95,211,196,.5)}
-#btn-defense-objection{display:none}body.role-defense #btn-defense-objection{display:block}
+/* ===== الشريط العلوي ===== */
+.topbar{position:fixed;top:calc(var(--safe-t) + 10px);left:12px;right:12px;z-index:30;display:flex;align-items:center;justify-content:space-between;pointer-events:none}
+.topbar>*{pointer-events:auto}
+#btn-hamburger{width:44px;height:44px;border-radius:50%;border:1px solid var(--gold-glow);background:var(--deep-navy);color:var(--gold-glow);font-size:1.25rem;cursor:pointer}
+.room-tag{font-family:'Alexandria',sans-serif;font-size:.8rem;color:var(--gold-glow);opacity:.85}
+.room-tag b{color:var(--text-white);letter-spacing:.14em}
+.score-chip{display:flex;align-items:baseline;gap:6px;padding:5px 14px;border-radius:8px;background:var(--inner-vintage);border:1px solid var(--gold-dim)}
+.score-chip small{opacity:.7}
+#personal-current-score-text{font-family:'Alexandria',sans-serif;font-weight:800;color:var(--gold-glow)}
 
-/* ============ 4) الجاني — توتر ومراقبة: كاميرا REC + خدوش + شريط توتر يحمّر الشاشة ============ */
-body.role-guilty{--gold-glow:#c8323c;--bg:#050303;--bg2:#1c0a0c;--fh:'Lalezar',sans-serif;--seat-r:6px;--inner-vintage:#120808;--mr:6px}
-body.role-guilty::before{background:radial-gradient(ellipse at center,transparent 45%,rgba(120,0,10,.55));animation:flick 5s infinite}
-body.role-guilty::after{background:linear-gradient(transparent 50%,rgba(0,0,0,.35) 50%);background-size:100% 3px;opacity:.7}
-body.role-guilty #topbar::after{content:"● REC";margin-inline-start:6px;color:#ff2d3d;font:700 .7rem monospace;animation:flick 1.6s infinite}
-body.role-guilty .court-seat-node{animation:twitch 6s infinite;filter:saturate(.7)}
-body.role-guilty.tense::before{background:radial-gradient(ellipse at center,transparent 25%,rgba(200,0,20,.75));animation:pulse 1s infinite}
-body.role-guilty.tense .court-seat-node{animation-duration:1.2s}
-body.role-guilty #gl-tension{display:block;top:78px;left:50%;transform:translateX(-50%);width:62%;text-align:center;font-size:.65rem;color:#ff6a73}
-#gl-tension .tr{height:7px;background:#2a0d10;border-radius:9px;overflow:hidden;margin-top:3px}
-#gl-tension-fill{height:100%;width:0;background:linear-gradient(90deg,#c8323c,#ff2d3d);transition:width 1s}
-body.role-guilty #gl-memo{display:block;bottom:14px;right:3%;width:200px;padding:10px;border:1px dashed #c8323c;background:#1b0b0d;font-family:'Harmattan';font-size:1rem;cursor:pointer;transform:rotate(1.5deg)}
-#gl-memo.closed #gl-memo-body,#gl-memo.closed #gl-q{display:none}
-#gl-memo::before{content:"🩸 مذكرتك السرية — اضغط للطي";display:block;color:#ff6a73;font:700 .62rem 'Alexandria';margin-bottom:4px}
-#gl-q-list li{font-size:.85rem;padding:2px 0;color:#f0b3b7}
+/* ===== لوحة الدور والصينية (الأزرار في مكان واحد) ===== */
+#role-plate{position:fixed;z-index:20;display:none}
+#role-plate strong{display:block;font-family:'Alexandria',sans-serif;font-weight:800;color:var(--gold-glow);line-height:1.4}
+#role-plate span{opacity:.75;font-size:1rem}
+#role-tray{position:fixed;z-index:40;display:none}
+#role-tray.has-items{display:flex}
+#role-tray>*{position:static!important;inset:auto!important;margin:0!important;transform:none!important;width:auto!important;pointer-events:auto}
+#judge-control-panel{display:none;flex-wrap:wrap;gap:8px;align-items:center;justify-content:center}
+.judge-counter-display{opacity:.85;font-size:1rem}
+.judge-counter-display strong{color:var(--gold-glow);font-family:'Alexandria',sans-serif}
+#interrogation-penalty-warning{flex-basis:100%;text-align:center}
 
-/* ============ 5) بريء بمصلحة سرية — غموض: ضباب بنفسجي + لوحة ظلال تنزلق من الحافة ============ */
-body.role-conflicted{--gold-glow:#b79cff;--bg:#0a0716;--bg2:#241a4a;--fh:'Aref Ruqaa',serif;--seat-r:50% 18% 50% 18%;--inner-vintage:#171034}
-body.role-conflicted::before{background:radial-gradient(circle at 30% 20%,rgba(183,156,255,.2),transparent 40%),radial-gradient(circle at 75% 80%,rgba(80,40,200,.25),transparent 45%);filter:blur(10px)}
-body.role-conflicted .court-seat-node{opacity:.82;backdrop-filter:blur(3px);border-style:dashed}
-body.role-conflicted .court-seat-node:hover{opacity:1}
-body.role-conflicted #cf-tab{display:block;top:46%;right:0;padding:14px 7px;border-radius:12px 0 0 12px;background:#b79cff;color:#150c33;font:700 .7rem 'Alexandria';writing-mode:vertical-rl;cursor:pointer;z-index:26}
-body.role-conflicted #cf-layer{display:block;top:0;bottom:0;right:-330px;width:min(310px,80vw);padding:70px 16px 16px;background:linear-gradient(200deg,#1e1450f2,#0a0716f2);border-left:2px solid #b79cff;transition:right .5s cubic-bezier(.3,1,.4,1);z-index:25}
-body.role-conflicted.cf-open #cf-layer{right:0}
-#cf-layer h4{font-family:'Aref Ruqaa';font-size:1.3rem;color:#b79cff;margin:0 0 8px}
-#cf-goal{font-family:'Harmattan';font-size:1.15rem;line-height:1.6;padding:10px;border:1px dashed #b79cff;border-radius:10px;background:#00000040}
-.cf-acts{display:flex;gap:6px;margin:12px 0;flex-wrap:wrap}
-.cf-acts button{all:unset;cursor:pointer;flex:1;text-align:center;padding:8px 4px;font-size:.68rem;font-weight:700;border:1px solid #b79cff80;color:#b79cff;border-radius:8px}
-.cf-acts button.on{background:#b79cff;color:#150c33}
-#cf-picked{font-size:.72rem;color:#d9ccff;min-height:20px}
+/* ===== شكل الأزرار الموحد (يُطبَّق من الجافاسكريبت بعد إزالة ستايلاتها القديمة) ===== */
+.ct-btn{min-height:44px;padding:10px 16px;border-radius:6px;border:1px solid var(--gold-glow);background:var(--deep-navy);color:var(--text-white);
+  font-family:'Alexandria',sans-serif;font-weight:600;font-size:.9rem;cursor:pointer;white-space:nowrap;box-shadow:inset 0 -3px 0 var(--inner-vintage);transition:background .15s,color .15s}
+.ct-btn:hover{background:var(--inner-vintage)}
+.ct-btn:active{translate:0 1px}
+.ct-btn.btn-verdict-style{background:var(--gold-glow);color:var(--shadow-black);font-weight:800;box-shadow:inset 0 -3px 0 rgba(5,10,18,.25)}
 
-/* ============ 6) بريء كاذب — كمال مبالغ فيه: باستيل بنكي مبتسم + ارتجاف وخطوط مكسورة + مفكرة أكاذيب ============ */
-body.role-liar{--gold-glow:#ff7eb6;--bg:#fff3e9;--bg2:#ffe0ee;--text-white:#3a1730;--fh:'Rakkas',cursive;--seat-r:40% 60% 55% 45%/55% 45% 60% 40%;--inner-vintage:#fff;--pan:rgba(255,255,255,.92);--mr:26px}
-body.role-liar{color:#3a1730}
-body.role-liar::before{background:radial-gradient(circle at 15% 15%,#fff8,transparent 30%),radial-gradient(circle at 85% 90%,#ffb3d966,transparent 40%)}
-body.role-liar::after{background:repeating-linear-gradient(-8deg,transparent 0 40px,rgba(255,126,182,.07) 40px 42px);animation:twitch 7s infinite}
-body.role-liar .court-seat-node{color:#3a1730;animation:wob 2.4s infinite;box-shadow:4px 4px 0 #ff7eb6}
-body.role-liar .court-seat-node div{color:#3a1730!important}
-body.role-liar #topbar{border-bottom:2px dashed #ff7eb6}
-body.role-liar #topbar::after{content:"😊 كل شيء على ما يرام!";font-size:.65rem;color:#c2336f;animation:twitch 3s infinite}
-body.role-liar #secret-panel,body.role-liar .modal-box{color:#3a1730}
-body.role-liar #secret-panel h3,body.role-liar #modal-alert-title{color:#c2336f}
-body.role-liar #lr-pad{display:block;left:3%;right:3%;bottom:10px;max-width:420px;margin:auto;padding:10px 12px;background:#fff9c4;border-radius:6px 6px 22px 6px;box-shadow:0 6px 0 #ffd54f,0 12px 24px #0003;transform:rotate(-1deg);color:#4a3a00;z-index:22}
-#lr-pad h4{margin:0 0 4px;font-family:'Rakkas';color:#c2336f}
-#lr-list{max-height:74px;overflow:auto;margin:0;padding:0 18px 0 0;font-family:'Harmattan';font-size:1rem;line-height:1.4}
-#lr-list li.fresh{background:#ff7eb655}
-#lr-pad .row{display:flex;gap:6px;margin-top:6px}
-#lr-input{flex:1;padding:6px 8px;border:1px dashed #c2336f;border-radius:8px;background:#fff;font-family:'Alexandria';font-size:.72rem}
-#lr-add-btn{all:unset;cursor:pointer;padding:6px 12px;background:#c2336f;color:#fff;border-radius:8px;font-size:.72rem;font-weight:700}
-body.role-liar .tb,body.role-liar .chip{background:#fff;color:#c2336f;border-color:#ff7eb6}
+/* ===== القاضي: منصة خشبية معلّقة من الأعلى ===== */
+body[data-role="judge"] #role-tray{top:calc(var(--safe-t) + 64px);left:0;right:0;justify-content:center;padding:12px 14px 16px;
+  background:linear-gradient(var(--inner-vintage),var(--deep-navy));border-bottom:3px solid var(--gold-glow);border-radius:0 0 50% 50%/0 0 26px 26px}
+body[data-role="judge"] #role-plate{bottom:calc(var(--safe-b) + 14px);left:50%;translate:-50% 0;text-align:center;padding:8px 26px;background:var(--gold-glow);border-radius:4px}
+body[data-role="judge"] #role-plate strong{color:var(--shadow-black);font-size:1.15rem}
+body[data-role="judge"] #role-plate span{color:var(--shadow-black);opacity:.8}
+
+/* ===== محامي الادعاء: ملف قضية يصعد من الأسفل بلسان جانبي ===== */
+body[data-role="prosecutor"] #role-tray{bottom:0;left:0;right:0;padding:16px 14px calc(var(--safe-b) + 16px);gap:8px;flex-wrap:wrap;justify-content:center;
+  background:var(--inner-vintage);border-top:3px solid var(--gold-glow);border-radius:22px 22px 0 0}
+body[data-role="prosecutor"] #role-plate{right:16px;bottom:calc(var(--safe-b) + 128px);padding:6px 18px;background:var(--inner-vintage);border:1px solid var(--gold-glow);border-bottom:none;border-radius:14px 14px 0 0}
+body[data-role="prosecutor"] #role-plate strong{font-size:1rem}
+body[data-role="prosecutor"] #role-plate span{display:none}
+
+/* ===== محامي الدفاع: سكة عمودية عند الحافة واسم مكتوب طولياً ===== */
+body[data-role="defense"] #role-tray{left:10px;bottom:calc(var(--safe-b) + 18px);flex-direction:column;gap:8px;padding:12px 10px;background:var(--deep-navy);border:1px solid var(--gold-glow);border-radius:0 30px 30px 0;left:0}
+body[data-role="defense"] #role-plate{left:12px;top:calc(var(--safe-t) + 70px);writing-mode:vertical-rl;padding:14px 6px;background:var(--gold-glow);border-radius:20px}
+body[data-role="defense"] #role-plate strong{color:var(--shadow-black);font-size:1rem}
+body[data-role="defense"] #role-plate span{display:none}
+
+/* ===== المتهم: إضاءة كاشفة من الأعلى ولوحة أرقام ===== */
+body[data-role="suspect"] #court-arena::after{content:"";position:fixed;inset:0;pointer-events:none;z-index:10;
+  background:radial-gradient(60% 55% at 50% 42%,transparent 0,rgba(5,10,18,.78) 100%),conic-gradient(from 165deg at 50% -5%,transparent 0 0deg,rgba(213,167,92,.12) 15deg,transparent 30deg)}
+body[data-role="suspect"] #role-plate{top:calc(var(--safe-t) + 66px);left:50%;translate:-50% 0;text-align:center;padding:8px 22px;border:2px solid var(--gold-glow);
+  background:repeating-linear-gradient(90deg,var(--deep-navy) 0 22px,var(--shadow-black) 22px 23px)}
+body[data-role="suspect"] #role-plate strong{font-size:1.05rem}
+body[data-role="suspect"] #role-tray{bottom:calc(var(--safe-b) + 16px);left:50%;translate:-50% 0!important;z-index:50}
+body[data-role="suspect"] #role-tray .ct-btn{border-radius:999px}
+
+/* ===== بقية اللاعبين: بطاقة صغيرة وزر عائم ===== */
+body[data-role="citizen"] #role-plate{top:calc(var(--safe-t) + 66px);right:12px;padding:6px 14px;background:var(--deep-navy);border:1px dashed var(--gold-dim);border-radius:8px}
+body[data-role="citizen"] #role-plate strong{font-size:.95rem}
+body[data-role="citizen"] #role-plate span{display:none}
+body[data-role="citizen"] #role-tray{bottom:calc(var(--safe-b) + 18px);left:16px;flex-direction:column;gap:8px}
+body[data-role="citizen"] #role-tray .ct-btn{border-radius:999px}
+
+/* ===== القائمة الجانبية ===== */
+#sidebar-drawer{position:fixed;top:0;bottom:0;right:0;width:min(80vw,290px);z-index:60;padding:calc(var(--safe-t) + 72px) 18px 24px;background:var(--deep-navy);border-left:2px solid var(--gold-glow);transform:translateX(105%);transition:transform .25s;display:flex;flex-direction:column;gap:10px}
+#sidebar-drawer.sidebar-drawer-active{transform:none}
+#sidebar-drawer h2{margin:0 0 6px;font-family:'Alexandria',sans-serif;font-weight:800;font-size:1.3rem;color:var(--gold-glow)}
+#btn-end-trial{display:none}
+
+/* ===== النوافذ ===== */
+.modal-shell{position:fixed;inset:0;z-index:200000;display:none;align-items:center;justify-content:center;padding:20px;background:rgba(5,10,18,.78)}
+.modal-shell.modal-overlay-active,.modal-shell.host-overlay-active{display:flex}
+.modal-box{width:min(92vw,400px);padding:22px;border-radius:10px;background:var(--deep-navy);border:1px solid var(--gold-glow);text-align:center}
+.modal-box h2{margin:0 0 8px;font-family:'Alexandria',sans-serif;font-weight:800;font-size:1.25rem;color:var(--gold-glow)}
+.modal-box p{margin:0 0 18px;line-height:1.7}
+.modal-actions{display:flex;gap:10px}
+.modal-actions .ct-btn{flex:1}
+
+@media (max-width:520px){.room-tag{display:none}}
+@media (prefers-reduced-motion:reduce){#sidebar-drawer,.ct-btn{transition:none}}
 </style>
 </head>
-<body>
+<body data-role="citizen">
 
-<div id="lobby-loading-screen">
-  <div class="seal">⚖️</div>
-  <div class="bar"><div id="progress-bar-fill"></div></div>
-  <div id="progress-counter-text">0%</div>
-  <div id="loading-dynamic-hint">جاري تجميع اللاعبين</div>
+<!-- شاشة التحميل السينمائية لساحة اللعب (مخفية افتراضياً وتظهر عند بدء القضية) -->
+<div id="lobby-loading-screen" class="modern-loading-overlay" style="display: none">
+<div class="loading-blurred-backdrop"></div>
+
+<div class="loading-card-content">
+<!-- أنيميشن الميزان النابض -->
+<!-- الهيكل المطور الخالي تماماً من الإطار الأبيض -->
+<div class="gavel-glow-animation">
+<span class="gavel-emoji">
+<iframe
+src="https://lottie.host/embed/5c8b4548-c18c-407f-9e64-00014c2aa006/UAYSrmYfhz.lottie"
+style="border: none; background: transparent; width: 100%; height: 100%"
+allowfullscreen>
+</iframe>
+</span>
 </div>
-<div id="loading-screen">جاري التحميل…</div>
 
-<div id="court-arena">
-  <div id="topbar">
-    <span id="role-identity-badge"></span>
-    <span class="chip">نقاطك <b id="personal-current-score-text">0</b></span>
-    <button class="tb" id="btn-open-shop" type="button">🛒 المتجر</button>
-    <button class="tb" id="secret-toggle" type="button">🔐 بطاقتي</button>
-    <button class="tb" id="btn-end-trial" type="button">إنهاء</button>
-  </div>
-  <div id="court-ticker"><div id="court-ticker-track"></div></div>
-  <div id="court-flash"><h1 id="court-flash-t"></h1><p id="court-flash-p"></p></div>
+<h1 class="loading-main-title">المحكمة</h1>
+<p id="loading-dynamic-hint" class="loading-subtitle-hint">جاري سحب الأجهزة وتوزيع الأدوار السرية...</p>
 
-  <div id="stage"></div>
+<!-- شريط العداد الذهبي -->
+<div class="modern-progress-wrapper">
+<div id="progress-bar-fill" class="modern-progress-fill"></div>
+</div>
+
+<div id="progress-counter-text" class="modern-percentage-text">0%</div>
+</div>
+</div>
+
+<header class="topbar">
+  <button id="btn-hamburger" aria-label="القائمة">☰</button>
+  <div class="room-tag">الغرفة <b id="room-code-number">----</b></div>
+  <div class="score-chip"><small>رصيدك</small><span id="personal-current-score-text">0</span></div>
+</header>
+
+<main id="court-arena" style="display:none">
+  <div class="floor" aria-hidden="true"></div>
   <div id="seats-container"></div>
-  <div id="judge-control-panel"></div>
+  <div id="role-plate"><strong id="role-plate-name"></strong><span id="role-plate-hint"></span></div>
+  <div id="role-tray"><div id="judge-control-panel"></div></div>
+</main>
 
-  <div id="secret-panel"><div id="secret-panel-body"></div></div>
+<aside id="sidebar-drawer" aria-label="القائمة">
+  <h2>قائمة الجلسة</h2>
+  <button id="btn-open-shop" class="ct-btn">متجر المشتريات</button>
+  <button id="btn-end-trial" class="ct-btn">إنهاء المحاكمة</button>
+</aside>
 
-  <!-- القاضي -->
-  <aside class="shell" id="jd-card"><h4>⚖ ملف القضية</h4><div id="jd-case" style="margin-bottom:6px;color:var(--gold-glow)">—</div><ul id="jd-roster-list"></ul></aside>
-  <!-- الادعاء -->
-  <aside class="shell" id="pr-evidence-wrap"><h4>🗂 قائمة الأدلة</h4><ul id="pr-evidence"></ul></aside>
-  <div class="shell" id="pr-dock"><div id="pr-cards"></div></div>
-  <!-- الدفاع -->
-  <div class="shell" id="df-dock"><div id="df-cards"></div></div>
-  <button type="button" id="btn-defense-objection">🛑 اعتراض!</button>
-  <!-- الجاني -->
-  <div class="shell" id="gl-tension">مستوى التوتر <b id="gl-tension-num">0%</b><div class="tr"><div id="gl-tension-fill"></div></div></div>
-  <div class="shell" id="gl-memo"><div id="gl-memo-body"></div><div id="gl-q"><b style="font-size:.7rem;color:#ff6a73">أسئلة متوقعة:</b><ul id="gl-q-list"></ul></div></div>
-  <!-- بريء بمصلحة سرية -->
-  <div class="shell" id="cf-tab">🕯 الظلال</div>
-  <aside class="shell" id="cf-layer"><h4>🕯 مصلحتك السرية</h4><div id="cf-goal">—</div>
-    <div class="cf-acts"><button data-act="حماية">🛡 حماية</button><button data-act="تشتيت">🌫 تشتيت</button><button data-act="تحالف">🤝 تحالف</button></div>
-    <div id="cf-picked">اختر حركة ثم اضغط كرسياً (تخطيط محلي فقط).</div></aside>
-  <!-- بريء كاذب -->
-  <div class="shell" id="lr-pad"><h4>📒 دفتر أكاذيبي (لا تنسَ شيئاً!)</h4><ol id="lr-list"></ol>
-    <div class="row"><input id="lr-input" placeholder="دوّن ما قلته…"><button id="lr-add-btn" type="button">حفظ</button></div></div>
-
-  <div id="custom-alert-modal" class="modal-overlay-hidden">
-    <div class="modal-box"><h2 id="modal-alert-title"></h2><div id="modal-alert-message"></div>
-      <button id="btn-modal-close" type="button">إغلاق</button></div>
+<div id="custom-alert-modal" class="modal-shell">
+  <div class="modal-box">
+    <h2 id="modal-alert-title"></h2>
+    <p id="modal-alert-message"></p>
+    <div class="modal-actions"><button id="btn-modal-close" class="ct-btn">حسناً</button></div>
   </div>
 </div>
 
+<div id="host-exit-modal" class="modal-shell">
+  <div class="modal-box">
+    <h2>مغادرة الجلسة</h2>
+    <p>إذا غادرت بصفتك منشئ الغرفة فستُغلق الجلسة لجميع اللاعبين.</p>
+    <div class="modal-actions">
+      <button id="btn-host-cancel-exit" class="ct-btn">البقاء</button>
+      <button id="btn-host-confirm-exit" class="ct-btn btn-verdict-style">إغلاق الجلسة</button>
+    </div>
+  </div>
+</div>
+
+<script type="module" src="app.js"></script>
 <script>
-/* معاينة بدون Firebase:  lobby.html?preview=judge|prosecutor|defense|guilty|conflicted|liar */
-(function(){var r=new URLSearchParams(location.search).get('preview');if(!r)return;
-document.body.classList.add('role-'+r);
-document.getElementById('lobby-loading-screen').style.display='none';
-var a=document.getElementById('court-arena');a.style.display='block';
-var n=['ليلى','سامر','هدى','كريم','نور','عمر'],s=document.getElementById('seats-container');
-n.forEach(function(x,i){var t=i*Math.PI/3-Math.PI/2,R=Math.min(innerWidth,innerHeight)*.34,d=document.createElement('div');
-d.className='court-seat-node';d.style.cssText='position:absolute;width:88px;height:88px;left:'+(innerWidth/2+R*Math.cos(t)-44)+'px;top:'+(innerHeight/2+R*Math.sin(t)-44)+'px';
-d.innerHTML='<div style="font-size:.8rem;font-weight:700">'+x+'</div><div style="font-family:Harmattan;font-size:.75rem;color:var(--gold-glow)">متهم</div>';s.appendChild(d)});
-var b=document.getElementById('role-identity-badge');b.style.display='block';b.textContent={judge:'⚖ القاضي',prosecutor:'⚔ محامي الادعاء',defense:'🛡 محامي الدفاع',guilty:'🩸 المتهم — الجاني',conflicted:'🕯 مصلحة سرية',liar:'⚠ متهم بريء'}[r]||'';
-document.getElementById('secret-panel').classList.add('on');document.getElementById('secret-panel-body').innerHTML='<h3>بطاقتك</h3><p>معاينة التصميم فقط.</p>';
-if(r==='judge'){var j=document.getElementById('judge-control-panel');j.style.display='flex';j.innerHTML='<button class="btn-judge-action">استجواب لاعب</button><button class="btn-judge-action btn-verdict-style">إصدار الحكم 🔨</button>'}
-if(r==='guilty'){document.getElementById('gl-tension-fill').style.width='45%';document.getElementById('gl-tension-num').textContent='45%'}
-if(r==='prosecutor')document.getElementById('pr-cards').innerHTML='<div class="pr-card" style="--r:-3deg"><b>كارت إدانة 1</b>بصمات على أداة الجريمة</div><div class="pr-card"><b>كارت إدانة 2</b>تسجيل كاميرا مشبوه</div><div class="pr-card" style="--r:3deg"><b>كارت إدانة 3</b>شاهد رأى المتهم</div>';
-if(r==='defense')document.getElementById('df-cards').innerHTML='<div class="df-card"><b style="color:#5fd3c4">كارت دفاع 1</b><br>لا دليل مباشر يربط موكلي</div><div class="df-card"><b style="color:#5fd3c4">كارت دفاع 2</b><br>شهادة تثبت غيابه</div>';
-if(r==='conflicted')document.getElementById('cf-goal').textContent='مصلحتك السرية تظهر هنا…';
+(function(){
+  var TEXT={judge:["تدير الجلسة وتصدر الحكم","القاضي"],prosecutor:["تثبت التهمة","محامي الادعاء"],defense:["تدافع عن المتهم","محامي الدفاع"],suspect:["حافظ على هدوئك","المتهم"],citizen:["اجمع الخيوط","لاعب"]};
+  var IDS=["btn-evidence-bag-trigger","objection-card-trigger","btn-unified-questions-trigger-holder","btn-lawyer-radar-trigger-holder","request-speak-trigger"];
+  var last="", queued=false;
+
+  function roleOf(c){
+    var n=c.role_name||"";
+    if(c.role_type==="judge")return"judge";
+    if(c.role_type==="lawyer")return n.indexOf("دفاع")>-1?"defense":"prosecutor";
+    return n.indexOf("متهم")>-1?"suspect":"citizen";
+  }
+  function paint(){
+    var c=window.myCurrentRoleCard;
+    if(!c||(!c.role_name&&!c.role_type))return;
+    var r=roleOf(c),key=r+"|"+c.role_name;
+    if(key===last)return; last=key;
+    document.body.setAttribute("data-role",r);
+    document.getElementById("role-plate-name").textContent=c.role_name||TEXT[r][1];
+    document.getElementById("role-plate-hint").textContent=TEXT[r][0];
+    document.getElementById("role-plate").style.display="block";
+  }
+
+  /* يزيل الستايلات المكتوبة داخل app.js من كل زر وحاوية زر، ويعطيها شكل الموقع الموحد */
+  function restyle(root){
+    root.querySelectorAll("button,"+IDS.map(function(i){return"#"+i}).join(",")).forEach(function(el){
+      if(el.hasAttribute("style"))el.removeAttribute("style");
+      if(el.tagName==="BUTTON"&&!el.classList.contains("ct-btn"))el.classList.add("ct-btn");
+    });
+  }
+  function gather(){
+    var tray=document.getElementById("role-tray"); if(!tray)return;
+    IDS.forEach(function(id){var el=document.getElementById(id); if(el&&el.parentNode!==tray)tray.appendChild(el);});
+    restyle(tray);
+    var jp=document.getElementById("judge-control-panel");
+    var judgeOn=jp&&jp.style.display==="flex"&&jp.children.length;
+    tray.classList.toggle("has-items",!!(tray.children.length>1||judgeOn));
+  }
+  function tick(){
+    if(queued)return; queued=true;
+    requestAnimationFrame(function(){queued=false;paint();gather();});
+  }
+
+  document.addEventListener("DOMContentLoaded",function(){
+    new MutationObserver(tick).observe(document.body,{childList:true,subtree:true,attributes:true,attributeFilter:["style"]});
+    setInterval(tick,600);
+    ["custom-alert-modal","host-exit-modal"].forEach(function(id){
+      var m=document.getElementById(id);
+      new MutationObserver(function(){
+        if(m.style.display==="flex"||m.style.display==="block")m.classList.add("modal-overlay-active");
+      }).observe(m,{attributes:true,attributeFilter:["style"]});
+    });
+    document.getElementById("btn-modal-close").addEventListener("click",function(){
+      var m=document.getElementById("custom-alert-modal");
+      m.classList.remove("modal-overlay-active"); m.style.display="";
+    });
+  });
 })();
 </script>
-<script type="module" src="app.js"></script>
 </body>
 </html>

@@ -793,18 +793,6 @@ function activateCasesClickEngine() {
                                 assignments[player.id] = finalRolesToDistribute[index];
                             });
 
-                            // 🌟 [تفكيك السكريبت]: تصريحات علنية مجردة تُحقن في بطاقة كل متهم (يقرؤها القاضي والمحامون للاستجواب)
-                            const claimSources = [activeCase.roles_pool.real_guilty].concat(
-                                activeCase.suspects_pool || []
-                            );
-                            Object.keys(assignments).forEach((uid) => {
-                                const c = assignments[uid];
-                                if (c && c.role_type === "suspect") {
-                                    const src = claimSources.find((x) => x && x.role_name === c.role_name);
-                                    if (src && src.claims) c.claims = src.claims;
-                                }
-                            });
-
                             // 🌟 [شبكة المعرفة]: يُفعَّل الرابط فقط إذا وقع الطرفان فعلاً على لاعبين حقيقيين في هذه الجولة
                             Object.keys(assignments).forEach((uid) => {
                                 const card = assignments[uid];
@@ -846,12 +834,7 @@ function activateCasesClickEngine() {
                                 // 🌟 [شاشة النتائج الكبرى]: لقطة فورية لأرصدة كل اللاعبين قبل بدء الجولة، لحساب دلتا النقاط المكتسبة فيها فقط لاحقاً
                                 scores_at_round_start: roomData.players_scores || {},
                                 // 🌟 [البند 3]: توثيق هوية موكل محامي الدفاع الثابتة لهذه الجولة سحابياً
-                                defense_client_uid: randomClientUID,
-                                // 🌟 [زر الطوارئ]: 3 جمل منقذة ثابتة لهذه القضية من الجيسون، وتصفير عدّاد الرشاوى للجولة
-                                emergency_lines: activeCase.emergency_lines || [],
-                                bribe_uses: null,
-                                bribery_offer: null,
-                                bribery_response: null
+                                defense_client_uid: randomClientUID
                             }).then(() => {
                                 window.location.href = `lobby.html?id=${caseId}`;
                             });
@@ -1001,30 +984,6 @@ function listenToFinalLobby() {
             // 🎭🔊 نمط الجولة الحالي وبطاقتي: يستخدمهما توجيه الارتجال وحارس سرية المتحدث الصوتي
             window.currentGameMode = normalizeGameMode(gameState.gameMode);
             window.myCurrentRoleCard = myRoleCard;
-            // 🎨 [تمييز الدور]: توهج لوني خفيف حول الطاولة وشارة هوية بحسب دور اللاعب الحالي
-            document.body.classList.remove("role-judge", "role-lawyer", "role-suspect");
-            const roleBadge = document.getElementById("role-identity-badge");
-            if (myRoleCard.role_type === "judge") {
-                document.body.classList.add("role-judge");
-                if (roleBadge) {
-                    roleBadge.textContent = "⚖️ أنت القاضي";
-                    roleBadge.style.display = "block";
-                }
-            } else if (myRoleCard.role_type === "lawyer") {
-                document.body.classList.add("role-lawyer");
-                if (roleBadge) {
-                    roleBadge.textContent = `🧑‍⚖️ ${myRoleCard.role_name || "أنت محامٍ"}`;
-                    roleBadge.style.display = "block";
-                }
-            } else if (myRoleCard.role_type === "suspect") {
-                document.body.classList.add("role-suspect");
-                if (roleBadge) {
-                    roleBadge.textContent = "🎭 أنت متهم";
-                    roleBadge.style.display = "block";
-                }
-            }
-            window.currentCaseId = gameState.caseId; // [مضاف] لتعرف هياكل الأدوار القضية الحالية
-            applyCourtTheme(myRoleCard);
             if (myRoleCard.secret_interest) registerForbiddenSpeech(myRoleCard.secret_interest);
 
             if (myRoleCard.role_type === "judge") {
@@ -1035,32 +994,6 @@ function listenToFinalLobby() {
                     myLawyerType = "defense_evidence";
                 } else if (myRoleCard.role_name.includes("ادعاء") || myRoleCard.role_name.includes("المحكمة")) {
                     myLawyerType = "court_evidence";
-                }
-            }
-
-            window.currentEmergencyLines = gameState.emergency_lines || [];
-
-            // ==========================================================================
-            // 💰 [الرشوة]: عرض رشوة جديد يظهر للمرشي فقط (قبول/رفض)، وإشعار قبول يصل للراشي فقط
-            // ==========================================================================
-            if (
-                gameState.bribery_offer &&
-                gameState.bribery_offer.timestamp &&
-                gameState.bribery_offer.timestamp !== window.lastProcessedBriberyOfferTimestamp
-            ) {
-                window.lastProcessedBriberyOfferTimestamp = gameState.bribery_offer.timestamp;
-                if (gameState.bribery_offer.to_uid === mySecretUID) injectBriberyOfferBox(gameState.bribery_offer);
-            }
-            if (
-                gameState.bribery_response &&
-                gameState.bribery_response.timestamp &&
-                gameState.bribery_response.timestamp !== window.lastProcessedBriberyResponseTimestamp
-            ) {
-                window.lastProcessedBriberyResponseTimestamp = gameState.bribery_response.timestamp;
-                if (gameState.bribery_response.from_uid === mySecretUID) {
-                    showLocalToast(
-                        `✅ ${gameState.bribery_response.to_name || "اللاعب"} قبل رشوتك (${gameState.bribery_response.amount} نقطة).`
-                    );
                 }
             }
 
@@ -1076,11 +1009,9 @@ function listenToFinalLobby() {
                 const promptData = gameState.active_question_prompt;
 
                 if (promptData.improvised === true) {
-                    // 🎭 وضع الارتجال: لا نص جاهز، السؤال يُطرح شفهياً (مع ذكر التصريح المستجوَب عنه إن وُجد)
+                    // 🎭 وضع الارتجال: لا نص جاهز، السؤال يُطرح شفهياً
                     triggerKillFeedAlert(
-                        promptData.claim_text
-                            ? `🎭 ${promptData.asker_name || "طرف المحكمة"} يستجوب (${promptData.target_name || "أحد الحاضرين"}) حول تصريحه: «${promptData.claim_text}» — السؤال يُطرح شفهياً`
-                            : `🎭 ${promptData.asker_name || "طرف المحكمة"} يستجوب (${promptData.target_name || "أحد الحاضرين"}) ارتجالياً... السؤال يُطرح شفهياً`,
+                        `🎭 ${promptData.asker_name || "طرف المحكمة"} يستجوب (${promptData.target_name || "أحد الحاضرين"}) ارتجالياً... السؤال يُطرح شفهياً`,
                         true
                     );
                 } else {
@@ -1398,8 +1329,6 @@ function renderCircularSeats(playersList, assignments, gameState) {
             const judgePanel = document.getElementById("judge-control-panel");
             if (judgePanel) {
                 if (isJudgeMe) {
-                    // 🐛 [إصلاح جوهري]: كان هذا المرجع غائباً فتفجّر خطأ صامت عند بث أي سؤال، فلا يصل الإشعار لأحد
-                    const gameStateRef = ref(db, "rooms/" + currentRoomCode + "/game_state");
                     judgePanel.style.setProperty("display", "flex", "important");
 
                     // تحديث عداد الاستجوابات الأصلي في الواجهة
@@ -1455,34 +1384,9 @@ function renderCircularSeats(playersList, assignments, gameState) {
 
                                 let pickerHTML = `<div style="text-align: right; font-family: 'Alexandria', sans-serif; direction: rtl;">`;
 
-                                const fixedTargetCard = fixedTargetUID ? latestAssignments[fixedTargetUID] || {} : null;
-                                const fixedTargetClaims =
-                                    fixedTargetCard && fixedTargetCard.claims ? fixedTargetCard.claims : [];
-                                const evidencePool =
-                                    (activeCase.lawyers_evidence_pool &&
-                                        activeCase.lawyers_evidence_pool.court_evidence) ||
-                                    [];
-
                                 if (fixedTargetUID) {
                                     // 🎯 القاضي مقفول على اللاعب الذي اختاره فعلاً — لا قائمة اختيار بعد الآن
                                     pickerHTML += `<p style="color: var(--gold-glow); font-size: 0.85rem; font-weight: 700; margin: 0 0 12px; line-height: 1.6;">🎯 الأسئلة موجّهة حصرياً للاعب المستجوَب حالياً: <b>${fixedTargetName || "اللاعب المحدد"}</b></p>`;
-
-                                    // 🌟 [تفكيك السكريبت]: شرائح تصريحاته العلنية — استجوبه عنها بصوتك، لا نص جاهز
-                                    if (fixedTargetClaims.length > 0) {
-                                        pickerHTML += `<label style="color: #6ee7a0; font-size: 0.78rem; font-weight: 700; display: block; margin-bottom: 6px;">📇 تصريحاته العلنية — اضغط للاستجواب شفهياً حول أحدها:</label>`;
-                                        fixedTargetClaims.forEach((claim) => {
-                                            const hasEvidence = evidencePool.some(
-                                                (e) => e.contradicts_claim === claim.id
-                                            );
-                                            pickerHTML += `
-                                            <button type="button" data-claim-id="${claim.id}" data-claim-text="${escapeHtml(claim.text)}" style="width: 100%; text-align: right; padding: 10px; margin-bottom: 6px; background: rgba(110,231,160,0.08); border: 1px solid #6ee7a0; color: #fff; border-radius: 8px; font-family: 'Harmattan'; font-size: 0.95rem; cursor: pointer;">
-                                                «${escapeHtml(claim.text)}» ${hasEvidence ? '<span style="color:#ffe9b3; font-size:.65rem;">💡 يوجد دليل مناقض في حقيبة الأدلة</span>' : ""}
-                                            </button>`;
-                                        });
-                                        pickerHTML += `<p id="claim-send-status" style="color:#ffe9b3; font-size:.72rem; text-align:center; margin: 4px 0 12px; min-height: 16px;"></p>
-                                        <div style="border-top: 1px dashed rgba(255,255,255,0.15); margin: 4px 0 12px;"></div>
-                                        <label style="color: var(--gold-glow); font-size: 0.75rem; font-weight: 700; display: block; margin-bottom: 6px;">أو استعن بسؤال جاهز احتياطي:</label>`;
-                                    }
                                 } else {
                                     pickerHTML += `
                                     <label style="color: var(--gold-glow); font-size: 0.8rem; font-weight: 700; display: block; margin-bottom: 8px;">اختر اللاعب الذي تريد استجوابه:</label>
@@ -1511,35 +1415,6 @@ function renderCircularSeats(playersList, assignments, gameState) {
                             `;
 
                                 document.getElementById("modal-alert-message").innerHTML = pickerHTML;
-
-                                // 🌟 [تفكيك السكريبت]: نقرة على شريحة تصريح تبث استجواباً ارتجالياً حول هذا التصريح بعينه
-                                document.querySelectorAll("[data-claim-id]").forEach((chip) => {
-                                    chip.addEventListener("click", () => {
-                                        const claimStatus = document.getElementById("claim-send-status");
-                                        update(gameStateRef, {
-                                            active_question_prompt: {
-                                                target_uid: fixedTargetUID,
-                                                target_name: fixedTargetName || "اللاعب المستهدف",
-                                                asker_uid: mySecretUID,
-                                                asker_name: myRoleCard.role_name || "القاضي المحقق",
-                                                question_text: "",
-                                                answers: null,
-                                                improvised: true,
-                                                claim_text: chip.getAttribute("data-claim-text"),
-                                                timestamp: Date.now()
-                                            }
-                                        })
-                                            .then(() => {
-                                                if (claimStatus)
-                                                    claimStatus.textContent =
-                                                        "✅ تم توجيه الاستجواب — تكلّم الآن بصوتك.";
-                                            })
-                                            .catch(() => {
-                                                if (claimStatus)
-                                                    claimStatus.textContent = "⚠️ تعذّر الإرسال، حاول مرة أخرى.";
-                                            });
-                                    });
-                                });
 
                                 const countDisplay = document.getElementById("questions-count-display");
                                 const btnPull = document.getElementById("btn-pull-random-question");
@@ -1827,13 +1702,6 @@ function renderCircularSeats(playersList, assignments, gameState) {
                         counterDiv.innerHTML = `الاستجوابات <strong id="interrogation-count-number">${currentInterrogationsCount}</strong>`;
                         judgePanel.appendChild(counterDiv);
 
-                        // 🛡️ [شارة صمام الأمان]: تُبنى فارغة، وتُملأ حياً من shop_purchases حتى تظهر الميزة فوراً بعد الشراء
-                        const valveBadge = document.createElement("p");
-                        valveBadge.id = "safety-valve-badge";
-                        valveBadge.style.cssText =
-                            "width: 100%; margin: 2px 0 0; color: #6ee7a0; font-family: 'Alexandria', sans-serif; font-weight: 700; font-size: 0.66rem; text-align: center; display: none;";
-                        judgePanel.appendChild(valveBadge);
-
                         // 🌟 [تحذير عقوبة تشتيت الجلسة]: نص أحمر فوق زر إصدار الحكم، يظهر فقط قبل الوصول لمضاعف 15 القادم مباشرة
                         const penaltyWarning = document.createElement("p");
                         penaltyWarning.id = "interrogation-penalty-warning";
@@ -1873,22 +1741,6 @@ function renderCircularSeats(playersList, assignments, gameState) {
                         liveQuestionsBtn.disabled = !hasActiveTarget;
                         liveQuestionsBtn.style.opacity = hasActiveTarget ? "1" : "0.4";
                         liveQuestionsBtn.style.cursor = hasActiveTarget ? "pointer" : "not-allowed";
-                    }
-
-                    // 🛡️ [شارة صمام الأمان]: تُقرأ حياً من السحابة عند كل تحديث حالة اللعبة (تظهر فور الشراء)
-                    const liveValveBadge = document.getElementById("safety-valve-badge");
-                    if (liveValveBadge) {
-                        get(ref(db, `rooms/${currentRoomCode}/shop_purchases/${mySecretUID}/safety_valve`)).then(
-                            (valveSnap) => {
-                                const valveCount = valveSnap.exists() ? valveSnap.val() : 0;
-                                if (valveCount > 0) {
-                                    liveValveBadge.textContent = `🛡️ صمامات الأمان المتاحة: ${valveCount}`;
-                                    liveValveBadge.style.display = "block";
-                                } else {
-                                    liveValveBadge.style.display = "none";
-                                }
-                            }
-                        );
                     }
 
                     // 🌟 [تحذير عقوبة تشتيت الجلسة]: يظهر عند الاقتراب (بحد 3) من أي مضاعف قادم لـ 15
@@ -3386,12 +3238,6 @@ function injectLawyerActionControls(
 
         btnEvidence.style.cssText = `all: unset !important; background: linear-gradient(135deg, #161c26 0%, #423423 100%) !important; border: 2px solid var(--gold-glow, #d5a75c) !important; color: var(--gold-glow, #d5a75c) !important; font-family: 'Alexandria', sans-serif !important; font-weight: 700 !important; font-size: 0.69rem !important; padding: 10px 14px !important; border-radius: 8px !important; cursor: pointer !important; display: flex !important; align-items: center !important; justify-content: center !important; gap: 6px !important; box-shadow: 0 4px 15px rgba(213, 167, 92, 0.25) !important; box-sizing: border-box !important; text-align: center !important; transition: all 0.2s ease-in-out !important; pointer-events: auto !important; -webkit-tap-highlight-color: transparent !important; touch-action: manipulation !important;`;
         btnEvidence.textContent = "حقيبة الأدلة";
-        // 🌟 [تعديل نظامي]: مبدئياً نعطّل الزر للقاضي لو لا يوجد مستجوَب حالياً (يُحدَّث بالتفصيل عند كل نقرة فعلياً)
-        if (myRoleCard.role_type === "judge" && activeSpeakerUID === "none") {
-            btnEvidence.disabled = true;
-            btnEvidence.style.setProperty("opacity", "0.4", "important");
-            btnEvidence.style.setProperty("cursor", "not-allowed", "important");
-        }
 
         // 🌟 [تحديث ميكانيكية الاستهداف]: إلغاء "الأدلة العامة" نهائياً - يجب اختيار لاعب مستهدف أولاً قبل عرض أي دليل
         const resolveEvidenceItemMatch = (item, playerCard) => resolveEvidenceItemMatchGlobal(item, playerCard);
@@ -3590,12 +3436,6 @@ function injectLawyerActionControls(
                     showLocalToast(
                         "🔒 يجب طلب الكلمة أو استخدام الاعتراض القسري أولاً، والحصول على فرصة التحدث من القاضي."
                     );
-                    return;
-                }
-
-                // 🌟 [تعديل نظامي]: القاضي أيضاً لا يفتح الأدلة إلا بعد اختيار لاعب فعلياً بزر "استجواب لاعب"
-                if (myRoleCard.role_type === "judge" && (latestGameState.activeSpeakerUID || "none") === "none") {
-                    showLocalToast("🔒 اختر لاعباً للاستجواب أولاً بالضغط على زر 'استجواب لاعب' قبل استخدام الأدلة.");
                     return;
                 }
 
@@ -4158,21 +3998,8 @@ function injectAutomatedResponseButtons(promptData) {
     questionLabel.style.cssText =
         "color: #fff; font-family: 'Alexandria', sans-serif; font-size: 0.82rem; text-align: center; margin: 0 0 8px; font-weight: 700; line-height: 1.6;";
     const isImprovisedPrompt = promptData.improvised === true;
-    window.lastQuestionedAt = Date.now();
-    if (promptData.claim_text) {
-        box.style.animation = "claimFlash 1s ease-in-out 3";
-        if (!document.getElementById("claim-flash-style")) {
-            const st = document.createElement("style");
-            st.id = "claim-flash-style";
-            st.textContent =
-                "@keyframes claimFlash{0%,100%{box-shadow:0 6px 25px rgba(213,167,92,.3)}50%{box-shadow:0 0 30px 6px rgba(255,233,179,.9)}}";
-            document.head.appendChild(st);
-        }
-    }
     questionLabel.textContent = isImprovisedPrompt
-        ? promptData.claim_text
-            ? `🎭 ${promptData.asker_name || "طرف المحكمة"} يستجوبك عن تصريحك: «${promptData.claim_text}» — استمع للسؤال ثم اختر أسلوب إجابتك:`
-            : `🎭 ${promptData.asker_name || "طرف المحكمة"} يوجّه إليك سؤالاً ارتجالياً شفهياً. استمع إليه ثم اختر أسلوب إجابتك:`
+        ? `🎭 ${promptData.asker_name || "طرف المحكمة"} يوجّه إليك سؤالاً ارتجالياً شفهياً. استمع إليه ثم اختر أسلوب إجابتك:`
         : `❓ سؤال موجّه لك من (${promptData.asker_name || "طرف المحكمة"}): ${promptData.question_text}`;
     box.appendChild(questionLabel);
     if (!isImprovisedPrompt) {
@@ -4200,30 +4027,6 @@ function injectAutomatedResponseButtons(promptData) {
     });
 
     box.appendChild(btnRow);
-
-    // 🆘 [زر الطوارئ]: جملة منقذة جاهزة من بنك القضية (3 جمل فقط) للاعب الخجول الذي يتلخبط
-    const emergencyLines = window.currentEmergencyLines || [];
-    if (emergencyLines.length > 0) {
-        const emergencyLine = document.createElement("p");
-        emergencyLine.id = "emergency-line-text";
-        emergencyLine.style.cssText =
-            "color: #ffe9b3; font-family: 'Harmattan'; font-size: 0.95rem; text-align: center; margin: 8px 0 0; min-height: 18px; line-height: 1.6; display: none;";
-        const btnEmergency = document.createElement("button");
-        btnEmergency.textContent = "🆘 جملة منقذة";
-        btnEmergency.style.cssText =
-            "width: 100%; margin-top: 8px; padding: 8px; background: rgba(255,255,255,0.05); border: 1px dashed #ffe9b3; color: #ffe9b3; font-family: 'Alexandria', sans-serif; font-weight: 700; font-size: 0.7rem; border-radius: 8px; cursor: pointer;";
-        btnEmergency.addEventListener("click", () => {
-            const line = emergencyLines[Math.floor(Math.random() * emergencyLines.length)];
-            emergencyLine.textContent = `🆘 ${line}`;
-            emergencyLine.style.display = "block";
-            btnEmergency.disabled = true;
-            btnEmergency.style.opacity = "0.4";
-            btnEmergency.style.cursor = "not-allowed";
-        });
-        box.appendChild(btnEmergency);
-        box.appendChild(emergencyLine);
-    }
-
     document.body.appendChild(box);
 }
 
@@ -4276,9 +4079,10 @@ function showResponseGuidanceModal(responseType, promptData) {
     const modal = document.getElementById("custom-alert-modal");
     if (!modal) return;
 
-    // 🌟 [سكريبت للحقائق، ارتجال للحوار]: التوجيه دائماً تكتيكي بلا جمل جاهزة في كل الأوضاع
-    renderImprovisedGuidance(responseType, promptData);
-    return;
+    if (promptData.improvised === true || window.currentGameMode === GAME_MODES.IMPROVISATION) {
+        renderImprovisedGuidance(responseType, promptData);
+        return;
+    }
 
     const FALLBACK_GUIDANCE = {
         lie: {
@@ -5290,7 +5094,7 @@ function openSecretRoleSecondModal(roleCard, defenseClientName) {
         modalHTML += `
             <div style="background: rgba(213, 167, 92, 0.1); padding: 14px; border-radius: 6px; border: 1px solid var(--gold-glow); color: var(--gold-glow); text-align: center; font-size: 0.85rem; font-weight: 700; margin-top: 10px; box-shadow: inset 0 0 10px rgba(213, 167, 92, 0.15); line-height: 1.4;">
                 مرسوم السيادة القضائية النزيهة:<br>
-                <span style="font-weight:500; font-size:0.7rem; color:#aaa;">أنت مبرأ تماماً من أي تهمة أو مصلحة سرية خبيثة في هذه الجلسة. مصلحتك هي نصرة ميزان العدالة.</span>
+                <span style="font-weight:500; font-size:0.7rem; color:#aaa;">أنت مبرأ تماماً من أي تهمة أو مصلحة سرية خبيثة in هذه الجلسة. مصلحتك هي نصرة ميزان العدالة.</span>
             </div>
         `;
     }
@@ -5365,286 +5169,6 @@ function openSecretRoleSecondModal(roleCard, defenseClientName) {
                         if (statusLine) statusLine.textContent = "⚠️ تعذّر الكشف، حاول مرة أخرى.";
                     });
             });
-        }
-    }
-}
-
-// ==========================================================================
-// 🎬 [جسر الهوية السينمائية] — يحوّل بطاقة الدور إلى class التصميم الجديد دون لمس منطق اللعبة
-// judge / prosecutor / defense / guilty / conflicted / liar  (مع إبقاء role-judge/lawyer/suspect القديمة)
-// ==========================================================================
-function applyCourtTheme(card) {
-    if (!card) return;
-    const all = [
-        "role-judge",
-        "role-lawyer",
-        "role-suspect",
-        "role-prosecutor",
-        "role-defense",
-        "role-guilty",
-        "role-conflicted",
-        "role-liar"
-    ];
-    const t = card.role_type;
-    const n = card.role_name || "";
-    let r = null;
-    const legacy = [];
-    if (t === "judge") {
-        r = "judge";
-        legacy.push("role-judge");
-    } else if (t === "lawyer") {
-        r = n.includes("دفاع") ? "defense" : "prosecutor";
-        legacy.push("role-lawyer");
-    } else if (t === "suspect") {
-        r = card.is_guilty === true ? "guilty" : card.secret_interest ? "conflicted" : "liar";
-        legacy.push("role-suspect");
-    } else if (t === "innocent_impostor") {
-        r = "liar";
-        legacy.push("role-suspect");
-    }
-    if (!r) return;
-    document.body.classList.remove(...all);
-    document.body.classList.add("role-" + r, ...legacy);
-
-    const meta = {
-        judge: ["⚖ القاضي — الهيبة والعدالة", "ملف القضية", "توجيهك للمحاكمة"],
-        prosecutor: ["⚔ محامي الادعاء", "قائمة الأدلة", "هدفك في الادعاء"],
-        defense: ["🛡 محامي الدفاع", "خطة الدفاع", "هدفك في الدفاع"],
-        guilty: ["🩸 المتهم — الجاني", "🩸 تفاصيل الجريمة", "حجتك الكاذبة"],
-        conflicted: ["🕯 متهم بريء — مصلحة سرية", "🕯 مصلحتك السرية", "كيف توجّه المحاكمة"],
-        liar: ["⚠ متهم بريء كاذب", "⚠ أكاذيبك المسجّلة", "ما قلته للمحكمة"]
-    }[r];
-    const badge = document.getElementById("role-identity-badge");
-    if (badge) {
-        badge.textContent = meta[0];
-        badge.style.display = "block";
-    }
-
-    const esc = (s) =>
-        String(s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]);
-    const panel = document.getElementById("secret-panel");
-    const body = document.getElementById("secret-panel-body");
-    if (panel && body) {
-        let html = `<h3>${meta[1]} <span class="x" id="secret-panel-x">إخفاء ✕</span></h3>`;
-        if (n) html += `<p><b>دورك:</b> ${esc(n)}</p>`;
-        if (card.public_story) html += `<p><b>القصة العلنية:</b> ${esc(card.public_story)}</p>`;
-        if (card.secret_interest) html += `<p><b>${meta[2]}:</b> ${esc(card.secret_interest)}</p>`;
-        body.innerHTML = html;
-        panel.classList.add("on");
-        panel.classList.remove("min");
-        document.getElementById("secret-panel-x").onclick = () => panel.classList.add("min");
-    }
-    renderRoleShell(r, card);
-    window.pushCourtTicker && window.pushCourtTicker("تم توزيع الأدوار السرية — الجلسة على وشك البدء");
-}
-
-window.courtFlash = function (title, sub) {
-    const f = document.getElementById("court-flash");
-    if (!f) return;
-    document.getElementById("court-flash-t").textContent = title;
-    document.getElementById("court-flash-p").textContent = sub || "";
-    f.classList.add("on");
-    setTimeout(() => f.classList.remove("on"), 1700);
-};
-
-window.pushCourtTicker = function (text) {
-    const bar = document.getElementById("court-ticker");
-    const track = document.getElementById("court-ticker-track");
-    if (!bar || !track) return;
-    window._courtNews = (window._courtNews || []).concat(text).slice(-8);
-    const items = window._courtNews.concat(window._courtNews);
-    track.innerHTML = items.map((x) => `<span>${String(x).replace(/</g, "&lt;")}</span>`).join("");
-    bar.style.display = "flex";
-};
-
-(function wireCourtFlash() {
-    const ob = document.getElementById("btn-defense-objection");
-    if (ob) ob.addEventListener("click", () => window.courtFlash("اعتراض!", "محامي الدفاع يستخدم الاعتراض القسري"));
-    const vd = document.getElementById("btn-verdict-trigger");
-    if (vd) vd.addEventListener("click", () => window.courtFlash("الحكم", "المحكمة ترفع الجلسة…"));
-    const tg = document.getElementById("secret-toggle");
-    if (tg) tg.addEventListener("click", () => document.getElementById("secret-panel").classList.remove("min"));
-})();
-
-// ==========================================================================
-// 🎭 [تعبئة هياكل الأدوار] — قراءة فقط من cases.json وبطاقة الدور؛ لا يكتب في Firebase ولا يغيّر أي دالة قديمة
-// تُستدعى من applyCourtTheme(). window.currentCaseId يُضبط قبلها بسطر واحد مضاف في app.js.
-// ==========================================================================
-function renderRoleShell(r, card) {
-    const $ = (id) => document.getElementById(id);
-    const esc = (s) =>
-        String(s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]);
-    const txt = (it) =>
-        typeof it === "string"
-            ? it
-            : (it &&
-                  (it.text ||
-                      it.title ||
-                      it.description ||
-                      it.evidence ||
-                      it.question ||
-                      Object.values(it).find((v) => typeof v === "string"))) ||
-              "";
-    if (window._shellRole === r) return; // لا نعيد البناء مع كل تحديث حالة
-    window._shellRole = r;
-    document.body.classList.remove("cf-open", "tense");
-
-    const withCase = (fn) =>
-        fetch("cases.json")
-            .then((x) => x.json())
-            .then((all) => fn(all.find((c) => c.id == window.currentCaseId) || {}))
-            .catch(() => fn({}));
-
-    // قائمة المتهمين للقاضي — تُبنى من مقاعد #seats-container الحالية
-    if (r === "judge") {
-        const sync = () => {
-            const ul = $("jd-roster-list");
-            if (!ul) return;
-            ul.innerHTML = [...document.querySelectorAll("#seats-container .court-seat-node")]
-                .map((s) => `<li>${esc((s.innerText || "").split("\n")[0].trim() || "لاعب")}</li>`)
-                .join("");
-        };
-        sync();
-        const box = $("seats-container");
-        if (box && !window._rosterObs) {
-            window._rosterObs = new MutationObserver(sync);
-            window._rosterObs.observe(box, { childList: true });
-        }
-        withCase((c) => {
-            if ($("jd-case") && c.title) $("jd-case").textContent = c.title;
-        });
-    }
-    // الادعاء: أدلة جانبية + كروت إدانة
-    if (r === "prosecutor") {
-        withCase((c) => {
-            const ev = ((c.lawyers_evidence_pool || {}).court_evidence || []).map(txt).filter(Boolean);
-            $("pr-evidence").innerHTML = ev.map((t) => `<li>${esc(t)}</li>`).join("") || "<li>لا أدلة مسجلة</li>";
-            $("pr-cards").innerHTML = ev
-                .map(
-                    (t, i) =>
-                        `<div class="pr-card" style="--r:${((i % 3) - 1) * 3}deg"><b>كارت إدانة ${i + 1}</b>${esc(t.slice(0, 70))}</div>`
-                )
-                .join("");
-        });
-        if (!window._prWired) {
-            window._prWired = true;
-            document.addEventListener("click", (e) => {
-                const card = e.target.closest && e.target.closest(".pr-card");
-                if (card) {
-                    document
-                        .querySelectorAll(".pr-card.armed")
-                        .forEach((x) => x !== card && x.classList.remove("armed"));
-                    card.classList.toggle("armed");
-                    return;
-                }
-                const seat = e.target.closest && e.target.closest(".court-seat-node");
-                if (seat && document.querySelector(".pr-card.armed")) {
-                    seat.classList.add("aimed");
-                    setTimeout(() => seat.classList.remove("aimed"), 1600);
-                }
-            });
-        }
-    }
-    // الدفاع: شريط كروت
-    if (r === "defense") {
-        withCase((c) => {
-            const ev = ((c.lawyers_evidence_pool || {}).defense_evidence || []).map(txt).filter(Boolean);
-            $("df-cards").innerHTML =
-                ev
-                    .map(
-                        (t, i) =>
-                            `<div class="df-card"><b style="color:var(--accent)">كارت دفاع ${i + 1}</b><br>${esc(t.slice(0, 90))}</div>`
-                    )
-                    .join("") || "<div class='df-card'>لا كروت دفاع</div>";
-        });
-        if (!window._dfWired) {
-            window._dfWired = true;
-            document.addEventListener("click", (e) => {
-                const d = e.target.closest && e.target.closest(".df-card");
-                if (d) d.classList.toggle("armed");
-            });
-        }
-    }
-    // الجاني: مذكرة مطوية + توتر + أسئلة متوقعة
-    if (r === "guilty") {
-        $("gl-memo-body").innerHTML =
-            `${card.public_story ? `<p><b>الرواية العلنية:</b> ${esc(card.public_story)}</p>` : ""}${card.secret_interest ? `<p><b>ما تخفيه:</b> ${esc(card.secret_interest)}</p>` : ""}`;
-        $("gl-memo").onclick = () => $("gl-memo").classList.toggle("closed");
-        withCase((c) => {
-            $("gl-q-list").innerHTML = (c.radar_questions_pool || [])
-                .slice(0, 8)
-                .map((q) => `<li>${esc(txt(q))}</li>`)
-                .join("");
-        });
-        if (!window._tensionTimer) {
-            let t = 0;
-            window._tensionTimer = setInterval(() => {
-                if (window._shellRole !== "guilty") return;
-                t = Math.min(100, t + 1);
-                $("gl-tension-fill").style.width = t + "%";
-                $("gl-tension-num").textContent = t + "%";
-                document.body.classList.toggle("tense", t >= 70);
-            }, 3000);
-        }
-    }
-    // المصلحة السرية: لوحة الظلال
-    if (r === "conflicted") {
-        $("cf-goal").textContent = card.secret_interest || "لا مصلحة مسجلة";
-        $("cf-tab").onclick = () => document.body.classList.toggle("cf-open");
-        document.querySelectorAll(".cf-acts button").forEach(
-            (b) =>
-                (b.onclick = () => {
-                    document.querySelectorAll(".cf-acts button").forEach((x) => x.classList.remove("on"));
-                    b.classList.add("on");
-                    window._cfAct = b.dataset.act;
-                })
-        );
-        if (!window._cfWired) {
-            window._cfWired = true;
-            document.addEventListener("click", (e) => {
-                const s = e.target.closest && e.target.closest(".court-seat-node");
-                if (s && window._cfAct && window._shellRole === "conflicted")
-                    $("cf-picked").textContent =
-                        `تم تحديد: ${(s.innerText || "").split("\n")[0].trim()} — ${window._cfAct} (تخطيط محلي)`;
-            });
-        }
-    }
-    // الكاذب: مفكرة تسجّل تلقائياً ما يظهر في صناديق الرد الآلي/الأدلة
-    if (r === "liar") {
-        window.recordLie = (t) => {
-            t = String(t || "")
-                .trim()
-                .slice(0, 110);
-            const ol = $("lr-list");
-            if (!t || !ol) return;
-            if ([...ol.children].some((li) => li.dataset.t === t)) return;
-            const li = document.createElement("li");
-            li.dataset.t = t;
-            li.className = "fresh";
-            li.textContent = t;
-            ol.appendChild(li);
-            ol.scrollTop = ol.scrollHeight;
-            setTimeout(() => li.classList.remove("fresh"), 2000);
-        };
-        $("lr-list").innerHTML = "";
-        if (card.public_story) window.recordLie("روايتي العلنية: " + card.public_story);
-        $("lr-add-btn").onclick = () => {
-            window.recordLie($("lr-input").value);
-            $("lr-input").value = "";
-        };
-        if (!window._lrObs) {
-            window._lrObs = new MutationObserver((ms) =>
-                ms.forEach((m) =>
-                    m.addedNodes.forEach((n) => {
-                        if (n.id === "automated-response-box" || n.id === "evidence-response-box")
-                            setTimeout(
-                                () => window.recordLie("قلت للمحكمة: " + (n.innerText || "").replace(/\s+/g, " ")),
-                                400
-                            );
-                    })
-                )
-            );
-            window._lrObs.observe(document.body, { childList: true });
         }
     }
 }
