@@ -592,6 +592,83 @@
             <div class="tag">مباشر</div>
             <div class="track" id="court-ticker-track"></div>
         </div>
+        <!-- ======================================================================
+             🎭 هياكل الأدوار (Role Shells) — حاوية مستقلة لكل دور، تظهر/تختفي بالـ class على body
+             ⚠ لا تحتوي أي ID قديم. كل عناصر اللعبة القديمة (#court-arena #seats-container #court-table
+             #judge-control-panel #defense-lawyer-panel #btn-defense-objection #btn-verdict-trigger ...)
+             تبقى مكانها في الـ DOM كما هي، ويعاد ترتيبها بصرياً فقط عبر CSS (انظر قسم LAYOUTS في style.css)
+             ====================================================================== -->
+
+        <!-- ⚖ القاضي: لوحة تحكم استراتيجية. (الأزرار الفعلية = #judge-control-panel القديمة تُرفع لأعلى بالـ CSS) -->
+        <section id="shell-judge" class="role-shell">
+            <header id="jd-topbar"><b>⚖ منصة القضاء</b><span id="jd-case">جلسة قيد الانعقاد</span></header>
+            <aside id="jd-roster">
+                <h4>المتهمون تحت سلطتك</h4>
+                <ul id="jd-roster-list"></ul>
+            </aside>
+        </section>
+
+        <!-- ⚔ الادعاء: قسم أدلة جانبي + حقيبة كروت سفلية + مركز مراقبة (= #court-arena القديمة) -->
+        <section id="shell-prosecutor" class="role-shell">
+            <aside id="pr-side">
+                <h4>⚔ الأدلة والملفات المستندية</h4>
+                <ol id="pr-evidence"></ol>
+            </aside>
+            <div id="pr-bag">
+                <h4>🗂 حقيبة كروت الإدانة <small id="pr-hint">اختر كرتاً ثم اضغط متهماً</small></h4>
+                <div id="pr-cards"></div>
+            </div>
+        </section>
+
+        <!-- 🛡 الدفاع: شريط كروت سفلي ضخم. زر الاعتراض = #btn-defense-objection القديم يُحوَّل لزر عائم بالـ CSS -->
+        <section id="shell-defense" class="role-shell">
+            <div id="df-strip">
+                <h4>🛡 كروت الدفاع</h4>
+                <div id="df-cards"></div>
+            </div>
+        </section>
+
+        <!-- 🩸 الجاني: شاشة استجواب ضيقة، مذكرة سرية مطوية، مؤشر توتر، أسئلة متوقعة -->
+        <section id="shell-guilty" class="role-shell">
+            <div id="gl-bar-top"></div>
+            <div id="gl-bar-bot"></div>
+            <div id="gl-memo" class="closed">
+                <div class="seal">🔒 مذكرة الجريمة السرية — اضغط للفتح</div>
+                <div class="body" id="gl-memo-body"></div>
+            </div>
+            <div id="gl-tension">
+                <span>مؤشر التوتر</span><i><u id="gl-tension-fill"></u></i><em id="gl-tension-num">0%</em>
+            </div>
+            <div id="gl-questions">
+                <h4>أسئلة متوقعة — جهّز كذبتك</h4>
+                <ul id="gl-q-list"></ul>
+            </div>
+        </section>
+
+        <!-- 🕯 المصلحة السرية: لوحة ظلال خلفية تُسحب من الجانب + أزرار مناورة خفية -->
+        <section id="shell-conflicted" class="role-shell">
+            <button id="cf-tab" type="button">🕯</button>
+            <aside id="cf-underlay">
+                <h4>لوحة الظلال — مصلحتك السرية</h4>
+                <p id="cf-goal"></p>
+                <div class="cf-acts">
+                    <button type="button" data-act="اتهام غير مباشر">🎯 وجّه شكاً</button
+                    ><button type="button" data-act="دعم خفي">🤝 ادعم بخفاء</button>
+                </div>
+                <small id="cf-picked">اضغط زراً ثم اختر لاعباً من الطاولة</small>
+            </aside>
+        </section>
+
+        <!-- ⚠ الكاذب: مفكرة مثبتة تسجّل الأقوال تلقائياً -->
+        <section id="shell-liar" class="role-shell">
+            <aside id="lr-notebook">
+                <h4>📓 مفكرة أقوالي</h4>
+                <ol id="lr-list"></ol>
+                <div class="lr-add">
+                    <input id="lr-input" placeholder="سجّل ما قلته…" /><button id="lr-add-btn" type="button">＋</button>
+                </div>
+            </aside>
+        </section>
         <!-- الحاوية العلوية السيادية الموحدة (The Ultimate Top Navbar) -->
         <nav class="court-sovereign-navbar">
             <!-- الجهة اليسرى: الأزرار التنفيذية (المايك يمين زر إنهاء المحاكمة ليكون أمامه برمجياً جهة اليسار) -->

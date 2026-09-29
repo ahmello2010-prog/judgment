@@ -1023,6 +1023,7 @@ function listenToFinalLobby() {
                     roleBadge.style.display = "block";
                 }
             }
+            window.currentCaseId = gameState.caseId; // [مضاف] لتعرف هياكل الأدوار القضية الحالية
             applyCourtTheme(myRoleCard);
             if (myRoleCard.secret_interest) registerForbiddenSpeech(myRoleCard.secret_interest);
 
@@ -5433,6 +5434,7 @@ function applyCourtTheme(card) {
         panel.classList.remove("min");
         document.getElementById("secret-panel-x").onclick = () => panel.classList.add("min");
     }
+    renderRoleShell(r, card);
     window.pushCourtTicker && window.pushCourtTicker("تم توزيع الأدوار السرية — الجلسة على وشك البدء");
 }
 
@@ -5463,3 +5465,186 @@ window.pushCourtTicker = function (text) {
     const tg = document.getElementById("secret-toggle");
     if (tg) tg.addEventListener("click", () => document.getElementById("secret-panel").classList.remove("min"));
 })();
+
+// ==========================================================================
+// 🎭 [تعبئة هياكل الأدوار] — قراءة فقط من cases.json وبطاقة الدور؛ لا يكتب في Firebase ولا يغيّر أي دالة قديمة
+// تُستدعى من applyCourtTheme(). window.currentCaseId يُضبط قبلها بسطر واحد مضاف في app.js.
+// ==========================================================================
+function renderRoleShell(r, card) {
+    const $ = (id) => document.getElementById(id);
+    const esc = (s) =>
+        String(s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]);
+    const txt = (it) =>
+        typeof it === "string"
+            ? it
+            : (it &&
+                  (it.text ||
+                      it.title ||
+                      it.description ||
+                      it.evidence ||
+                      it.question ||
+                      Object.values(it).find((v) => typeof v === "string"))) ||
+              "";
+    if (window._shellRole === r) return; // لا نعيد البناء مع كل تحديث حالة
+    window._shellRole = r;
+    document.body.classList.remove("cf-open", "tense");
+
+    const withCase = (fn) =>
+        fetch("cases.json")
+            .then((x) => x.json())
+            .then((all) => fn(all.find((c) => c.id == window.currentCaseId) || {}))
+            .catch(() => fn({}));
+
+    // قائمة المتهمين للقاضي — تُبنى من مقاعد #seats-container الحالية
+    if (r === "judge") {
+        const sync = () => {
+            const ul = $("jd-roster-list");
+            if (!ul) return;
+            ul.innerHTML = [...document.querySelectorAll("#seats-container .court-seat-node")]
+                .map((s) => `<li>${esc((s.innerText || "").split("\n")[0].trim() || "لاعب")}</li>`)
+                .join("");
+        };
+        sync();
+        const box = $("seats-container");
+        if (box && !window._rosterObs) {
+            window._rosterObs = new MutationObserver(sync);
+            window._rosterObs.observe(box, { childList: true });
+        }
+        withCase((c) => {
+            if ($("jd-case") && c.title) $("jd-case").textContent = c.title;
+        });
+    }
+    // الادعاء: أدلة جانبية + كروت إدانة
+    if (r === "prosecutor") {
+        withCase((c) => {
+            const ev = ((c.lawyers_evidence_pool || {}).court_evidence || []).map(txt).filter(Boolean);
+            $("pr-evidence").innerHTML = ev.map((t) => `<li>${esc(t)}</li>`).join("") || "<li>لا أدلة مسجلة</li>";
+            $("pr-cards").innerHTML = ev
+                .map(
+                    (t, i) =>
+                        `<div class="pr-card" style="--r:${((i % 3) - 1) * 3}deg"><b>كارت إدانة ${i + 1}</b>${esc(t.slice(0, 70))}</div>`
+                )
+                .join("");
+        });
+        if (!window._prWired) {
+            window._prWired = true;
+            document.addEventListener("click", (e) => {
+                const card = e.target.closest && e.target.closest(".pr-card");
+                if (card) {
+                    document
+                        .querySelectorAll(".pr-card.armed")
+                        .forEach((x) => x !== card && x.classList.remove("armed"));
+                    card.classList.toggle("armed");
+                    return;
+                }
+                const seat = e.target.closest && e.target.closest(".court-seat-node");
+                if (seat && document.querySelector(".pr-card.armed")) {
+                    seat.classList.add("aimed");
+                    setTimeout(() => seat.classList.remove("aimed"), 1600);
+                }
+            });
+        }
+    }
+    // الدفاع: شريط كروت
+    if (r === "defense") {
+        withCase((c) => {
+            const ev = ((c.lawyers_evidence_pool || {}).defense_evidence || []).map(txt).filter(Boolean);
+            $("df-cards").innerHTML =
+                ev
+                    .map(
+                        (t, i) =>
+                            `<div class="df-card"><b style="color:var(--accent)">كارت دفاع ${i + 1}</b><br>${esc(t.slice(0, 90))}</div>`
+                    )
+                    .join("") || "<div class='df-card'>لا كروت دفاع</div>";
+        });
+        if (!window._dfWired) {
+            window._dfWired = true;
+            document.addEventListener("click", (e) => {
+                const d = e.target.closest && e.target.closest(".df-card");
+                if (d) d.classList.toggle("armed");
+            });
+        }
+    }
+    // الجاني: مذكرة مطوية + توتر + أسئلة متوقعة
+    if (r === "guilty") {
+        $("gl-memo-body").innerHTML =
+            `${card.public_story ? `<p><b>الرواية العلنية:</b> ${esc(card.public_story)}</p>` : ""}${card.secret_interest ? `<p><b>ما تخفيه:</b> ${esc(card.secret_interest)}</p>` : ""}`;
+        $("gl-memo").onclick = () => $("gl-memo").classList.toggle("closed");
+        withCase((c) => {
+            $("gl-q-list").innerHTML = (c.radar_questions_pool || [])
+                .slice(0, 8)
+                .map((q) => `<li>${esc(txt(q))}</li>`)
+                .join("");
+        });
+        if (!window._tensionTimer) {
+            let t = 0;
+            window._tensionTimer = setInterval(() => {
+                if (window._shellRole !== "guilty") return;
+                t = Math.min(100, t + 1);
+                $("gl-tension-fill").style.width = t + "%";
+                $("gl-tension-num").textContent = t + "%";
+                document.body.classList.toggle("tense", t >= 70);
+            }, 3000);
+        }
+    }
+    // المصلحة السرية: لوحة الظلال
+    if (r === "conflicted") {
+        $("cf-goal").textContent = card.secret_interest || "لا مصلحة مسجلة";
+        $("cf-tab").onclick = () => document.body.classList.toggle("cf-open");
+        document.querySelectorAll(".cf-acts button").forEach(
+            (b) =>
+                (b.onclick = () => {
+                    document.querySelectorAll(".cf-acts button").forEach((x) => x.classList.remove("on"));
+                    b.classList.add("on");
+                    window._cfAct = b.dataset.act;
+                })
+        );
+        if (!window._cfWired) {
+            window._cfWired = true;
+            document.addEventListener("click", (e) => {
+                const s = e.target.closest && e.target.closest(".court-seat-node");
+                if (s && window._cfAct && window._shellRole === "conflicted")
+                    $("cf-picked").textContent =
+                        `تم تحديد: ${(s.innerText || "").split("\n")[0].trim()} — ${window._cfAct} (تخطيط محلي)`;
+            });
+        }
+    }
+    // الكاذب: مفكرة تسجّل تلقائياً ما يظهر في صناديق الرد الآلي/الأدلة
+    if (r === "liar") {
+        window.recordLie = (t) => {
+            t = String(t || "")
+                .trim()
+                .slice(0, 110);
+            const ol = $("lr-list");
+            if (!t || !ol) return;
+            if ([...ol.children].some((li) => li.dataset.t === t)) return;
+            const li = document.createElement("li");
+            li.dataset.t = t;
+            li.className = "fresh";
+            li.textContent = t;
+            ol.appendChild(li);
+            ol.scrollTop = ol.scrollHeight;
+            setTimeout(() => li.classList.remove("fresh"), 2000);
+        };
+        $("lr-list").innerHTML = "";
+        if (card.public_story) window.recordLie("روايتي العلنية: " + card.public_story);
+        $("lr-add-btn").onclick = () => {
+            window.recordLie($("lr-input").value);
+            $("lr-input").value = "";
+        };
+        if (!window._lrObs) {
+            window._lrObs = new MutationObserver((ms) =>
+                ms.forEach((m) =>
+                    m.addedNodes.forEach((n) => {
+                        if (n.id === "automated-response-box" || n.id === "evidence-response-box")
+                            setTimeout(
+                                () => window.recordLie("قلت للمحكمة: " + (n.innerText || "").replace(/\s+/g, " ")),
+                                400
+                            );
+                    })
+                )
+            );
+            window._lrObs.observe(document.body, { childList: true });
+        }
+    }
+}

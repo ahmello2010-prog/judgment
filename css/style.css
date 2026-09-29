@@ -2163,3 +2163,593 @@ html[dir="rtl"] #secret-panel.min {
         animation: none !important;
     }
 }
+
+/* ==========================================================================
+   🎭 LAYOUTS — هيكل مختلف لكل دور. ⚠ لا نلمس الـ DOM القديم: نعيد تموضعه بـ translate/scale/position فقط.
+   #seats-container و #court-table = "مركز المراقبة" لكل الأدوار (JS القديم يحسب مواقع المقاعد منهما).
+   ========================================================================== */
+.role-shell {
+    display: none;
+    position: fixed;
+    inset: 0;
+    z-index: 6;
+    pointer-events: none;
+    font-family: "Alexandria", sans-serif;
+    color: #f4ecdc;
+}
+body.role-judge #shell-judge,
+body.role-prosecutor #shell-prosecutor,
+body.role-defense #shell-defense,
+body.role-guilty #shell-guilty,
+body.role-conflicted #shell-conflicted,
+body.role-liar #shell-liar {
+    display: block;
+}
+.role-shell > * {
+    pointer-events: auto;
+}
+.role-shell h4 {
+    margin: 0 0 8px;
+    font: 700 0.95rem var(--f-display);
+    color: var(--accent);
+}
+.role-shell ol,
+.role-shell ul {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+.role-shell li {
+    font-size: 0.76rem;
+    line-height: 1.7;
+    padding: 6px 8px;
+    border-radius: 8px;
+    background: rgba(var(--glow), 0.07);
+    border: 1px solid rgba(var(--glow), 0.25);
+    margin-bottom: 5px;
+}
+.glass {
+    background: rgba(10, 14, 22, 0.66);
+    backdrop-filter: blur(14px) saturate(1.3);
+    -webkit-backdrop-filter: blur(14px) saturate(1.3);
+    border: 1px solid rgba(var(--glow), 0.5);
+    box-shadow:
+        0 20px 50px #000,
+        0 0 26px rgba(var(--glow), 0.2);
+}
+
+/* مركز المراقبة: إزاحة/تصغير كل دور (translate/scale لا تكسر transform الأصلي) */
+html body #seats-container {
+    translate: var(--ax, 0) var(--ay, 0);
+    scale: var(--as, 1);
+    transition:
+        translate 0.6s,
+        scale 0.6s;
+}
+html body #court-table {
+    scale: var(--ts, 1);
+    translate: var(--ax, 0) var(--ay, 0);
+    transition:
+        scale 0.6s,
+        translate 0.6s;
+}
+body.role-judge {
+    --ax: 0;
+    --ay: 12vh;
+    --as: 0.92;
+    --ts: 1.35;
+}
+body.role-prosecutor {
+    --ax: -15vw;
+    --ay: -8vh;
+    --as: 0.74;
+    --ts: 0.8;
+}
+body.role-defense {
+    --ax: 0;
+    --ay: -10vh;
+    --as: 0.82;
+    --ts: 0.85;
+}
+body.role-guilty {
+    --ay: -3vh;
+    --as: 0.58;
+    --ts: 0.6;
+}
+body.role-conflicted {
+    --as: 0.95;
+}
+body.role-conflicted.cf-open {
+    --ax: -13vw;
+}
+body.role-liar {
+    --ax: 15vw;
+    --as: 0.8;
+    --ts: 0.8;
+}
+html body.body3 .court-seat-node.aimed {
+    outline: 3px solid var(--accent);
+    box-shadow: 0 0 30px rgba(var(--glow), 0.9);
+    animation: courtPulse 0.5s 3;
+}
+
+/* ⚖ القاضي — شريط علوي مهيمن + أزرار ضخمة + قائمة المتهمين + الميزان (الطاولة) كبير */
+#jd-topbar {
+    position: absolute;
+    top: calc(env(safe-area-inset-top, 0px) + 10px);
+    left: 14px;
+    right: 14px;
+    height: 44px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0 22px;
+    border-radius: 14px;
+    font: 700 1.05rem var(--f-display);
+    color: var(--accent);
+    background: linear-gradient(90deg, transparent, rgba(var(--glow), 0.18), transparent);
+    border: 1px solid rgba(var(--glow), 0.6);
+    letter-spacing: 1px;
+}
+#jd-topbar span {
+    font: 500 0.75rem "Alexandria";
+    color: #c9bfa8;
+}
+#jd-roster {
+    position: absolute;
+    top: 130px;
+    right: 12px;
+    width: 150px;
+    padding: 10px;
+    border-radius: 14px;
+}
+#jd-roster {
+    background: rgba(10, 14, 22, 0.66);
+    border: 1px solid rgba(var(--glow), 0.5);
+    backdrop-filter: blur(12px);
+}
+#jd-roster li {
+    display: flex;
+    gap: 6px;
+    align-items: center;
+}
+#jd-roster li::before {
+    content: "⛓";
+    color: var(--accent);
+}
+html body.role-judge #judge-control-panel {
+    top: calc(env(safe-area-inset-top, 0px) + 62px) !important;
+    bottom: auto !important;
+    width: min(96vw, 720px) !important;
+    max-width: none !important;
+    padding: 14px !important;
+    gap: 14px;
+}
+html body.role-judge .btn-judge-action {
+    min-height: 64px;
+    font-size: 1.15rem;
+    flex: 1;
+}
+
+/* ⚔ الادعاء — 3 أقسام: جانب أدلة عريض / حقيبة كروت سفلية / مركز مراقبة */
+#pr-side {
+    position: absolute;
+    top: calc(env(safe-area-inset-top, 0px) + 56px);
+    bottom: 190px;
+    right: 10px;
+    width: min(38vw, 290px);
+    padding: 12px;
+    border-radius: 16px;
+    overflow: auto;
+    background: rgba(30, 6, 12, 0.7);
+    border: 1px solid rgba(var(--glow), 0.6);
+    backdrop-filter: blur(12px);
+    border-inline-start: 5px solid var(--accent);
+}
+#pr-side li {
+    counter-increment: e;
+    position: relative;
+    padding-right: 30px;
+}
+#pr-side li::before {
+    content: counter(e);
+    position: absolute;
+    right: 6px;
+    top: 6px;
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    background: var(--accent);
+    color: #170f04;
+    font-size: 0.65rem;
+    display: grid;
+    place-items: center;
+    font-weight: 700;
+}
+#pr-bag {
+    position: absolute;
+    bottom: 44px;
+    left: 0;
+    right: 0;
+    padding: 10px 12px 12px;
+    background: linear-gradient(transparent, rgba(30, 6, 12, 0.92) 30%);
+    border-top: 1px solid rgba(var(--glow), 0.5);
+}
+#pr-bag small {
+    color: #c9a0a8;
+    font: 400 0.65rem "Alexandria";
+    margin-inline-start: 8px;
+}
+#pr-cards {
+    display: flex;
+    gap: 10px;
+    overflow-x: auto;
+    padding: 14px 4px 6px;
+    scroll-snap-type: x mandatory;
+}
+.pr-card {
+    flex: none;
+    width: 118px;
+    min-height: 118px;
+    padding: 10px 8px;
+    border-radius: 10px;
+    font-size: 0.68rem;
+    line-height: 1.6;
+    scroll-snap-align: start;
+    cursor: grab;
+    background: linear-gradient(160deg, rgba(var(--ambient), 0.6), #0a0608);
+    border: 1px solid var(--accent);
+    clip-path: polygon(0 0, 100% 0, 100% 88%, 88% 100%, 0 100%);
+    transform: rotate(var(--r, 0deg));
+    transition: 0.25s;
+}
+.pr-card:hover,
+.pr-card.armed {
+    transform: translateY(-14px) rotate(0);
+    box-shadow: 0 0 24px rgba(var(--glow), 0.8);
+}
+.pr-card.armed {
+    background: var(--accent);
+    color: #170f04;
+}
+.pr-card b {
+    display: block;
+    font-family: var(--f-display);
+    margin-bottom: 4px;
+}
+
+/* 🛡 الدفاع — شريط كروت ضخم + زر اعتراض عائم عملاق (الزر القديم نفسه #btn-defense-objection) */
+#df-strip {
+    position: absolute;
+    bottom: 34px;
+    left: 0;
+    right: 0;
+    height: 160px;
+    padding: 10px 14px;
+    background: linear-gradient(transparent, rgba(8, 16, 44, 0.95) 25%);
+    border-top: 1px solid rgba(var(--glow), 0.6);
+}
+#df-cards {
+    display: flex;
+    gap: 12px;
+    overflow-x: auto;
+    padding: 10px 4px;
+    height: 112px;
+}
+.df-card {
+    flex: none;
+    width: 210px;
+    padding: 10px 12px;
+    border-radius: 14px;
+    font-size: 0.78rem;
+    line-height: 1.6;
+    cursor: pointer;
+    background: linear-gradient(160deg, rgba(var(--ambient), 0.5), #050a1c);
+    border: 1.5px solid var(--accent);
+    box-shadow: 0 6px 22px rgba(var(--glow), 0.3);
+    transition: 0.2s;
+}
+.df-card:active {
+    transform: scale(0.94);
+}
+html body.role-defense #defense-lawyer-panel {
+    left: 0 !important;
+    bottom: 0 !important;
+    width: 100% !important;
+    max-width: none !important;
+    transform: none !important;
+    background: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
+    padding: 0 !important;
+    pointer-events: none;
+    height: 0;
+}
+html body.role-defense #defense-lawyer-panel > * {
+    pointer-events: auto;
+}
+html body.role-defense #btn-defense-objection {
+    position: fixed !important;
+    right: 16px;
+    bottom: 210px;
+    width: 132px;
+    height: 132px;
+    flex: none !important;
+    border-radius: 50% !important;
+    font-size: 1.05rem !important;
+    line-height: 1.2;
+    box-shadow:
+        0 0 0 6px rgba(var(--glow), 0.25),
+        0 0 40px rgba(var(--glow), 0.9) !important;
+}
+html body.role-defense #btn-defense-speak {
+    position: fixed;
+    left: 14px;
+    bottom: 210px;
+}
+html body.role-defense #defense-lawyer-panel > div {
+    position: fixed;
+    left: 50%;
+    bottom: 172px;
+    transform: translateX(-50%);
+}
+
+/* 🩸 الجاني — Claustrophobic: أشرطة تضيّق الشاشة، مذكرة مطوية، توتر، أسئلة */
+#gl-bar-top,
+#gl-bar-bot {
+    position: absolute;
+    left: 0;
+    right: 0;
+    height: 17vh;
+    background: #000;
+    box-shadow: 0 0 60px 30px #000;
+    transition: height 1.2s;
+}
+#gl-bar-top {
+    top: 0;
+}
+#gl-bar-bot {
+    bottom: 0;
+}
+body.role-guilty.tense #gl-bar-top,
+body.role-guilty.tense #gl-bar-bot {
+    height: 23vh;
+}
+html body.role-guilty.body3::after {
+    background: radial-gradient(ellipse 55% 50% at 50% 50%, transparent 30%, rgba(60, 0, 0, 0.85) 100%);
+    animation: courtFlicker var(--pulse-speed) infinite;
+}
+#gl-memo {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    translate: -50% -50%;
+    width: min(88vw, 340px);
+    border-radius: 8px;
+    overflow: hidden;
+    background: #150808;
+    border: 1px solid var(--accent);
+    box-shadow: 0 0 40px rgba(var(--glow), 0.5);
+    cursor: pointer;
+    transition: 0.4s;
+    z-index: 2;
+}
+#gl-memo .seal {
+    padding: 12px;
+    text-align: center;
+    font: 700 0.85rem var(--f-display);
+    color: var(--accent);
+}
+#gl-memo .body {
+    font-size: 0.8rem;
+    line-height: 1.8;
+    padding: 0 14px 14px;
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.5s;
+}
+#gl-memo:not(.closed) .body {
+    max-height: 60vh;
+    overflow: auto;
+}
+#gl-memo.closed {
+    opacity: 0.75;
+    width: min(70vw, 250px);
+}
+#gl-tension {
+    position: absolute;
+    top: calc(17vh + 8px);
+    left: 50%;
+    translate: -50% 0;
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    font-size: 0.7rem;
+    color: #ff9a9a;
+    z-index: 2;
+}
+#gl-tension i {
+    display: block;
+    width: 140px;
+    height: 8px;
+    border-radius: 9px;
+    background: #200;
+    border: 1px solid var(--accent);
+    overflow: hidden;
+}
+#gl-tension u {
+    display: block;
+    height: 100%;
+    width: 0;
+    background: linear-gradient(90deg, #ff9a2e, #ff2a2a);
+    transition: width 1s;
+    box-shadow: 0 0 12px #f22;
+}
+#gl-questions {
+    position: absolute;
+    bottom: calc(17vh + 8px);
+    left: 50%;
+    translate: -50% 0;
+    width: min(92vw, 420px);
+    max-height: 22vh;
+    overflow: auto;
+    z-index: 2;
+}
+#gl-questions li {
+    font-size: 0.72rem;
+    padding: 4px 8px;
+    margin-bottom: 3px;
+}
+
+/* 🕯 المصلحة السرية — لوحة ظلال تُسحب من الجانب */
+#cf-tab {
+    position: absolute;
+    top: 44%;
+    left: 0;
+    width: 44px;
+    height: 64px;
+    border-radius: 0 16px 16px 0;
+    border: 1px solid var(--accent);
+    border-left: 0;
+    background: rgba(40, 16, 70, 0.85);
+    color: var(--accent);
+    font-size: 1.3rem;
+    cursor: pointer;
+    animation: courtPulse var(--pulse-speed) infinite;
+    z-index: 3;
+}
+#cf-underlay {
+    position: absolute;
+    top: calc(env(safe-area-inset-top, 0px) + 56px);
+    bottom: 60px;
+    left: 0;
+    width: min(78vw, 300px);
+    padding: 16px;
+    border-radius: 0 18px 18px 0;
+    translate: -102% 0;
+    transition: translate 0.5s cubic-bezier(0.2, 0.8, 0.2, 1);
+    background: linear-gradient(160deg, rgba(60, 24, 110, 0.9), rgba(8, 4, 20, 0.95));
+    border: 1px solid var(--accent);
+    border-left: 0;
+    box-shadow: 0 0 40px rgba(var(--glow), 0.4);
+    z-index: 3;
+}
+body.cf-open #cf-underlay {
+    translate: 0 0;
+}
+body.cf-open #cf-tab {
+    left: min(78vw, 300px);
+}
+#cf-underlay p {
+    font-size: 0.82rem;
+    line-height: 1.9;
+    color: #e6d8ff;
+}
+.cf-acts {
+    display: flex;
+    gap: 8px;
+    margin: 12px 0;
+}
+.cf-acts button {
+    flex: 1;
+    padding: 12px 4px;
+    border-radius: 12px;
+    font: 700 0.78rem "Alexandria";
+    color: var(--accent);
+    background: rgba(var(--glow), 0.1);
+    border: 1px dashed var(--accent);
+    cursor: pointer;
+    opacity: 0.75;
+    transition: 0.2s;
+}
+.cf-acts button.on {
+    opacity: 1;
+    background: rgba(var(--glow), 0.35);
+    box-shadow: 0 0 18px rgba(var(--glow), 0.6);
+}
+#cf-underlay small {
+    color: #b9a6e6;
+}
+
+/* ⚠ الكاذب — مفكرة مثبتة مضطربة تسجّل الأقوال تلقائياً */
+#lr-notebook {
+    position: absolute;
+    top: calc(env(safe-area-inset-top, 0px) + 56px);
+    bottom: 60px;
+    left: 10px;
+    width: min(36vw, 260px);
+    padding: 12px;
+    border-radius: 6px 16px 16px 6px;
+    display: flex;
+    flex-direction: column;
+    background: repeating-linear-gradient(#1a1108 0 26px, #2a1c0d 26px 27px);
+    border: 1px solid var(--accent);
+    border-right: 6px double var(--accent);
+    box-shadow: 0 0 30px rgba(var(--glow), 0.45);
+    animation: lrJitter 2.2s steps(2) infinite;
+}
+@keyframes lrJitter {
+    50% {
+        translate: 0 1.5px;
+        rotate: 0.25deg;
+    }
+}
+#lr-list {
+    flex: 1;
+    overflow: auto;
+    counter-reset: l;
+}
+#lr-list li {
+    counter-increment: l;
+    background: transparent;
+    border: 0;
+    border-bottom: 1px dashed rgba(var(--glow), 0.4);
+    border-radius: 0;
+    color: #ffd9a8;
+}
+#lr-list li::before {
+    content: "✎ " counter(l) ") ";
+    color: var(--accent);
+}
+#lr-list li.fresh {
+    animation: courtPulse 0.6s 3;
+    background: rgba(var(--glow), 0.2);
+}
+.lr-add {
+    display: flex;
+    gap: 4px;
+    margin-top: 8px;
+}
+.lr-add input {
+    flex: 1;
+    min-width: 0;
+    padding: 6px;
+    border-radius: 6px;
+    border: 1px solid var(--accent);
+    background: #0c0805;
+    color: #fff;
+    font: 400 0.72rem "Alexandria";
+}
+.lr-add button {
+    width: 32px;
+    border-radius: 6px;
+    border: 1px solid var(--accent);
+    background: rgba(var(--glow), 0.2);
+    color: var(--accent);
+    font-size: 1.1rem;
+    cursor: pointer;
+}
+@media (max-width: 560px) {
+    #jd-roster {
+        display: none;
+    }
+    #pr-side {
+        width: 44vw;
+    }
+    body.role-prosecutor {
+        --ax: -20vw;
+    }
+    body.role-liar {
+        --ax: 18vw;
+    }
+}
