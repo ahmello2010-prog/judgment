@@ -1272,12 +1272,10 @@ body.body2::-webkit-scrollbar-thumb:hover {
 }
 
 body.body3 {
-    background: radial-gradient(
-        circle,
-        var(--inner-vintage) 0%,
-        var(--deep-navy) 65%,
-        var(--shadow-black) 100%
-    ) !important;
+    background-image: url("/img/bcg.jpg");
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
     background-attachment: fixed !important;
     width: 100vw !important;
     height: 100vh !important;
