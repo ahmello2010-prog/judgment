@@ -4,6 +4,9 @@
         <meta charset="UTF-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
         <title>محكمة الأدوار - شاشة الترحيب</title>
+        <meta name="description" content="محكمة الأدوار - لعبة التحقيق والاستراتيجية الذهنية" />
+        <meta property="og:title" content="محكمة الأدوار" />
+        <meta property="og:description" content="محكمة الأدوار - لعبة التحقيق والاستراتيجية الذهنية" />
 
         <!-- استدعاء المكون المباشر لـ Lottie ليعمل فقط أثناء فترة التحميل -->
         <script src="https://lottie.host/5c8b4548-c18c-407f-9e64-00014c2aa006/UAYSrmYfhz.lottie"></script>
@@ -31,6 +34,40 @@
             <div class="video-overlay"></div>
         </div>
 
+        <style>
+            .speech-toggle-btn {
+                all: unset;
+                box-sizing: border-box;
+                display: inline-flex;
+                align-items: center;
+                gap: 8px;
+                padding: 7px 18px;
+                border-radius: 20px;
+                background: rgba(13, 25, 43, 0.75);
+                border: 1.5px solid var(--gold-glow, #d5a75c);
+                color: var(--gold-glow, #d5a75c);
+                font-family: "Alexandria", sans-serif;
+                font-size: 0.8rem;
+                font-weight: 700;
+                cursor: pointer;
+                margin-bottom: 25px;
+                transition: all 0.25s ease;
+                backdrop-filter: blur(8px);
+                -webkit-backdrop-filter: blur(8px);
+                box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4);
+            }
+            .speech-toggle-btn:hover {
+                background: rgba(213, 167, 92, 0.2);
+                transform: translateY(-2px);
+                box-shadow: 0 6px 20px rgba(213, 167, 92, 0.35);
+            }
+            .speech-toggle-btn.is-speaking {
+                border-color: #4ade80;
+                color: #4ade80;
+                box-shadow: 0 0 16px rgba(74, 222, 128, 0.45);
+            }
+        </style>
+
         <!-- الحاوية الرئيسية للشاشة الأولى -->
         <div class="splash-container">
             <div id="welcome-component" class="fade-active">
@@ -38,6 +75,16 @@
 
                 <!-- تركنا النص فارغاً ليتم كتابته برمجياً حرفاً بحرف -->
                 <p id="dynamic-subtitle" class="welcome-subtitle"></p>
+
+                <!-- زر تفاعلي للاستماع أو إعادة الاستماع للترحيب الصوتي عبر Web Speech API -->
+                <button
+                    type="button"
+                    id="btn-replay-speech"
+                    class="speech-toggle-btn"
+                    aria-label="استمع للترحيب الصوتي">
+                    <span id="speech-icon">🔊</span>
+                    <span id="speech-text">استمع للترحيب</span>
+                </button>
 
                 <!-- الزر مخفي افتراضياً بانتهاء النص وسيهبط سينمائياً -->
                 <a id="btn-start-game-index" class="btn-main btn-hidden" href="rooms.html">ابدأ اللعبة</a>
@@ -52,33 +99,136 @@
                 const textPart2 = "حيث عالم التحقيق والاستراتيجية الذهنية";
                 const subtitleElement = document.getElementById("dynamic-subtitle");
                 const startButton = document.getElementById("btn-start-game-index");
+                const replayButton = document.getElementById("btn-replay-speech");
 
-                // 🎵 تجهيز ملف الصوت المستمر للكتابة / الفويس
-                const sfxContinuousType = new Audio("img/uh.mp3");
-                sfxContinuousType.volume = 0.95; // صوت متزن ومناسب
-
-                // 🎵 صوت هبوط وارتطام الزر (سيعمل كاملاً بدون أي قص)
+                // 🎵 صوت هبوط وارتطام الزر
                 const sfxButtonDrop = new Audio("img/uh (1).mp3");
                 sfxButtonDrop.volume = 0.8;
 
                 let currentText = "";
                 let charIndex = 0;
                 const typingSpeed = 65;
+                let isSpeechActive = false;
 
-                // دالة لتشغيل الصوت بأمان
-                function playAudio(audio) {
-                    audio.play().catch(() => console.log("في انتظار لمسة أولى لتفعيل الصوت..."));
+                // ==============================================================
+                // 🎙️ الصوت البشري الرجالي العصبي (HamedNeural - الأقرب للبشر)
+                // ==============================================================
+                const humanAudio = new Audio();
+                humanAudio.preload = "auto";
+
+                let arabicVoice = null;
+                function loadArabicVoices() {
+                    if (!("speechSynthesis" in window)) return;
+                    const voices = window.speechSynthesis.getVoices() || [];
+                    const arVoices = voices.filter((v) => /^ar/i.test(v.lang));
+                    arabicVoice =
+                        arVoices.find((v) => /natural|neural|google|siri|maged|tariq|naayf/i.test(v.name)) ||
+                        arVoices[0] ||
+                        null;
                 }
 
-                // دالة لإيقاف الصوت المستمر فوراً
-                function stopAudio(audio) {
-                    audio.pause();
+                if ("speechSynthesis" in window) {
+                    loadArabicVoices();
+                    if (window.speechSynthesis.onvoiceschanged !== undefined) {
+                        window.speechSynthesis.onvoiceschanged = loadArabicVoices;
+                    }
                 }
 
-                // 1️⃣ بدء كتابة الجزء الأول وتشغيل الصوت المستمر
+                // دالة نطق النصوص بصوت بشري رجالي طبيعي وعصبي فخم
+                function speakPhraseWithHumanVoice(textToSpeak, onEndCallback) {
+                    humanAudio.pause();
+                    humanAudio.currentTime = 0;
+                    humanAudio.src = `/api/speak?text=${encodeURIComponent(textToSpeak)}&voice=ar-SA-HamedNeural`;
+                    humanAudio.playbackRate = 0.95;
+
+                    updateSpeechUi(true);
+
+                    let finished = false;
+                    const complete = () => {
+                        if (finished) return;
+                        finished = true;
+                        updateSpeechUi(false);
+                        if (onEndCallback) onEndCallback();
+                    };
+
+                    humanAudio.onended = complete;
+                    humanAudio.onerror = () => {
+                        // في حال تعذر تشغيل الصوت، التراجع إلى Web Speech API
+                        speakPhraseWithWebSpeech(textToSpeak, complete);
+                    };
+
+                    const playPromise = humanAudio.play();
+                    if (playPromise && playPromise.catch) {
+                        playPromise.catch((err) => {
+                            console.warn("Autoplay notice, falling back to speech synthesis:", err);
+                            speakPhraseWithWebSpeech(textToSpeak, complete);
+                        });
+                    }
+                }
+
+                // بديل Web Speech API في حال كان الجهاز أوفلاين
+                function speakPhraseWithWebSpeech(textToSpeak, onEndCallback) {
+                    if (!("speechSynthesis" in window)) {
+                        if (onEndCallback) onEndCallback();
+                        return;
+                    }
+
+                    try {
+                        if (window.speechSynthesis.paused) {
+                            window.speechSynthesis.resume();
+                        }
+                        window.speechSynthesis.cancel();
+
+                        const utterance = new SpeechSynthesisUtterance(textToSpeak);
+                        utterance.lang = "ar-SA";
+                        utterance.rate = 0.9;
+                        utterance.pitch = 0.95;
+
+                        if (arabicVoice) {
+                            utterance.voice = arabicVoice;
+                        }
+
+                        let finished = false;
+                        const complete = () => {
+                            if (finished) return;
+                            finished = true;
+                            updateSpeechUi(false);
+                            if (onEndCallback) onEndCallback();
+                        };
+
+                        utterance.onstart = () => {
+                            updateSpeechUi(true);
+                        };
+
+                        utterance.onend = complete;
+                        utterance.onerror = complete;
+
+                        window._welcomeUtterance = utterance;
+                        window.speechSynthesis.speak(utterance);
+                    } catch (err) {
+                        if (onEndCallback) onEndCallback();
+                    }
+                }
+
+                function updateSpeechUi(speaking) {
+                    if (!replayButton) return;
+                    const icon = replayButton.querySelector("#speech-icon");
+                    const label = replayButton.querySelector("#speech-text");
+                    if (speaking) {
+                        replayButton.classList.add("is-speaking");
+                        if (icon) icon.textContent = "🔊";
+                        if (label) label.textContent = "جارٍ النطق الصوتي...";
+                    } else {
+                        replayButton.classList.remove("is-speaking");
+                        if (icon) icon.textContent = "🔈";
+                        if (label) label.textContent = "استمع للترحيب (صوت بشري)";
+                    }
+                }
+
+                // 1️⃣ بدء كتابة الجزء الأول ونطقه بصوت رجالي بشري وقور
                 function typePart1() {
                     if (charIndex === 0) {
-                        playAudio(sfxContinuousType);
+                        speakPhraseWithHumanVoice(textPart1);
                     }
 
                     if (charIndex < textPart1.length) {
@@ -89,24 +239,19 @@
                     } else {
                         currentText += ".. ";
                         subtitleElement.textContent = currentText;
-
-                        // 🛑 أول ما يخلص الجزء الأول: اقطع صوت الكيبورد فوراً لبدء الوقف التشويقي (ثانيتين صمت)
-                        stopAudio(sfxContinuousType);
-
-                        setTimeout(typePart2Init, 2000);
+                        setTimeout(typePart2Init, 1800);
                     }
                 }
 
                 function typePart2Init() {
                     charIndex = 0;
-                    sfxContinuousType.currentTime = 0; // إرجاع مؤشر صوت الكيبورد للبداية للمرحلة الثانية
                     typePart2();
                 }
 
-                // 2️⃣ بدء كتابة الجزء الثاني وإعادة تشغيل صوت الكيبورد
+                // 2️⃣ بدء كتابة الجزء الثاني ونطقه
                 function typePart2() {
                     if (charIndex === 0) {
-                        playAudio(sfxContinuousType);
+                        speakPhraseWithHumanVoice(textPart2);
                     }
 
                     if (charIndex < textPart2.length) {
@@ -115,23 +260,42 @@
                         charIndex++;
                         setTimeout(typePart2, typingSpeed);
                     } else {
-                        // 🛑 اقطع صوت الكيبورد نهائياً فور نهاية آخر حرف في العبارة الترحيبية
-                        stopAudio(sfxContinuousType);
-
-                        // 🚀 إطلاق شرارة هبوط الزر وتشغيل صوت الارتطام كاملاً
                         triggerButtonDrop();
                     }
                 }
 
-                // دالة إطلاق وهبوط الزر السينمائي الارتدادي مع تشغيل المؤثر الصوتي الخاص به كاملاً
+                // دالة إطلاق وهبوط الزر السينمائي
                 function triggerButtonDrop() {
                     if (startButton) {
                         startButton.classList.remove("btn-hidden");
                         startButton.classList.add("btn-cinema-drop");
-
-                        // 🌟 تشغيل صوت الارتطام ليأخذ وقته الكامل والمستقل متزامناً مع أنيميشن الهبوط والاستقرار
-                        playAudio(sfxButtonDrop);
+                        sfxButtonDrop.play().catch(() => {});
                     }
+                }
+
+                function unlockSpeechOnFirstTouch() {
+                    humanAudio
+                        .play()
+                        .then(() => humanAudio.pause())
+                        .catch(() => {});
+                    if ("speechSynthesis" in window && window.speechSynthesis.paused) {
+                        window.speechSynthesis.resume();
+                    }
+                }
+                document.addEventListener("click", unlockSpeechOnFirstTouch, { once: true });
+                document.addEventListener("touchstart", unlockSpeechOnFirstTouch, { once: true });
+
+                // زر إعادة الاستماع اليدوي للترحيب الصوتي
+                if (replayButton) {
+                    replayButton.addEventListener("click", function (e) {
+                        e.stopPropagation();
+                        unlockSpeechOnFirstTouch();
+                        speakPhraseWithHumanVoice(textPart1, () => {
+                            setTimeout(() => {
+                                speakPhraseWithHumanVoice(textPart2);
+                            }, 400);
+                        });
+                    });
                 }
 
                 if (subtitleElement) {

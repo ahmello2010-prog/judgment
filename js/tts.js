@@ -1,50 +1,63 @@
 // ==========================================================================
-// 🔊 js/tts.js — المتحدث الصوتي لمحكمة الأدوار
-// Google Cloud Text-to-Speech (WaveNet) + بديل تلقائي: speechSynthesis
-// ==========================================================================
-// قواعد السرية (مفروضة برمجياً وليست مجرد اتفاق):
-//  1) kind: "secret"  → مرفوض دائماً ولا يُبنى له زر أصلاً (المصلحة السرية لا تُقرأ أبداً).
-//  2) أي نوع آخر (القصة العلنية، وصف القضية، الأسئلة، الأدلة، التوجيه) → يُقرأ مباشرة بدون نوافذ تحذير.
-//  3) حارس إضافي: أي نص يتضمن المصلحة السرية للاعب الحالي يُمنع نطقه حتى لو مُرّر خطأً.
+// 🔊 js/tts.js — قارئ النصوص الذاتي المدمج لمحكمة الأدوار
+// نظام صوتي مدمج 100% بدون أي مكتبات خارجية (HTML5 Audio + Web Speech API)
 // ==========================================================================
 
 export const TTS_CONFIG = {
-    // وسيط خادمي اختياري (api/tts.js). اتركه فارغاً لاستخدام المفتاح المباشر بدون باك اند.
-    proxyUrl: "",
-    // 🔑 ضع مفتاح Google Cloud هنا (بين علامتي التنصيص) للاتصال المباشر بدون باك اند.
-    directApiKey: "AIzaSyDFB8qTw1Zri54YJ_xF1awzEWbYCYEgzOg",
-    directEndpoint: "https://texttospeech.googleapis.com/v1/text:synthesize",
-    languageCode: "ar-XA",
-    // أصوات عربية WaveNet: A/D أنثوية، B/C ذكورية. (Chirp3-HD متاحة أيضاً مثل ar-XA-Chirp3-HD-Charon)
-    voiceName: "ar-XA-Wavenet-B",
-    speakingRate: 0.92,
-    pitch: -1.5, // يُتجاهل تلقائياً مع أصوات Chirp3-HD لأنها لا تدعمه
-    maxChunkChars: 800, // حد Google 5000 بايت والعربية 2 بايت للحرف تقريباً
-    requestTimeoutMs: 15000,
-    cacheLimit: 24,
-    browserLang: "ar-SA"
+    languageCode: "ar-SA",
+    defaultRate: 1.0,
+    maxChunkChars: 200
 };
 
-const SILENT_WAV = "data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQAAAAA=";
 const HAS_DOM = typeof document !== "undefined" && typeof window !== "undefined";
 
-const player = typeof Audio !== "undefined" ? new Audio() : null;
-if (player) player.preload = "auto";
+// مشغل HTML5 Audio الموحد (يعمل على كافة الأجهزة والمتصفحات بدون مشاكل أو أخطاء نطق)
+const nativeAudioPlayer = HAS_DOM ? new Audio() : null;
+if (nativeAudioPlayer) {
+    nativeAudioPlayer.preload = "auto";
+}
 
-const state = {
+// حالة القارئ
+const readerState = {
     token: 0,
-    controller: null,
-    abortPlayback: null,
+    isPlaying: false,
+    isPaused: false,
+    currentRate: 1.0,
+    selectedVoiceId: "ar-SA-HamedNeural", // الصوت الرجالي العصبي الفخم الأقرب للبشر
+    activeElement: null,
     activeWrapper: null,
-    observer: null
+    clickToReadEnabled: false,
+    pageQueue: [],
+    queueIndex: 0,
+    statusText: "جاهز للاستماع",
+    currentChunkIndex: 0,
+    currentChunks: [],
+    audioUnlocked: false
 };
 
-const audioCache = new Map();
-let lastCloudError = null;
+// كلمات/نصوص محظورة لحماية المصلحة السرية للاعبين
 const forbiddenSecrets = new Set();
 
+// فك قفل الصوت تلقائياً عند أول نقرة أو لمسة لمراعاة سياسات المتصفحات للهواتف
+function unlockAudioContext() {
+    if (readerState.audioUnlocked || !nativeAudioPlayer) return;
+    try {
+        nativeAudioPlayer.src = "data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQAAAAA=";
+        const p = nativeAudioPlayer.play();
+        if (p && p.catch) p.catch(() => {});
+        readerState.audioUnlocked = true;
+    } catch (e) {
+        // تجاهل
+    }
+}
+
+if (HAS_DOM) {
+    document.addEventListener("click", unlockAudioContext, { once: true });
+    document.addEventListener("touchstart", unlockAudioContext, { once: true });
+}
+
 // ==========================================================================
-// 1️⃣ أدوات النص
+// 1️⃣ تنظيف ومعالجة النصوص وقواعد السرية
 // ==========================================================================
 export function sanitizeForSpeech(raw) {
     return String(raw == null ? "" : raw)
@@ -66,6 +79,21 @@ function normalizeForCompare(text) {
         .replace(/[^\p{L}\p{N}]+/gu, "");
 }
 
+export function registerForbiddenSpeech(secretText) {
+    const n = normalizeForCompare(secretText);
+    if (n.length >= 10) forbiddenSecrets.add(n);
+}
+
+export function isForbiddenSpeech(text) {
+    const n = normalizeForCompare(text);
+    if (!n) return false;
+    for (const f of forbiddenSecrets) {
+        if (n.includes(f)) return true;
+        if (n.length >= 20 && f.includes(n)) return true;
+    }
+    return false;
+}
+
 export function splitIntoChunks(text, max = TTS_CONFIG.maxChunkChars) {
     const sentences = text.match(/[^.!?؟؛…\n]+[.!?؟؛…]*/g) || [text];
     const chunks = [];
@@ -79,13 +107,14 @@ export function splitIntoChunks(text, max = TTS_CONFIG.maxChunkChars) {
         if (!s) return;
         if (s.length > max) {
             flush();
+            const words = s.split(/\s+/);
             let piece = "";
-            s.split(/\s+/).forEach((w) => {
+            words.forEach((w) => {
                 if ((piece + " " + w).length > max) {
                     if (piece) chunks.push(piece.trim());
                     piece = w;
                 } else {
-                    piece += " " + w;
+                    piece += (piece ? " " : "") + w;
                 }
             });
             if (piece.trim()) chunks.push(piece.trim());
@@ -99,409 +128,302 @@ export function splitIntoChunks(text, max = TTS_CONFIG.maxChunkChars) {
 }
 
 // ==========================================================================
-// 2️⃣ حارس السرية
+// 2️⃣ محرك تشغيل الصوت (HTML5 Audio مع بديل المتصفح المباشر)
 // ==========================================================================
-export function registerForbiddenSpeech(secretText) {
-    const n = normalizeForCompare(secretText);
-    if (n.length >= 12) forbiddenSecrets.add(n);
-}
 
-export function isForbiddenSpeech(text) {
-    const n = normalizeForCompare(text);
-    if (!n) return false;
-    for (const f of forbiddenSecrets) {
-        if (n.includes(f)) return true;
-        if (n.length >= 25 && f.includes(n)) return true;
-    }
-    return false;
-}
-
-// ==========================================================================
-// 3️⃣ الاتصال بـ Google Cloud TTS (مع مهلة وإلغاء وذاكرة مؤقتة)
-// ==========================================================================
-function buildRequestBody(text) {
-    const audioConfig = { audioEncoding: "MP3", speakingRate: TTS_CONFIG.speakingRate };
-    if (!/Chirp3/i.test(TTS_CONFIG.voiceName)) audioConfig.pitch = TTS_CONFIG.pitch;
-    return {
-        input: { text },
-        voice: { languageCode: TTS_CONFIG.languageCode, name: TTS_CONFIG.voiceName },
-        audioConfig
-    };
-}
-
-function base64ToBlob(b64) {
-    const bin = atob(b64);
-    const bytes = new Uint8Array(bin.length);
-    for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
-    return new Blob([bytes], { type: "audio/mpeg" });
-}
-
-async function requestAudio(url, body, parentSignal) {
-    const ctrl = new AbortController();
-    const onParentAbort = () => ctrl.abort();
-    parentSignal.addEventListener("abort", onParentAbort);
-    const timer = setTimeout(() => ctrl.abort(), TTS_CONFIG.requestTimeoutMs);
-    try {
-        const res = await fetch(url, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(body),
-            signal: ctrl.signal
-        });
-        if (!res.ok) {
-            let detail = "";
-            try {
-                const errBody = await res.json();
-                const rawErr = errBody && (errBody.detail || errBody.error);
-                // Google ترجع { error: { code, message, status } } بينما وسيطنا يرجع نصاً
-                detail = typeof rawErr === "object" && rawErr ? rawErr.message || rawErr.status || "" : rawErr || "";
-            } catch (e) {
-                /* الاستجابة ليست JSON (مثلاً صفحة 404 من الاستضافة) */
-            }
-            const err = new Error("TTS HTTP " + res.status + (detail ? " — " + detail : ""));
-            err.httpStatus = res.status;
-            throw err;
+// تشغيل مقطع عبر مسار الصوت المدمج في الخادم بدون أي مكتبة خارجية
+function playAudioChunk(chunkText, token) {
+    return new Promise((resolve) => {
+        if (!nativeAudioPlayer) {
+            resolve(false);
+            return;
         }
-        const data = await res.json();
-        if (!data || !data.audioContent) throw new Error("TTS empty audio");
-        return base64ToBlob(data.audioContent);
-    } finally {
-        clearTimeout(timer);
-        parentSignal.removeEventListener("abort", onParentAbort);
-    }
-}
 
-async function synthesizeChunk(text, signal) {
-    const key = TTS_CONFIG.voiceName + "|" + text;
-    if (audioCache.has(key)) {
-        const hit = audioCache.get(key);
-        audioCache.delete(key);
-        audioCache.set(key, hit);
-        return hit;
-    }
-    const endpoints = [];
-    if (TTS_CONFIG.proxyUrl) endpoints.push(TTS_CONFIG.proxyUrl);
-    if (TTS_CONFIG.directApiKey) {
-        endpoints.push(`${TTS_CONFIG.directEndpoint}?key=${encodeURIComponent(TTS_CONFIG.directApiKey)}`);
-    }
-    if (endpoints.length === 0) {
-        const err = new Error("لم يُضبط directApiKey في TTS_CONFIG");
-        err.code = "NO_KEY";
-        throw err;
-    }
+        const encodedText = encodeURIComponent(chunkText);
+        const voiceParam = encodeURIComponent(readerState.selectedVoiceId || "ar-SA-HamedNeural");
+        const streamUrl = `/api/speak?text=${encodedText}&voice=${voiceParam}`;
 
-    const body = buildRequestBody(text);
-    let lastErr = null;
-    for (const url of endpoints) {
-        try {
-            const blob = await requestAudio(url, body, signal);
-            audioCache.set(key, blob);
-            while (audioCache.size > TTS_CONFIG.cacheLimit) audioCache.delete(audioCache.keys().next().value);
-            return blob;
-        } catch (err) {
-            if (signal.aborted) throw err;
-            lastErr = err;
-            lastCloudError = err;
-        }
-    }
-    throw lastErr;
-}
+        let resolved = false;
+        const finish = (ok) => {
+            if (resolved) return;
+            resolved = true;
+            nativeAudioPlayer.onended = null;
+            nativeAudioPlayer.onerror = null;
+            resolve(ok);
+        };
 
-// ==========================================================================
-// 4️⃣ التشغيل (Audio) + البديل (speechSynthesis)
-// ==========================================================================
-function primeAudioElement() {
-    // فتح قفل التشغيل التلقائي على iOS/Android داخل لمسة المستخدم نفسها
-    if (!player) return;
-    try {
-        player.src = SILENT_WAV;
-        const p = player.play();
-        if (p && p.catch) p.catch(() => {});
-    } catch (e) {
-        /* تجاهل */
-    }
-}
+        nativeAudioPlayer.src = streamUrl;
+        nativeAudioPlayer.playbackRate = readerState.currentRate;
 
-function playBlob(blob) {
-    return new Promise((resolve, reject) => {
-        const url = URL.createObjectURL(blob);
-        const cleanup = () => {
-            player.onended = null;
-            player.onerror = null;
-            URL.revokeObjectURL(url);
-            if (state.abortPlayback === abort) state.abortPlayback = null;
+        nativeAudioPlayer.onended = () => {
+            finish(true);
         };
-        const abort = () => {
-            cleanup();
-            resolve("aborted");
+
+        nativeAudioPlayer.onerror = () => {
+            // في حال فشل الاتصال بالمسار، التراجع لميزة المتصفح المحلية
+            speakWithBrowserUtterance(chunkText).then(finish);
         };
-        state.abortPlayback = abort;
-        player.onended = () => {
-            cleanup();
-            resolve("ended");
-        };
-        player.onerror = () => {
-            cleanup();
-            reject(new Error("audio element error"));
-        };
-        player.src = url;
-        const p = player.play();
-        if (p && p.catch) {
-            p.catch((err) => {
-                cleanup();
-                reject(err);
+
+        const playPromise = nativeAudioPlayer.play();
+        if (playPromise && playPromise.catch) {
+            playPromise.catch((err) => {
+                console.warn("تعذر تشغيل الصوت عبر HTML5 Audio، تجربة محرك المتصفح:", err);
+                speakWithBrowserUtterance(chunkText).then(finish);
             });
         }
     });
 }
 
-function pickBrowserVoice() {
-    try {
-        const voices = window.speechSynthesis.getVoices() || [];
-        return voices.find((v) => /^ar[-_]SA/i.test(v.lang)) || voices.find((v) => /^ar/i.test(v.lang)) || null;
-    } catch (e) {
-        return null;
-    }
-}
-
-function speakUtterance(text) {
+// بديل المتصفح المحلي (SpeechSynthesis) إذا كان الجهاز أوفلاين
+function speakWithBrowserUtterance(text) {
     return new Promise((resolve) => {
-        if (!HAS_DOM || !("speechSynthesis" in window) || typeof SpeechSynthesisUtterance === "undefined") {
+        if (!("speechSynthesis" in window) || typeof SpeechSynthesisUtterance === "undefined") {
             resolve(false);
             return;
         }
+
         try {
-            const u = new SpeechSynthesisUtterance(text);
-            u.lang = TTS_CONFIG.browserLang;
-            u.rate = 0.95;
-            u.pitch = 0.9;
-            const v = pickBrowserVoice();
-            if (v) u.voice = v;
-            const abort = () => resolve(false);
-            state.abortPlayback = abort;
-            u.onend = () => {
-                if (state.abortPlayback === abort) state.abortPlayback = null;
-                resolve(true);
-            };
-            u.onerror = () => {
-                if (state.abortPlayback === abort) state.abortPlayback = null;
-                resolve(false);
-            };
-            window.speechSynthesis.speak(u);
+            if (window.speechSynthesis.paused) {
+                window.speechSynthesis.resume();
+            }
+
+            const utter = new SpeechSynthesisUtterance(text);
+            utter.lang = "ar-SA";
+            utter.rate = readerState.currentRate;
+
+            // محاولة اختيار صوت عربي مناسب
+            const voices = window.speechSynthesis.getVoices() || [];
+            const arVoice = voices.find((v) => /^ar/i.test(v.lang));
+            if (arVoice) utter.voice = arVoice;
+
+            utter.onend = () => resolve(true);
+            utter.onerror = () => resolve(false);
+
+            window.speechSynthesis.speak(utter);
         } catch (e) {
             resolve(false);
         }
     });
 }
 
-async function speakWithBrowser(text, token) {
-    // مقاطع قصيرة لتفادي انقطاع الأصوات الطويلة في Chrome
-    const parts = splitIntoChunks(text, 220);
-    for (const part of parts) {
-        if (token !== state.token) return false;
-        const ok = await speakUtterance(part);
-        if (!ok) return false;
-    }
-    return true;
-}
-
-async function playChunks(chunks, token, signal, wrapper) {
-    const pending = [];
-    const fetchOrNull = (i) =>
-        synthesizeChunk(chunks[i], signal).catch((err) => {
-            if (!signal.aborted) console.error("❌ فشل المتحدث السحابي (Google TTS):", err && err.message);
-            return null;
-        });
-
-    pending[0] = fetchOrNull(0);
-    let useBrowser = false;
-    let warned = false;
-
-    for (let i = 0; i < chunks.length; i++) {
-        if (token !== state.token) return;
-
-        if (!useBrowser) {
-            const blob = await pending[i];
-            if (token !== state.token) return;
-            if (blob) {
-                if (i + 1 < chunks.length && !pending[i + 1]) pending[i + 1] = fetchOrNull(i + 1); // تحميل مسبق
-                setUiState(wrapper, "playing");
-                try {
-                    const result = await playBlob(blob);
-                    if (result === "aborted" || token !== state.token) return;
-                    continue;
-                } catch (err) {
-                    if (token !== state.token) return;
-                    console.warn("⚠️ تعذر تشغيل الملف الصوتي:", err && err.message);
-                }
-            }
-            useBrowser = true;
-            if (!warned) {
-                warned = true;
-                showToast(describeCloudFailure(lastCloudError));
-            }
-        }
-
-        if (token !== state.token) return;
-        setUiState(wrapper, "playing");
-        const ok = await speakWithBrowser(chunks[i], token);
-        if (token !== state.token) return;
-        if (!ok) {
-            showToast("تعذّر تشغيل الصوت على هذا الجهاز. يمكنك متابعة القراءة يدوياً.");
-            return;
-        }
-    }
-}
-
-function describeCloudFailure(err) {
-    const status = err && err.httpStatus;
-    const base = "تعذّر الوصول للمتحدث السحابي، جارٍ استخدام صوت المتصفح. ";
-    if (err && err.code === "NO_KEY") return base + "(لم يُضع مفتاح Google في TTS_CONFIG.directApiKey)";
-    if (status === 404) return base + "(الخطأ 404: ملف api/tts.js غير منشور على الاستضافة)";
-    if (status === 405) return base + "(الخطأ 405: الاستضافة لا تنفّذ دوال الخادم)";
-    if (status === 500) return base + "(الخطأ 500: متغير GOOGLE_TTS_API_KEY غير مضبوط أو الدالة تعطلت)";
-    if (status === 403 || status === 400)
-        return base + "(الخطأ " + status + ": المفتاح مرفوض أو واجهة Text-to-Speech غير مفعّلة)";
-    if (status) return base + "(الخطأ " + status + ")";
-    if (err && err.name === "AbortError") return base + "(انتهت مهلة الاتصال)";
-    return base + "(افتح Console لمعرفة التفاصيل)";
-}
-
-// تشخيص سريع: اكتب ttsDiagnose() في Console المتصفح لتعرف سبب عدم عمل الصوت السحابي
-export async function diagnoseTts() {
-    const ctrl = new AbortController();
-    const report = {
-        proxyUrl: TTS_CONFIG.proxyUrl,
-        hasDirectKey: !!TTS_CONFIG.directApiKey,
-        voice: TTS_CONFIG.voiceName
-    };
-    try {
-        const blob = await synthesizeChunk("اختبار المتحدث الصوتي", ctrl.signal);
-        report.ok = true;
-        report.bytes = blob.size;
-    } catch (err) {
-        report.ok = false;
-        report.error = err && err.message;
-    }
-    console.log("🔎 تشخيص المتحدث الصوتي:", report);
-    return report;
-}
-if (HAS_DOM) window.ttsDiagnose = diagnoseTts;
-
 // ==========================================================================
-// 5️⃣ الدالة المركزية + الإيقاف الفوري
+// 3️⃣ الدالة المركزية للقراءة (speakText)
 // ==========================================================================
 export async function speakText(rawText, options = {}) {
+    unlockAudioContext();
+
     const kind = options.kind || "public";
     const wrapper = options.wrapper || null;
+    const targetElement = options.targetElement || null;
 
-    if (kind === "secret") {
-        showToast("🔒 المصلحة السرية لا تُقرأ بصوتٍ عالٍ حفاظاً على سرية اللعبة.");
+    if (
+        kind === "secret" ||
+        (targetElement && targetElement.closest && targetElement.closest('[data-tts-block="secret"]'))
+    ) {
+        showReaderToast("🔒 المصلحة السرية لا تُقرأ بصوتٍ عالٍ حفاظاً على سرية اللعبة.");
         return false;
     }
 
     const text = sanitizeForSpeech(rawText);
     if (!text) return false;
 
-    const chunks = splitIntoChunks(text);
-    if (isForbiddenSpeech(text) || chunks.some(isForbiddenSpeech)) {
-        showToast("🔒 هذا النص يتضمن معلومة سرية ولن يُقرأ بصوتٍ عالٍ.");
+    if (isForbiddenSpeech(text)) {
+        showReaderToast("🔒 هذا النص يتضمن معلومة سرية ولن يُقرأ بصوتٍ عالٍ.");
         return false;
     }
 
-    stopSpeech(); // إلغاء أي كلام سابق قبل أي شيء
+    // إيقاف أي صوت سابق
+    stopSpeech();
 
-    primeAudioElement();
+    const token = ++readerState.token;
+    readerState.isPlaying = true;
+    readerState.isPaused = false;
+    readerState.activeWrapper = wrapper;
+    readerState.activeElement = targetElement;
 
-    const token = ++state.token;
-    state.controller = new AbortController();
-    state.activeWrapper = wrapper;
-    setUiState(wrapper, "loading");
-    startWatchdog();
+    highlightElement(targetElement);
+    if (wrapper) setUiState(wrapper, "playing");
 
-    try {
-        await playChunks(chunks, token, state.controller.signal, wrapper);
-    } catch (err) {
-        console.error("خطأ غير متوقع في المتحدث الصوتي:", err);
-        if (token === state.token) showToast("حدث خطأ في المتحدث الصوتي.");
-    } finally {
-        if (token === state.token) {
-            state.controller = null;
-            state.abortPlayback = null;
-            resetUi();
-            stopWatchdog();
-        }
+    const chunks = splitIntoChunks(text);
+    readerState.currentChunks = chunks;
+
+    for (let i = 0; i < chunks.length; i++) {
+        if (token !== readerState.token) break;
+        readerState.currentChunkIndex = i;
+        readerState.statusText = chunks[i];
+        updateReaderUi();
+
+        const ok = await playAudioChunk(chunks[i], token);
+        if (token !== readerState.token || !ok) break;
     }
+
+    if (token === readerState.token) {
+        readerState.isPlaying = false;
+        readerState.isPaused = false;
+        readerState.statusText = "اكتملت القراءة";
+        unhighlightElement();
+        if (wrapper) setUiState(wrapper, "idle");
+        updateReaderUi();
+    }
+
     return true;
 }
 
+export function pauseSpeech() {
+    if (!readerState.isPlaying) return;
+    if (nativeAudioPlayer && !nativeAudioPlayer.paused) {
+        nativeAudioPlayer.pause();
+    }
+    if ("speechSynthesis" in window && window.speechSynthesis.speaking) {
+        window.speechSynthesis.pause();
+    }
+    readerState.isPaused = true;
+    readerState.statusText = "موقوف مؤقتاً";
+    updateReaderUi();
+}
+
+export function resumeSpeech() {
+    if (!readerState.isPlaying || !readerState.isPaused) return;
+    if (nativeAudioPlayer && nativeAudioPlayer.paused && nativeAudioPlayer.src) {
+        nativeAudioPlayer.play().catch(() => {});
+    }
+    if ("speechSynthesis" in window && window.speechSynthesis.paused) {
+        window.speechSynthesis.resume();
+    }
+    readerState.isPaused = false;
+    readerState.statusText = "جارٍ الاستماع...";
+    updateReaderUi();
+}
+
 export function stopSpeech() {
-    state.token++;
-    if (state.controller) {
+    readerState.token++;
+    readerState.isPlaying = false;
+    readerState.isPaused = false;
+    readerState.pageQueue = [];
+    readerState.queueIndex = 0;
+    readerState.statusText = "جاهز للاستماع";
+
+    if (nativeAudioPlayer) {
         try {
-            state.controller.abort();
+            nativeAudioPlayer.pause();
+            nativeAudioPlayer.currentTime = 0;
+            nativeAudioPlayer.removeAttribute("src");
         } catch (e) {
-            /* تجاهل */
-        }
-        state.controller = null;
-    }
-    if (typeof state.abortPlayback === "function") {
-        const abort = state.abortPlayback;
-        state.abortPlayback = null;
-        try {
-            abort();
-        } catch (e) {
-            /* تجاهل */
+            // تجاهل
         }
     }
-    if (player) {
-        try {
-            player.onended = null;
-            player.onerror = null;
-            player.pause();
-            player.removeAttribute("src");
-            player.load();
-        } catch (e) {
-            /* تجاهل */
-        }
-    }
+
     if (HAS_DOM && "speechSynthesis" in window) {
         try {
             window.speechSynthesis.cancel();
         } catch (e) {
-            /* تجاهل */
+            // تجاهل
         }
     }
-    resetUi();
-    stopWatchdog();
+
+    if (readerState.activeWrapper) {
+        setUiState(readerState.activeWrapper, "idle");
+        readerState.activeWrapper = null;
+    }
+
+    unhighlightElement();
+    updateReaderUi();
 }
 
 export function isSpeaking() {
-    return state.activeWrapper !== null;
+    return readerState.isPlaying;
 }
 
 // ==========================================================================
-// 6️⃣ الواجهة: أزرار "تشغيل المتحدث الصوتي" و"إيقاف"
+// 4️⃣ تمييز النصوص بصرياً
 // ==========================================================================
-function injectStyles() {
-    if (!HAS_DOM || document.getElementById("tts-styles")) return;
-    const style = document.createElement("style");
-    style.id = "tts-styles";
-    style.textContent = `
-        .tts-controls{display:flex;flex-wrap:wrap;gap:8px;align-items:center;justify-content:flex-start;margin:8px 0 14px;direction:rtl}
-        .tts-controls[hidden]{display:none !important}
-        .tts-btn{all:unset;box-sizing:border-box;cursor:pointer;font-family:'Alexandria',sans-serif;font-weight:700;font-size:.72rem;padding:8px 12px;border-radius:8px;border:1.5px solid var(--gold-glow,#d5a75c);color:var(--gold-glow,#d5a75c);background:rgba(5,10,18,.55);display:inline-flex;align-items:center;gap:6px;-webkit-tap-highlight-color:transparent;touch-action:manipulation;transition:transform .15s ease,background .2s ease}
-        .tts-btn:active{transform:scale(.96)}
-        .tts-btn[disabled]{opacity:.6;cursor:progress}
-        .tts-play[data-active="true"]{background:var(--gold-glow,#d5a75c);color:var(--shadow-black,#050a12);animation:ttsPulse 1.4s ease-in-out infinite}
-        .tts-stop{border-color:#ff5252;color:#ff5252}
-                .tts-compact{margin:6px 0 0;flex-basis:100%}
-        .tts-compact .tts-btn{font-size:.62rem;padding:6px 9px}
-        @keyframes ttsPulse{0%,100%{box-shadow:0 0 0 0 rgba(213,167,92,.5)}50%{box-shadow:0 0 0 6px rgba(213,167,92,0)}}
-        .tts-toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);max-width:88%;z-index:2147483600;background:rgba(5,10,18,.96);border:2px solid var(--gold-glow,#d5a75c);color:#fff;font-family:'Alexandria',sans-serif;font-size:.8rem;font-weight:600;line-height:1.7;padding:10px 16px;border-radius:10px;text-align:center;direction:rtl;box-shadow:0 6px 24px rgba(0,0,0,.6)}
-    `;
-    document.head.appendChild(style);
+function highlightElement(el) {
+    unhighlightElement();
+    if (!el || !el.classList) return;
+    readerState.activeElement = el;
+    el.classList.add("tts-active-reading");
+    try {
+        el.scrollIntoView({ behavior: "smooth", block: "nearest" });
+    } catch (e) {
+        // تجاهل
+    }
 }
+
+function unhighlightElement() {
+    if (readerState.activeElement && readerState.activeElement.classList) {
+        readerState.activeElement.classList.remove("tts-active-reading");
+    }
+    readerState.activeElement = null;
+}
+
+// ==========================================================================
+// 5️⃣ قراءة الصفحة كاملة تلقائياً بالتسلسل
+// ==========================================================================
+export async function readCurrentPage() {
+    if (!HAS_DOM) return;
+    unlockAudioContext();
+    stopSpeech();
+
+    const selectors = [
+        "h1",
+        "h2",
+        "h3",
+        ".welcome-title",
+        ".welcome-subtitle",
+        ".accordion-trigger span",
+        ".accordion-panel p",
+        ".guide-text",
+        ".case-overview-text",
+        ".room-title",
+        "p:not(.tts-ignore)"
+    ];
+
+    const elements = Array.from(document.querySelectorAll(selectors.join(","))).filter((el) => {
+        if (!el || !el.offsetParent) return false;
+        if (el.closest('[data-tts-block="secret"]') || el.closest(".tts-ignore")) return false;
+        const txt = sanitizeForSpeech(el.textContent);
+        return txt.length >= 5;
+    });
+
+    if (elements.length === 0) {
+        showReaderToast("لم يتم العثور على نصوص قابلة للقراءة في هذه الصفحة.");
+        return;
+    }
+
+    const token = ++readerState.token;
+    readerState.isPlaying = true;
+    readerState.pageQueue = elements;
+    readerState.queueIndex = 0;
+    updateReaderUi();
+
+    for (let i = 0; i < elements.length; i++) {
+        if (token !== readerState.token) break;
+        readerState.queueIndex = i;
+        const el = elements[i];
+        const text = sanitizeForSpeech(el.textContent);
+        if (!text || isForbiddenSpeech(text)) continue;
+
+        highlightElement(el);
+        const chunks = splitIntoChunks(text);
+
+        for (const chunk of chunks) {
+            if (token !== readerState.token) break;
+            readerState.statusText = chunk;
+            updateReaderUi();
+            await playAudioChunk(chunk, token);
+        }
+    }
+
+    if (token === readerState.token) {
+        stopSpeech();
+        showReaderToast("اكتملت قراءة الصفحة بالكامل.");
+    }
+}
+
+// ==========================================================================
+// 6️⃣ أدوات العناصر المضمنة (الأزرار على البطاقات والأسئلة والأدلة)
+// ==========================================================================
+const mountedWeak = new WeakMap();
 
 function setUiState(wrapper, uiState) {
     if (!wrapper) return;
@@ -509,86 +431,61 @@ function setUiState(wrapper, uiState) {
     const play = wrapper.querySelector(".tts-play");
     const label = wrapper.querySelector(".tts-play-label");
     if (play) {
-        play.disabled = uiState === "loading";
         play.dataset.active = uiState === "playing" ? "true" : "false";
     }
-    if (label) label.textContent = uiState === "loading" ? "جارٍ تحضير الصوت..." : "تشغيل المتحدث الصوتي";
-}
-
-function resetUi() {
-    const w = state.activeWrapper;
-    state.activeWrapper = null;
-    if (w) setUiState(w, "idle");
-}
-
-let toastTimer = null;
-function showToast(message) {
-    if (!HAS_DOM) return;
-    injectStyles();
-    const old = document.getElementById("tts-toast");
-    if (old) old.remove();
-    clearTimeout(toastTimer);
-    const el = document.createElement("div");
-    el.id = "tts-toast";
-    el.className = "tts-toast";
-    el.textContent = message;
-    document.body.appendChild(el);
-    toastTimer = setTimeout(() => el.remove(), 3800);
-}
-
-const mounted = new WeakMap();
-
-function readTargetText(targetEl, options) {
-    return typeof options.getText === "function" ? options.getText() : targetEl.textContent;
+    if (label) {
+        label.textContent = uiState === "playing" ? "جارٍ القراءة..." : "استمع";
+    }
 }
 
 export function mountVoiceControls(targetEl, options = {}) {
     if (!HAS_DOM || !targetEl || typeof targetEl.closest !== "function") return null;
     const kind = options.kind || "public";
-    // 🔒 لا أزرار على المصلحة السرية إطلاقاً
     if (kind === "secret" || targetEl.closest('[data-tts-block="secret"]')) return null;
-    injectStyles();
+    injectReaderStyles();
 
-    const existing = mounted.get(targetEl);
+    const existing = mountedWeak.get(targetEl);
     if (existing && existing.wrapper.isConnected) {
         existing.options = options;
-        existing.wrapper.hidden = !sanitizeForSpeech(readTargetText(targetEl, options));
         return existing.wrapper;
     }
 
     const wrapper = document.createElement("div");
-    wrapper.className = "tts-controls" + (options.compact ? " tts-compact" : "");
+    wrapper.className = "tts-inline-controls" + (options.compact ? " tts-compact" : "");
     wrapper.dataset.ttsState = "idle";
-    wrapper.dataset.ttsKind = kind;
     wrapper.innerHTML = `
-        <button type="button" class="tts-btn tts-play" aria-label="تشغيل المتحدث الصوتي">
+        <button type="button" class="tts-inline-btn tts-play" aria-label="قراءة النص صوتياً">
             <span aria-hidden="true">🔊</span>
-            <span class="tts-play-label">تشغيل المتحدث الصوتي</span>
+            <span class="tts-play-label">استمع</span>
         </button>
-        <button type="button" class="tts-btn tts-stop" aria-label="إيقاف الصوت">
-            <span aria-hidden="true">⏹</span><span>إيقاف</span>
+        <button type="button" class="tts-inline-btn tts-stop" aria-label="إيقاف">
+            <span aria-hidden="true">⏹</span>
         </button>
     `;
 
     const entry = { wrapper, options };
-    mounted.set(targetEl, entry);
+    mountedWeak.set(targetEl, entry);
 
     wrapper.querySelector(".tts-play").addEventListener("click", (e) => {
         e.preventDefault();
         e.stopPropagation();
-        const opts = entry.options;
-        speakText(readTargetText(targetEl, opts), { kind: opts.kind || "public", wrapper });
+        unlockAudioContext();
+        const textToRead = typeof options.getText === "function" ? options.getText() : targetEl.textContent;
+        speakText(textToRead, { kind, wrapper, targetElement: targetEl });
     });
+
     wrapper.querySelector(".tts-stop").addEventListener("click", (e) => {
         e.preventDefault();
         e.stopPropagation();
         stopSpeech();
     });
 
-    if (options.placement === "inside-end") targetEl.appendChild(wrapper);
-    else targetEl.insertAdjacentElement("afterend", wrapper);
+    if (options.placement === "inside-end") {
+        targetEl.appendChild(wrapper);
+    } else {
+        targetEl.insertAdjacentElement("afterend", wrapper);
+    }
 
-    wrapper.hidden = !sanitizeForSpeech(readTargetText(targetEl, options));
     return wrapper;
 }
 
@@ -600,35 +497,516 @@ export function mountVoiceControlsAll(root, selector, options = {}) {
 }
 
 // ==========================================================================
-// 7️⃣ حارس الإيقاف الفوري: إغلاق المودال / اختفاء العنصر / مغادرة الصفحة
+// 7️⃣ واجهة القارئ الذاتي العائم الشامل في كل صفحات الموقع
 // ==========================================================================
-function startWatchdog() {
-    if (!HAS_DOM) return;
-    stopWatchdog();
-    state.observer = new MutationObserver(() => {
-        const w = state.activeWrapper;
-        if (!w) return;
-        if (!w.isConnected || w.getClientRects().length === 0) stopSpeech();
-    });
-    state.observer.observe(document.body, {
-        subtree: true,
-        childList: true,
-        attributes: true,
-        attributeFilter: ["style", "class", "hidden"]
-    });
+function injectReaderStyles() {
+    if (!HAS_DOM || document.getElementById("native-tts-styles")) return;
+    const style = document.createElement("style");
+    style.id = "native-tts-styles";
+    style.textContent = `
+        .tts-active-reading {
+            outline: 2px solid var(--gold-glow, #d5a75c) !important;
+            outline-offset: 3px;
+            background-color: rgba(213, 167, 92, 0.18) !important;
+            border-radius: 6px;
+            transition: all 0.3s ease;
+        }
+
+        .tts-inline-controls {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            margin: 6px 0;
+            direction: rtl;
+        }
+        .tts-inline-controls[hidden] { display: none !important; }
+        .tts-inline-btn {
+            all: unset;
+            box-sizing: border-box;
+            cursor: pointer;
+            font-family: 'Alexandria', system-ui, sans-serif;
+            font-weight: 700;
+            font-size: 0.72rem;
+            padding: 5px 10px;
+            border-radius: 8px;
+            border: 1.5px solid var(--gold-glow, #d5a75c);
+            color: var(--gold-glow, #d5a75c);
+            background: rgba(10, 17, 24, 0.75);
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            transition: all 0.2s ease;
+            -webkit-tap-highlight-color: transparent;
+        }
+        .tts-inline-btn:hover { background: rgba(213, 167, 92, 0.2); }
+        .tts-inline-btn:active { transform: scale(0.96); }
+        .tts-inline-btn.tts-stop { border-color: #ff5252; color: #ff5252; }
+        .tts-play[data-active="true"] {
+            background: var(--gold-glow, #d5a75c) !important;
+            color: #050a12 !important;
+            animation: ttsGlowPulse 1.4s infinite ease-in-out;
+        }
+        @keyframes ttsGlowPulse {
+            0%, 100% { box-shadow: 0 0 0 0 rgba(213, 167, 92, 0.6); }
+            50% { box-shadow: 0 0 0 8px rgba(213, 167, 92, 0); }
+        }
+
+        .tts-floating-container {
+            position: fixed;
+            bottom: 16px;
+            left: 16px;
+            z-index: 99999;
+            direction: rtl;
+            font-family: 'Alexandria', system-ui, sans-serif;
+        }
+        .tts-fab-btn {
+            background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+            border: 1.5px solid var(--gold-glow, #d5a75c);
+            color: var(--gold-glow, #d5a75c);
+            border-radius: 50px;
+            padding: 10px 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            cursor: pointer;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+            font-weight: 700;
+            font-size: 0.8rem;
+            transition: all 0.25s ease;
+            outline: none;
+        }
+        .tts-fab-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 28px rgba(213, 167, 92, 0.25);
+            background: #1e293b;
+        }
+        .tts-fab-btn.is-active {
+            border-color: #4ade80;
+            color: #4ade80;
+            animation: ttsGlowPulse 2s infinite ease-in-out;
+        }
+
+        .tts-dock-panel {
+            position: absolute;
+            bottom: 54px;
+            left: 0;
+            width: 310px;
+            max-width: 90vw;
+            background: rgba(13, 23, 38, 0.96);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1.5px solid rgba(213, 167, 92, 0.5);
+            border-radius: 16px;
+            padding: 14px;
+            box-shadow: 0 16px 36px rgba(0, 0, 0, 0.6);
+            color: #fff;
+            display: none;
+            flex-direction: column;
+            gap: 10px;
+            animation: ttsFadeSlide 0.25s ease forwards;
+        }
+        .tts-dock-panel.is-open { display: flex; }
+        @keyframes ttsFadeSlide {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .tts-dock-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid rgba(213, 167, 92, 0.2);
+            padding-bottom: 8px;
+        }
+        .tts-dock-title {
+            font-size: 0.85rem;
+            font-weight: 800;
+            color: var(--gold-glow, #d5a75c);
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            margin: 0;
+        }
+        .tts-dock-close {
+            background: transparent;
+            border: none;
+            color: #94a3b8;
+            cursor: pointer;
+            font-size: 1.1rem;
+            padding: 0 4px;
+            line-height: 1;
+        }
+        .tts-dock-close:hover { color: #fff; }
+
+        .tts-dock-status {
+            font-size: 0.72rem;
+            color: #cbd5e1;
+            background: rgba(0, 0, 0, 0.35);
+            padding: 6px 10px;
+            border-radius: 8px;
+            border-right: 3px solid var(--gold-glow, #d5a75c);
+            max-height: 48px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .tts-dock-actions {
+            display: flex;
+            gap: 8px;
+            justify-content: center;
+        }
+        .tts-dock-btn {
+            flex: 1;
+            padding: 8px 10px;
+            border-radius: 8px;
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            background: rgba(255, 255, 255, 0.06);
+            color: #fff;
+            font-family: inherit;
+            font-size: 0.75rem;
+            font-weight: 700;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 5px;
+            transition: all 0.2s;
+        }
+        .tts-dock-btn:hover {
+            background: rgba(213, 167, 92, 0.15);
+            border-color: var(--gold-glow, #d5a75c);
+            color: var(--gold-glow, #d5a75c);
+        }
+        .tts-dock-btn.active {
+            background: var(--gold-glow, #d5a75c);
+            color: #050a12;
+            border-color: var(--gold-glow, #d5a75c);
+        }
+
+        .tts-dock-speed-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            font-size: 0.72rem;
+            color: #94a3b8;
+            padding-top: 4px;
+            border-top: 1px solid rgba(255, 255, 255, 0.08);
+        }
+        .tts-speed-btns {
+            display: flex;
+            gap: 4px;
+        }
+        .tts-speed-chip {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            color: #cbd5e1;
+            padding: 3px 8px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.68rem;
+            font-weight: 600;
+        }
+        .tts-speed-chip.active {
+            background: var(--gold-glow, #d5a75c);
+            color: #050a12;
+            border-color: var(--gold-glow, #d5a75c);
+        }
+
+        .tts-toast {
+            position: fixed;
+            bottom: 74px;
+            left: 50%;
+            transform: translateX(-50%);
+            max-width: 90%;
+            z-index: 100000;
+            background: rgba(5, 10, 18, 0.96);
+            border: 1.5px solid var(--gold-glow, #d5a75c);
+            color: #fff;
+            font-family: 'Alexandria', system-ui, sans-serif;
+            font-size: 0.8rem;
+            font-weight: 600;
+            padding: 10px 18px;
+            border-radius: 12px;
+            text-align: center;
+            direction: rtl;
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.7);
+        }
+
+        .tts-selection-pill {
+            position: fixed;
+            z-index: 100001;
+            background: var(--gold-glow, #d5a75c);
+            color: #050a12;
+            border: none;
+            border-radius: 20px;
+            padding: 6px 14px;
+            font-family: 'Alexandria', system-ui, sans-serif;
+            font-size: 0.75rem;
+            font-weight: 800;
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4);
+            cursor: pointer;
+            display: none;
+            align-items: center;
+            gap: 6px;
+            direction: rtl;
+            transform: translate(-50%, -100%);
+            animation: ttsFadeSlide 0.2s ease;
+        }
+        .tts-selection-pill:hover {
+            transform: translate(-50%, -105%) scale(1.03);
+        }
+    `;
+    document.head.appendChild(style);
 }
 
-function stopWatchdog() {
-    if (state.observer) {
-        state.observer.disconnect();
-        state.observer = null;
+let toastTimeout = null;
+export function showReaderToast(message) {
+    if (!HAS_DOM) return;
+    injectReaderStyles();
+    const old = document.getElementById("native-tts-toast");
+    if (old) old.remove();
+    clearTimeout(toastTimeout);
+    const toast = document.createElement("div");
+    toast.id = "native-tts-toast";
+    toast.className = "tts-toast";
+    toast.textContent = message;
+    document.body.appendChild(toast);
+    toastTimeout = setTimeout(() => toast.remove(), 3200);
+}
+
+function updateReaderUi() {
+    if (!HAS_DOM) return;
+    const fab = document.getElementById("tts-fab-toggle");
+    const dockStatus = document.getElementById("tts-dock-status");
+    const playPauseBtn = document.getElementById("tts-dock-playpause");
+
+    if (fab) {
+        fab.classList.toggle("is-active", readerState.isPlaying);
+        const icon = fab.querySelector(".tts-fab-icon");
+        if (icon) icon.textContent = readerState.isPlaying ? "🔊" : "🔈";
+    }
+
+    if (dockStatus) {
+        dockStatus.textContent = readerState.statusText;
+    }
+
+    if (playPauseBtn) {
+        if (!readerState.isPlaying) {
+            playPauseBtn.innerHTML = "<span>▶️</span><span>قراءة الصفحة</span>";
+        } else if (readerState.isPaused) {
+            playPauseBtn.innerHTML = "<span>▶️</span><span>استئناف</span>";
+        } else {
+            playPauseBtn.innerHTML = "<span>⏸️</span><span>إيقاف مؤقت</span>";
+        }
     }
 }
 
-if (HAS_DOM) {
+export function initGlobalTextReader() {
+    if (!HAS_DOM || document.getElementById("tts-global-root")) return;
+    injectReaderStyles();
+
+    const root = document.createElement("div");
+    root.id = "tts-global-root";
+    root.className = "tts-floating-container";
+    root.innerHTML = `
+        <button type="button" id="tts-fab-toggle" class="tts-fab-btn" aria-label="فتح القارئ الصوتي الذاتي">
+            <span class="tts-fab-icon">🔈</span>
+            <span>القارئ الذاتي</span>
+        </button>
+
+        <div id="tts-dock-panel" class="tts-dock-panel">
+            <div class="tts-dock-header">
+                <h4 class="tts-dock-title">
+                    <span>🎙️</span>
+                    <span>القارئ الصوتي الذاتي</span>
+                </h4>
+                <button type="button" id="tts-dock-close" class="tts-dock-close" aria-label="إغلاق">&times;</button>
+            </div>
+
+            <div id="tts-dock-status" class="tts-dock-status">جاهز للاستماع</div>
+
+            <div class="tts-dock-actions">
+                <button type="button" id="tts-dock-playpause" class="tts-dock-btn" title="قراءة محتوى الصفحة">
+                    <span>▶️</span>
+                    <span>قراءة الصفحة</span>
+                </button>
+                <button type="button" id="tts-dock-stop" class="tts-dock-btn" title="إيقاف القراءة">
+                    <span>⏹️</span>
+                    <span>إيقاف</span>
+                </button>
+            </div>
+
+            <div class="tts-dock-actions">
+                <button type="button" id="tts-dock-clickread" class="tts-dock-btn" title="انقر على أي فقرة أو سؤال لسماعه">
+                    <span>👆</span>
+                    <span>انقر للقراءة</span>
+                </button>
+            </div>
+
+            <div class="tts-dock-speed-row">
+                <span>سرعة القراءة:</span>
+                <div class="tts-speed-btns">
+                    <button type="button" class="tts-speed-chip" data-speed="0.8">0.8x</button>
+                    <button type="button" class="tts-speed-chip active" data-speed="1.0">عادي</button>
+                    <button type="button" class="tts-speed-chip" data-speed="1.25">1.25x</button>
+                </div>
+            </div>
+
+            <div class="tts-dock-voice-row" style="display:flex;align-items:center;justify-content:space-between;padding-top:6px;border-top:1px solid rgba(255,255,255,0.08);font-size:0.72rem;color:#cbd5e1;">
+                <span>صوت المتحدث:</span>
+                <select id="tts-voice-select" style="background:#0a1118;border:1px solid rgba(213,167,92,0.5);color:var(--gold-glow,#d5a75c);border-radius:6px;padding:3px 6px;font-family:inherit;font-size:0.68rem;cursor:pointer;outline:none;">
+                    <option value="ar-SA-HamedNeural" selected>🎙️ حامد (رجالي فخم - الأقرب للبشر)</option>
+                    <option value="ar-EG-ShakirNeural">🎙️ شاكر (رجالي هادئ)</option>
+                    <option value="ar-SA-ZariyahNeural">🎙️ زارية (نسائي طبيعي)</option>
+                </select>
+            </div>
+        </div>
+
+        <button type="button" id="tts-selection-pill" class="tts-selection-pill">
+            <span>🔊</span>
+            <span>استمع للمحدد</span>
+        </button>
+    `;
+
+    document.body.appendChild(root);
+
+    const fab = root.querySelector("#tts-fab-toggle");
+    const panel = root.querySelector("#tts-dock-panel");
+    const closeBtn = root.querySelector("#tts-dock-close");
+    const playPauseBtn = root.querySelector("#tts-dock-playpause");
+    const stopBtn = root.querySelector("#tts-dock-stop");
+    const clickReadBtn = root.querySelector("#tts-dock-clickread");
+    const selectionPill = root.querySelector("#tts-selection-pill");
+    const speedChips = root.querySelectorAll(".tts-speed-chip");
+
+    fab.addEventListener("click", (e) => {
+        e.stopPropagation();
+        unlockAudioContext();
+        panel.classList.toggle("is-open");
+    });
+
+    closeBtn.addEventListener("click", () => {
+        panel.classList.remove("is-open");
+    });
+
+    playPauseBtn.addEventListener("click", () => {
+        unlockAudioContext();
+        if (!readerState.isPlaying) {
+            readCurrentPage();
+        } else if (readerState.isPaused) {
+            resumeSpeech();
+        } else {
+            pauseSpeech();
+        }
+    });
+
+    stopBtn.addEventListener("click", () => {
+        stopSpeech();
+    });
+
+    clickReadBtn.addEventListener("click", () => {
+        unlockAudioContext();
+        readerState.clickToReadEnabled = !readerState.clickToReadEnabled;
+        clickReadBtn.classList.toggle("active", readerState.clickToReadEnabled);
+        if (readerState.clickToReadEnabled) {
+            showReaderToast("تم تفعيل وضع القراءة بالنقر: اضغط على أي نص أو كارت لسماعه.");
+        } else {
+            showReaderToast("تم إلغاء وضع القراءة بالنقر.");
+        }
+    });
+
+    speedChips.forEach((chip) => {
+        chip.addEventListener("click", () => {
+            speedChips.forEach((c) => c.classList.remove("active"));
+            chip.classList.add("active");
+            readerState.currentRate = parseFloat(chip.dataset.speed) || 1.0;
+            if (nativeAudioPlayer) nativeAudioPlayer.playbackRate = readerState.currentRate;
+            showReaderToast(`تم ضبط سرعة القراءة: ${chip.textContent}`);
+        });
+    });
+
+    const voiceSelect = root.querySelector("#tts-voice-select");
+    if (voiceSelect) {
+        voiceSelect.addEventListener("change", (e) => {
+            readerState.selectedVoiceId = e.target.value;
+            const selectedText = e.target.options[e.target.selectedIndex].text;
+            showReaderToast(`تم تفعيل: ${selectedText}`);
+        });
+    }
+
+    document.addEventListener(
+        "click",
+        (e) => {
+            if (!readerState.clickToReadEnabled) return;
+            if (root.contains(e.target)) return;
+
+            const target = e.target.closest(
+                "p, h1, h2, h3, h4, li, span, button, .accordion-trigger, .guide-text, .image-showcase-box"
+            );
+            if (!target) return;
+
+            const text = sanitizeForSpeech(target.textContent);
+            if (text && text.length >= 3) {
+                e.preventDefault();
+                e.stopPropagation();
+                unlockAudioContext();
+                speakText(text, { targetElement: target });
+            }
+        },
+        true
+    );
+
+    document.addEventListener("selectionchange", () => {
+        const selection = window.getSelection();
+        const selectedText = selection ? selection.toString().trim() : "";
+
+        if (selectedText.length >= 2 && !isForbiddenSpeech(selectedText)) {
+            try {
+                const range = selection.getRangeAt(0);
+                const rect = range.getBoundingClientRect();
+                if (rect.width > 0 && rect.height > 0) {
+                    selectionPill.style.top = `${Math.max(10, rect.top + window.scrollY - 10)}px`;
+                    selectionPill.style.left = `${rect.left + rect.width / 2 + window.scrollX}px`;
+                    selectionPill.style.display = "inline-flex";
+                    return;
+                }
+            } catch (err) {
+                // تجاهل
+            }
+        }
+        selectionPill.style.display = "none";
+    });
+
+    selectionPill.addEventListener("mousedown", (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        unlockAudioContext();
+        const selection = window.getSelection();
+        const selectedText = selection ? selection.toString().trim() : "";
+        if (selectedText) {
+            speakText(selectedText);
+            selectionPill.style.display = "none";
+        }
+    });
+
+    document.addEventListener("click", (e) => {
+        if (!root.contains(e.target)) {
+            panel.classList.remove("is-open");
+        }
+    });
+
     document.addEventListener("visibilitychange", () => {
         if (document.hidden) stopSpeech();
     });
     window.addEventListener("pagehide", stopSpeech);
     window.addEventListener("beforeunload", stopSpeech);
+}
+
+if (HAS_DOM) {
+    if (document.readyState === "loading") {
+        document.addEventListener("DOMContentLoaded", initGlobalTextReader);
+    } else {
+        initGlobalTextReader();
+    }
 }
