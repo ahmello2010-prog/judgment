@@ -356,6 +356,225 @@
                     box-shadow: 0 6px 25px rgba(224, 92, 92, 0.15);
                 }
             }
+
+            /* ==========================================================================
+   🗂️ [تابات الهوية/التوجيه/السوق السوداء] داخل بطاقة الدور السرية
+   ========================================================================== */
+            .role-tabs-bar {
+                display: flex;
+                gap: 6px;
+                margin-bottom: 16px;
+                border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+                padding-bottom: 0;
+            }
+            .role-tab-btn {
+                flex: 1;
+                padding: 10px 4px;
+                background: transparent;
+                border: none;
+                border-bottom: 3px solid transparent;
+                color: #8d99a8;
+                font-family: "Alexandria", sans-serif;
+                font-weight: 700;
+                font-size: 0.72rem;
+                cursor: pointer;
+                transition:
+                    color 0.2s,
+                    border-color 0.2s;
+            }
+            .role-tab-btn.active {
+                color: var(--gold-glow);
+                border-bottom-color: var(--gold-glow);
+            }
+            .role-tab-pane {
+                display: none;
+                animation: tabFadeIn 0.25s ease-out;
+            }
+            .role-tab-pane.active {
+                display: block;
+            }
+            @keyframes tabFadeIn {
+                from {
+                    opacity: 0;
+                    transform: translateY(4px);
+                }
+                to {
+                    opacity: 1;
+                    transform: translateY(0);
+                }
+            }
+
+            /* ==========================================================================
+   💰 [مودال الرشوة]: بوب أوفر صغير جانبي، لا يغطي الشاشة كبقية المودالات
+   ========================================================================== */
+            #bribery-popover {
+                position: fixed;
+                z-index: 2147483200;
+                width: 270px;
+                max-width: 88vw;
+                background: #10151d;
+                border: 1px solid #ffb84d;
+                border-radius: 12px;
+                padding: 12px;
+                box-shadow: 0 10px 35px rgba(0, 0, 0, 0.65);
+                direction: rtl;
+                font-family: "Alexandria", sans-serif;
+            }
+            .bribery-preset-chip {
+                display: block;
+                width: 100%;
+                text-align: right;
+                background: rgba(255, 184, 77, 0.08);
+                border: 1px solid rgba(255, 184, 77, 0.4);
+                color: #ffe9b3;
+                border-radius: 6px;
+                padding: 6px 8px;
+                font-size: 0.66rem;
+                margin-bottom: 4px;
+                cursor: pointer;
+                font-family: "Alexandria", sans-serif;
+            }
+            .bribery-stepper-btn {
+                width: 30px;
+                height: 30px;
+                border-radius: 50%;
+                border: 1px solid #ffb84d;
+                background: transparent;
+                color: #ffb84d;
+                font-size: 1rem;
+                font-weight: 700;
+                cursor: pointer;
+            }
+
+            /* ==========================================================================
+   🖼️ [إعادة تصميم شاملة لقاعة المحكمة]: أجواء "محكمة ليلية" أعمق وأكثر دراما، بمرجعية
+   بصرية موحّدة، محصورة بالكامل هنا (body.body3) فلا تؤثر على أي صفحة أخرى في الموقع.
+   ========================================================================== */
+
+            /* خلفية الصفحة: تدرج ليلي أعمق + توهج مركزي خافت فوق الطاولة + شبكة خطوط دقيقة كنسيج خفيف */
+            body.body3 {
+                background: radial-gradient(ellipse 70% 55% at 50% 42%, rgba(213, 167, 92, 0.14) 0%, transparent 65%),
+                    radial-gradient(circle at 50% 50%, #1a1510 0%, #0c1017 45%, #05070c 100%) !important;
+                background-attachment: fixed !important;
+                position: relative;
+            }
+            body.body3::before {
+                content: "";
+                position: fixed;
+                inset: 0;
+                background-image: linear-gradient(rgba(255, 255, 255, 0.02) 1px, transparent 1px),
+                    linear-gradient(90deg, rgba(255, 255, 255, 0.02) 1px, transparent 1px);
+                background-size: 42px 42px;
+                pointer-events: none;
+                z-index: 0;
+            }
+            body.body3::after {
+                /* فينيت غامق على الحواف الأربعة يركّز النظر على وسط القاعة */
+                content: "";
+                position: fixed;
+                inset: 0;
+                background: radial-gradient(ellipse 80% 75% at 50% 50%, transparent 55%, rgba(0, 0, 0, 0.55) 100%);
+                pointer-events: none;
+                z-index: 1;
+            }
+            body.body3 #court-arena {
+                position: relative;
+                z-index: 2;
+            }
+
+            /* الطاولة المركزية: طابع خشب/رخام مع حافة معدنية ذهبية بارزة وتوهج نابض هادئ */
+            body.body3 #court-table {
+                background: radial-gradient(circle at 38% 32%, rgba(255, 255, 255, 0.08) 0%, transparent 45%),
+                    radial-gradient(circle, #2b2115 0%, #17120b 70%, #0c0906 100%) !important;
+                border: 4px solid var(--gold-glow) !important;
+                box-shadow:
+                    inset 0 0 25px rgba(0, 0, 0, 0.65),
+                    inset 0 0 60px rgba(213, 167, 92, 0.08),
+                    0 0 45px rgba(213, 167, 92, 0.22) !important;
+                animation: courtTableBreath 6s ease-in-out infinite;
+            }
+            @keyframes courtTableBreath {
+                0%,
+                100% {
+                    box-shadow:
+                        inset 0 0 25px rgba(0, 0, 0, 0.65),
+                        inset 0 0 60px rgba(213, 167, 92, 0.08),
+                        0 0 45px rgba(213, 167, 92, 0.22);
+                }
+                50% {
+                    box-shadow:
+                        inset 0 0 25px rgba(0, 0, 0, 0.65),
+                        inset 0 0 60px rgba(213, 167, 92, 0.12),
+                        0 0 60px rgba(213, 167, 92, 0.32);
+                }
+            }
+            body.body3 #court-table span {
+                text-shadow: 0 2px 8px rgba(0, 0, 0, 0.6);
+                letter-spacing: 0.5px;
+            }
+
+            /* كراسي الحضور: بطاقات زجاجية أنيقة بشريط لوني علوي بدل الصندوق الأسود المسطّح */
+            body.body3 .court-seat-node {
+                background: linear-gradient(165deg, rgba(22, 28, 40, 0.92) 0%, rgba(10, 14, 22, 0.96) 100%) !important;
+                border: 1.5px solid #222c3c;
+                border-radius: 14px !important;
+                backdrop-filter: blur(4px);
+                position: relative;
+                overflow: hidden;
+            }
+            body.body3 .court-seat-node::before {
+                /* شريط لوني علوي رقيق يعكس دور صاحب الكرسي (يُصبغ عبر متغيرات الدور المعرّفة أعلاه) */
+                content: "";
+                position: absolute;
+                top: 0;
+                right: 0;
+                left: 0;
+                height: 4px;
+                background: linear-gradient(90deg, transparent, var(--gold-glow), transparent);
+                opacity: 0.85;
+            }
+
+            /* شارة هوية الدور: توهج زجاجي أوضح فوق الرأس */
+            #role-identity-badge {
+                box-shadow:
+                    0 4px 18px rgba(0, 0, 0, 0.55),
+                    inset 0 0 10px rgba(255, 255, 255, 0.04) !important;
+            }
+
+            @media screen and (max-width: 541px) {
+                body.body3 #court-table {
+                    background: radial-gradient(circle at 38% 32%, rgba(255, 255, 255, 0.08) 0%, transparent 45%),
+                        radial-gradient(circle, #2b2115 0%, #17120b 70%, #0c0906 100%) !important;
+                    border: 3px solid var(--gold-glow) !important;
+                }
+                body.body3 .court-seat-node {
+                    background: linear-gradient(
+                        165deg,
+                        rgba(22, 28, 40, 0.92) 0%,
+                        rgba(10, 14, 22, 0.96) 100%
+                    ) !important;
+                    border-radius: 12px !important;
+                }
+            }
+
+            /* بطاقة الدور السرية (المودال الرئيسي بتاباته الثلاثة): طابع "ملف قضائي" فاخر بدل الصندوق المسطّح */
+            body.body3 .modal-alert-box {
+                background: linear-gradient(165deg, #141b26 0%, #0a0e15 100%) !important;
+                border: 1px solid var(--gold-glow) !important;
+                box-shadow:
+                    0 25px 60px rgba(0, 0, 0, 0.7),
+                    0 0 30px rgba(213, 167, 92, 0.12) !important;
+            }
+            body.body3 .modal-alert-box h2 {
+                border-bottom: 1px solid rgba(213, 167, 92, 0.25);
+                padding-bottom: 10px;
+            }
+
+            /* لوحة القاضي السفلية: نفس الروح الليلية الفاخرة */
+            body.body3 .judge-panel-container,
+            body.body3 #judge-control-panel {
+                background: linear-gradient(180deg, rgba(10, 14, 22, 0.97) 0%, rgba(20, 16, 10, 0.97) 100%) !important;
+            }
         </style>
     </head>
     <body class="body3">
