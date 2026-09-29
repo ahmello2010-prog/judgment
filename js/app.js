@@ -520,7 +520,27 @@ async function loadAndDisplayCases() {
 
             let innerHTML = "";
             if (item.is_pinned) {
-                innerHTML += `<span style="background-color: var(--gold-glow); color: var(--shadow-black); font-family: 'Alexandria', sans-serif; font-weight: 700; font-size: 0.75rem; padding: 2px 8px; border-radius: 4px; margin-bottom: 12px; display: inline-block;">📌 قضية مثبتة (تتطلب ${item.required_players} لاعبين)</span>`;
+                innerHTML += `
+        <span style="
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            background-color: rgba(181, 148, 91, 0.12);
+            color: var(--gc-gold, #b5945b);
+            border: 1px solid rgba(181, 148, 91, 0.25);
+            font-family: 'Alexandria', sans-serif;
+            font-weight: 700;
+            font-size: 1rem;
+            padding: 4px 10px;
+            border-radius: 6px;
+            margin-bottom: 8px;
+            box-shadow: 0 0 10px rgba(181, 148, 91, 0.1);
+        ">
+            <svg viewBox="0 0 24 24" width="12" height="12" fill="currentColor">
+                <path d="M12 2l2.4 7.6L22 12l-7.6 2.4L12 22l-2.4-7.6L2 12l7.6-2.4Z"/>
+            </svg>
+
+        </span>`;
             }
 
             // تحديد مسار الصورة ديناميكياً بناءً على الـ id الخاص بكل قضية (مثال: assets/cases/1.png)
@@ -1799,17 +1819,32 @@ function renderCircularSeats(playersList, assignments, gameState) {
                 const fontSizeName = totalSeats > 6 ? "0.75rem" : "0.85rem";
                 const fontSizeRole = totalSeats > 6 ? "0.7rem" : "0.8rem";
 
+                /* ==========================================================================
+   استبدل جزء seatBox.style.cssText القديم (تقريباً من السطر 563) بهذا التنسيق:
+   ========================================================================== */
                 seatBox.style.cssText = `
-                    position: absolute;
-                    width: ${seatSize}px;
-                    height: ${seatSize}px;
-                    left: ${posX}px;
-                    top: ${posY}px;
-                    border-color: ${isMeBorder};
-                    box-shadow: ${isMeShadow};
-                    transform: ${isMeScale};
-                    transition: transform 0.3s cubic-bezier(0.25, 1, 0.5, 1), border-color 0.3s ease, box-shadow 0.3s ease;
-                `;
+    position: absolute;
+    width: ${seatSize}px;
+    height: ${seatSize}px;
+    left: ${posX}px;
+    top: ${posY}px;
+
+    /* مظهر الكراسي الفخم الجديد المتناسق مع الخشب واللوجو */
+    background: linear-gradient(135deg, var(--gc-blue-light, #101e2b) 0%, var(--gc-blue-dark, #0a1118) 100%);
+    border: 2px solid ${isMeBorder};
+    border-radius: 16px; /* زوايا دائرية فخمة لتبدو كمنصة قضائية مصغرة */
+
+    /* توزيع العناصر داخلياً بشكل متناسق */
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+
+    box-shadow: ${isMeShadow}, inset 0 0 15px rgba(0, 0, 0, 0.6);
+    transform: ${isMeScale};
+    transition: transform 0.3s cubic-bezier(0.25, 1, 0.5, 1), border-color 0.3s ease, box-shadow 0.3s ease;
+`;
 
                 const isMeLabel =
                     player.id === mySecretUID

@@ -1272,17 +1272,91 @@ body.body2::-webkit-scrollbar-thumb:hover {
 }
 
 body.body3 {
-    background-image: url("/img/backg.jpeg");
-    background-size: cover;
-    background-position: center;
-    background-repeat: no-repeat;
-    background-attachment: fixed !important;
     width: 100vw !important;
     height: 100vh !important;
     max-height: 100vh !important;
     margin: 0 !important;
     padding: 0 !important;
     box-sizing: border-box !important;
+    overflow: hidden !important;
+    position: relative;
+
+    /* إنشاء هيكل ألواح الخشب الطولية (رأسية) باستخدام التدرجات المتكررة */
+    background:
+            /* طبقة الإضاءة والظلال الممتدة فوق الألواح */
+        linear-gradient(rgba(10, 17, 24, 0.4), rgba(5, 10, 15, 0.75)),
+        /* فواصل الألواح الخشبية العمودية (كل لوح بعرض 140 بكسل ممتد بالطول) */
+            repeating-linear-gradient(90deg, #070d14 0px, #070d14 4px, #101a24 4px, #162432 140px);
+    background-attachment: fixed !important;
+}
+
+/* طبقة الإطار الذهبي المتحرك والظلال السينمائية المحيطة بكامل الشاشة */
+body.body3::after {
+    content: "";
+    position: fixed;
+    /* مسافة 10 بكسل من كل طرف ليظهر الإطار عائماً بشكل عصري وفخم */
+    inset: 10px;
+    pointer-events: none;
+
+    /* إطار ذهبي مطفي ونحاسي مأخوذ من روح شعار اللعبة */
+    border: 2px solid #b5945b;
+    /* زوايا دائرية ناعمة للإطار */
+    border-radius: 12px;
+
+    /* استدعاء حركة التنفس الذهبي: المدة 4 ثوانٍ بشكل متكرر وناعم جداً */
+    animation: goldPulse 4s ease-in-out infinite;
+
+    z-index: 1; /* يضمن بقاء الإطار والظلال فوق الخشب وتحت عناصر واجهة المستخدم (UI) */
+}
+
+/* أنيميشن التوهج النبضي (Breathing Glow Effect) ليعطي الإطار حياة وحيوية غامضة */
+@keyframes goldPulse {
+    0%,
+    100% {
+        box-shadow:
+            inset 0 0 100px rgba(0, 0, 0, 0.95),
+            /* الحفاظ على عمق الظلال أطراف الشاشة */ inset 0 0 12px rgba(181, 148, 91, 0.15),
+            /* توهج داخلي خافت */ 0 0 15px rgba(181, 148, 91, 0.1); /* توهج خارجي ناعم */
+    }
+    50% {
+        box-shadow:
+            inset 0 0 100px rgba(0, 0, 0, 0.9),
+            /* تمدد الظل خفيفاً */ inset 0 0 25px rgba(181, 148, 91, 0.35),
+            /* ذروة التوهج الداخلي الفخم */ 0 0 28px rgba(181, 148, 91, 0.25); /* ذروة التوهج الخارجي */
+        border-color: #dbc18f; /* تفتيح لون الإطار الذهبي قليلاً في المنتصف */
+    }
+}
+
+/* لوحة الـ Canvas الخاصة بتوليد عروق وألياف الخشب الطولية */
+#wood-grain-canvas {
+    position: fixed;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    opacity: 0.15; /* التحكم في مدى نعومة ووضوح عروق الخشب الرأسية */
+    pointer-events: none;
+    z-index: 0;
+}
+
+/* طبقة ظلال سينمائية عميقة (Vignette) على أطراف الشاشة لتركيز الانتباه */
+body.body3::after {
+    content: "";
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    box-shadow: inset 0 0 120px rgba(0, 0, 0, 0.95);
+    z-index: 1; /* يضمن بقاء الظل فوق الخشب وتحت عناصر واجهة المستخدم */
+}
+
+/* لوحة الـ Canvas الخاصة بتوليد عروق وألياف الخشب الطولية */
+#wood-grain-canvas {
+    position: fixed;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    opacity: 0.15; /* التحكم في مدى نعومة ووضوح عروق الخشب الرأسية */
+    pointer-events: none;
+    z-index: 0;
 }
 
 #court-arena {

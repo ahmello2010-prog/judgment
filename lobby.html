@@ -440,5 +440,58 @@
         </div>
 
         <script type="module" src="js/app.js"></script>
+        <canvas id="wood-grain-canvas"></canvas>
+
+        <script>
+            document.addEventListener("DOMContentLoaded", () => {
+                const canvas = document.getElementById("wood-grain-canvas");
+                const ctx = canvas.getContext("2d");
+
+                function resizeCanvas() {
+                    canvas.width = window.innerWidth;
+                    canvas.height = window.innerHeight;
+                    generateWoodGrain();
+                }
+
+                function generateWoodGrain() {
+                    const width = canvas.width;
+                    const height = canvas.height;
+
+                    // تنظيف الكانفاس قبل إعادة الرسم
+                    ctx.clearRect(0, 0, width, height);
+
+                    // توليد خطوط الألياف العمودية الطولية الناعمة
+                    for (let i = 0; i < width; i += 2) {
+                        // إدخال العشوائية والتموج لمحاكاة عروق الخشب العمودية الطبيعية
+                        let noise = Math.sin(i * 0.05) * Math.cos(i * 0.01) * 4;
+                        let opacity = Math.random() * 0.15 + 0.05;
+
+                        ctx.fillStyle = `rgba(255, 255, 255, ${opacity})`;
+
+                        // رسم خط ألياف عمودي ممتد من أعلى لأسفل مع تعرجات خفيفة
+                        ctx.fillRect(i + noise, 0, 1, height);
+                    }
+
+                    // إضافة بعض العقد الخشبية الداكنة العشوائية (Knots) لعمق واقعي
+                    for (let k = 0; k < 3; k++) {
+                        let knotX = Math.random() * width;
+                        let knotY = Math.random() * height;
+                        let radius = Math.random() * 100 + 50;
+
+                        let grad = ctx.createRadialGradient(knotX, knotY, 5, knotX, knotY, radius);
+                        grad.addColorStop(0, "rgba(0, 0, 0, 0.35)");
+                        grad.addColorStop(0.6, "rgba(0, 0, 0, 0.08)");
+                        grad.addColorStop(1, "rgba(0, 0, 0, 0)");
+
+                        ctx.fillStyle = grad;
+                        ctx.fillRect(knotX - radius, knotY - radius, radius * 2, radius * 2);
+                    }
+                }
+
+                // تشغيل التوليد عند فتح الصفحة وضبط الأبعاد تلقائياً عند تغيير حجم النافذة
+                window.addEventListener("resize", resizeCanvas);
+                resizeCanvas();
+            });
+        </script>
     </body>
 </html>

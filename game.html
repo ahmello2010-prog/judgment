@@ -12,21 +12,24 @@
         <meta name="apple-mobile-web-app-title" content="المحكمة" />
         <link rel="manifest" href="/site.webmanifest" />
         <style>
+            /* ==========================================================================
+       تنسيق شريط التمرير (Scrollbar CSS)
+       ========================================================================== */
             #points-guide-modal-overlay div::-webkit-scrollbar {
                 width: 4px;
             }
             #points-guide-modal-overlay div::-webkit-scrollbar-track {
-                background: rgba(5, 10, 18, 0.5);
+                background: rgba(10, 17, 24, 0.3);
             }
             #points-guide-modal-overlay div::-webkit-scrollbar-thumb {
-                background: var(--gold-glow, #d5a75c);
+                background: var(--gc-gold, #b5945b);
                 border-radius: 2px;
             }
         </style>
         <style>
             /* ==========================================================================
-   تنسيق نافذة الإنذارات المنبثقة الموحدة (Custom Alert Modal UI)
-   ========================================================================== */
+       تنسيق نافذة الإنذارات المنبثقة الموحدة (Custom Alert Modal UI)
+       ========================================================================== */
 
             /* فئة التفعيل - تظهر الشاشة بالكامل فوق قاعة المحاكمة وقاعدة البيانات */
             .modal-overlay-active {
@@ -35,7 +38,7 @@
                 left: 0 !important;
                 width: 100vw !important;
                 height: 100vh !important;
-                background-color: rgba(5, 10, 18, 0.85) !important; /* خلفية داكنة لطمس محتوى الصفحة */
+                background-color: rgba(5, 10, 18, 0.92) !important; /* خلفية داكنة لطمس محتوى الصفحة */
                 display: flex !important;
                 justify-content: center !important; /* توسيط أفقي صارم */
                 align-items: center !important; /* توسيط عمودي صارم */
@@ -49,18 +52,18 @@
                 display: none !important;
             }
 
-            /* صندوق التنبيه الزجاجي الفخم الممتزج مع ألوان المحكمة */
+            /* صندوق التنبيه الزجاجي الفخم الممتزج مع ألوان المحكمة الكحلية */
             .modal-alert-box {
                 width: 88%;
                 max-width: 380px;
-                background-color: var(--inner-vintage, #423423); /* البني العتيق من هويتك البصرية */
-                border: 3px solid var(--gold-glow, #d5a75c); /* إطار ذهبي مضيء يحاكي منصة القضاء */
+                background-color: var(--gc-blue-dark, #0a1118) !important; /* تحويل للون الداكن الفخم */
+                border: 2px solid var(--gc-gold, #b5945b) !important; /* إطار ذهبي مطفي يحاكي منصة القضاء */
                 border-radius: 16px;
                 padding: 30px 20px;
                 text-align: center;
                 box-shadow:
                     0 15px 40px rgba(0, 0, 0, 0.7),
-                    0 0 25px rgba(213, 167, 92, 0.1);
+                    0 0 25px rgba(181, 148, 91, 0.15) !important;
                 display: flex;
                 flex-direction: column;
                 align-items: center;
@@ -68,44 +71,43 @@
                 animation: modalPopReveal 0.35s cubic-bezier(0.25, 1, 0.5, 1) forwards; /* أنيميشن ظهور مبهج */
             }
 
-            /* عنوان التنبيه العريض */
+            /* عنوان التنبيه العريض بالذهبي المطفي */
             #modal-alert-title {
                 font-family: "Alexandria", system-ui, sans-serif;
                 font-weight: 800;
                 font-size: 1.35rem;
-                color: var(--gold-glow, #d5a75c);
+                color: var(--gc-gold, #b5945b) !important;
                 text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
             }
 
-            /* نص التنبيه المقروء والمنسق بالكامل */
+            /* نص التنبيه المقروء والمنسق بالكامل باللون البيج المستوحى من اللوجو */
             #modal-alert-message {
                 font-family: "Harmattan", system-ui, sans-serif;
                 font-weight: 500;
                 font-size: 1.35rem;
-                color: var(--text-white, #ffffff);
+                color: var(--gc-surface, #f9f5eb) !important; /* خط فاتح فخم ومقروء فوق الخلفية الداكنة */
                 line-height: 1.5;
             }
 
             /* زر إغلاق التنبيه التفاعلي الفاخر */
             #btn-modal-close {
-                background-color: var(--gold-glow, #d5a75c);
-                color: #050a12; /* خط أسود حاد داخل الكتلة الذهبية الفاخرة للتباين */
-                border: none;
-                padding: 10px 28px;
-                font-family: "Alexandria", sans-serif;
-                font-weight: 700;
+                background-color: var(--gc-gold, #b5945b) !important;
+                color: var(--gc-blue-dark, #0a1118) !important; /* تباين حاد وممتاز */
+                border: none !important;
+                padding: 10px 28px !important;
+                font-family: "Alexandria", sans-serif !important;
+                font-weight: 700 !important;
                 font-size: 0.9rem;
-                border-radius: 8px;
-                cursor: pointer;
-                box-shadow: 0 4px 12px rgba(213, 167, 92, 0.25);
-                transition: all 0.2s ease-in-out;
+                border-radius: 8px !important;
+                cursor: pointer !important;
+                box-shadow: 0 4px 12px rgba(181, 148, 91, 0.25) !important;
+                transition: all 0.2s ease-in-out !important;
             }
 
             /* تأثير اللمس والضغط الفيزيائي على الهواتف */
             #btn-modal-close:active {
-                transform: scale(0.96);
-                background-color: var(--text-white, #ffffff);
-                color: #050a12;
+                transform: scale(0.96) !important;
+                background-color: var(--gc-surface-2, #ede6d5) !important;
             }
 
             /* حركة التمدد والظهور الانسيابية للمودال */
@@ -119,32 +121,42 @@
                     transform: scale(1) translateY(0);
                 }
             }
-            <style>
+        </style>
+        <style>
             /* ==========================================================================
-               موسوعة القضايا — نفس أسلوب rooms.html المسطّح الهادئ (بدون توهّج شاسع)
-               ========================================================================== */
+       موسوعة القضايا — تم تحديث الهوية لتطابق ألوان شعار "محكمة الأدوار" الفخم
+       ========================================================================== */
             :root {
-                --gc-gold: #c9a25a;
-                --gc-gold-soft: rgba(201, 162, 90, 0.35);
-                --gc-cream: #efe3c8;
-                --gc-muted: #a89f90;
-                --gc-surface: #34312d;
-                --gc-surface-2: #3b3833;
-                --gc-line: #5b5245;
+                /* الألوان الجديدة المستخرجة بدقة من اللوجو */
+                --gc-blue-dark: #0a1118; /* الكحلي الليلي الأساسي */
+                --gc-blue-light: #101e2b; /* الكحلي المضيء في خلفية اللوجو */
+                --gc-blue-card: #142230; /* كحلي مخصص للكروت ليعطي تبايناً فخماً فوق الخلفية */
+                --gc-gold: #b5945b; /* الذهب المطفي العتيق */
+                --gc-gold-soft: rgba(181, 148, 91, 0.15);
+
+                /* ألوان الأسطح والورق العتيق (البيج المستوحى من خلفية الميزان) */
+                --gc-surface: #ede6d5; /* البيج العتيق للنصوص البارزة */
+                --gc-line: #223446; /* لون فواصل ناعم متناسق مع الكحلي */
+                --gc-cream: #f9f5eb; /* لون الخطوط الأساسية داخل الكروت */
+                --gc-muted: #8ea1b4; /* لون النصوص الجانبية والمطفية */
             }
+
             html,
             body.gc-body {
                 height: 100%;
             }
+
             body.gc-body {
                 margin: 0 !important;
                 padding: 0 !important;
                 display: block !important;
                 overflow: hidden !important;
                 font-family: "Alexandria", system-ui, sans-serif;
-                background: #22201d !important;
+                /* الخلفية الكلية للموقع متماشية مع الطابع الليلي الفخم */
+                background: linear-gradient(180deg, #0f1922 0%, #050a0f 100%) !important;
                 color: var(--gc-cream);
             }
+
             .gc-app {
                 position: relative;
                 display: flex;
@@ -154,8 +166,17 @@
                 height: 100vh;
                 height: 100dvh;
                 margin: 0 auto;
-                background: linear-gradient(180deg, #2f2c29 0%, #2a2724 100%);
-                box-shadow: 0 0 40px rgba(0, 0, 0, 0.4);
+
+                /* تدرج لوني فخم مستوحى مباشرة من كحلي اللوجو الداكن ولمسة الذهب المطفي */
+                background: linear-gradient(180deg, var(--gc-blue-light) 0%, var(--gc-blue-dark) 100%);
+
+                /* إطار داخلي ناعم بلون الذهب المطفي والنحاسي المأخوذ من الشعار */
+                border: 2px solid var(--gc-gold);
+
+                /* ظلال داخلية وخارجية عميقة تعطي إحساس الغموض والمحكمة */
+                box-shadow:
+                    inset 0 0 60px rgba(0, 0, 0, 0.8),
+                    0 0 40px rgba(181, 148, 91, 0.15);
             }
 
             /* ---------- الشريط العلوي ---------- */
@@ -167,16 +188,18 @@
                 justify-content: space-between;
                 gap: 8px;
                 padding: calc(env(safe-area-inset-top, 0px) + 12px) 14px 12px;
-                background: linear-gradient(180deg, #7d5f3c 0%, #6b5236 100%);
-                border-bottom: 1px solid #4a3a26;
+                /* هيدر كحلي ملكي فخم مع خط ذهبي سفلي */
+                background: linear-gradient(180deg, #162635 0%, #0d1620 100%);
+                border-bottom: 2px solid var(--gc-gold);
             }
+
             .gc-header-exit {
                 display: inline-flex;
                 align-items: center;
                 justify-content: center;
                 width: 38px;
                 height: 38px;
-                border: 1.5px solid rgba(255, 255, 255, 0.65);
+                border: 1.5px solid rgba(255, 255, 255, 0.2);
                 border-radius: 50%;
                 background: linear-gradient(180deg, #c0392b 0%, #922b21 100%);
                 color: #fff;
@@ -184,23 +207,27 @@
                 flex: none;
                 box-shadow: 0 2px 8px rgba(0, 0, 0, 0.35);
             }
+
             .gc-header-exit svg {
                 width: 18px;
                 height: 18px;
             }
+
             .gc-header-title {
+                padding-bottom: 20px;
                 margin: 0;
                 flex: 1;
                 min-width: 0;
                 text-align: center;
                 font-family: "Alexandria", sans-serif;
                 font-weight: 700;
-                font-size: 1.05rem;
-                color: var(--gc-cream);
+                font-size: 1.5rem;
+                color: var(--gc-gold); /* العنوان باللون الذهبي الفخم */
                 white-space: nowrap;
                 overflow: hidden;
                 text-overflow: ellipsis;
             }
+
             .gc-score-badge {
                 flex: none;
                 display: flex;
@@ -210,24 +237,27 @@
                 min-width: 56px;
                 padding: 4px 10px;
                 border-radius: 10px;
-                border: 1.5px solid rgba(239, 227, 200, 0.6);
-                background: rgba(0, 0, 0, 0.18);
+                border: 1.5px solid var(--gc-gold);
+                background: rgba(255, 255, 255, 0.05);
                 cursor: pointer;
             }
+
             .gc-score-badge span:first-child {
                 font-family: "Alexandria", sans-serif;
                 font-size: 0.6rem;
-                color: rgba(255, 255, 255, 0.8);
+                color: var(--gc-muted);
             }
+
             .gc-score-badge strong {
                 font-family: "Alexandria", sans-serif;
                 font-size: 0.95rem;
-                color: #fff;
+                color: var(--gc-gold);
             }
+
             .gc-score-hint {
                 display: block;
                 font-size: 0.55rem;
-                color: var(--gc-gold);
+                color: var(--gc-muted);
                 margin-top: 1px;
             }
 
@@ -238,6 +268,7 @@
                 overflow-y: auto;
                 padding: 20px 16px 34px;
             }
+
             .gc-subtitle {
                 margin: 0 4px 18px;
                 font-family: "Harmattan", sans-serif;
@@ -245,10 +276,10 @@
                 font-size: 1.3rem;
                 line-height: 1.5;
                 text-align: center;
-                color: var(--gc-muted);
+                color: var(--gc-gold); /* النص الفرعي بالذهبي المطفأ ليتناسب مع غموض الخلفية */
             }
 
-            /* بطاقات القضايا: نُعيد تنسيقها فوق ستايل app.js الداخلي (cssText) بخصوصية أعلى */
+            /* بطاقات القضايا: نُعيد تنسيقها لتصبح كروت كحلية فخمة ومظلمة */
             #cases-container {
                 display: flex !important;
                 flex-direction: column !important;
@@ -256,30 +287,37 @@
                 width: 100% !important;
                 margin: 0 !important;
             }
+
             #cases-container .image-showcase-box {
                 flex-direction: row !important;
                 align-items: center !important;
                 justify-content: flex-start !important;
                 gap: 14px !important;
-                padding: 10px 12px !important;
+                padding: 12px 14px !important;
                 text-align: right !important;
-                background: var(--gc-surface) !important;
+                background: var(--gc-blue-card) !important; /* إلغاء الأبيض والبيج الفاتح بالكامل */
                 border: 1px solid var(--gc-line) !important;
                 border-radius: 14px !important;
-                box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3) !important;
+                box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3) !important;
                 transition:
                     background 0.18s ease,
                     border-color 0.18s ease !important;
             }
+
+            /* تأثير اللمس والتمرير فوق كروت القضايا */
             #cases-container .image-showcase-box:active {
-                background: #2e2b27 !important;
+                background: #192b3d !important; /* تفتيح خفيف جداً عند الضغط للتفاعل */
+                border-color: var(--gc-gold) !important;
             }
-            /* القضية المثبّتة: شريط ذهبي جانبي بدل التوهّج الواسع */
+
+            /* القضية المثبّتة: شريط ذهبي محكم مع إضاءة خفيفة */
             #cases-container .image-showcase-box[style*="border: 3px solid"] {
-                border: 1px solid var(--gc-line) !important;
-                border-inline-start: 4px solid var(--gc-gold) !important;
-                box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3) !important;
+                border: 1.5px solid var(--gc-gold) !important;
+                border-inline-start: 5px solid var(--gc-gold) !important;
+                box-shadow: 0 0 15px rgba(181, 148, 91, 0.2) !important;
+                background: #172737 !important;
             }
+
             #cases-container .image-showcase-box > div[style*="aspect-ratio"] {
                 width: 64px !important;
                 max-width: 64px !important;
@@ -290,23 +328,25 @@
                 box-shadow: none !important;
                 flex: none;
             }
+
             #cases-container .image-showcase-box h3 {
                 font-size: 0.95rem !important;
-                color: var(--gc-cream) !important;
+                color: var(--gc-cream) !important; /* نصوص الكروت باللون البيج الفاتح الواضح */
                 line-height: 1.4 !important;
                 text-align: right !important;
             }
+
             #cases-container .image-showcase-box span[style*="background-color: var(--gold-glow)"] {
                 position: static !important;
                 display: inline-block !important;
                 margin-bottom: 4px !important;
             }
 
-            /* ---------- المودالات (نفس هوية create.html/rooms.html) ---------- */
+            /* ---------- المودالات ---------- */
             .host-overlay-active {
                 position: fixed !important;
                 inset: 0 !important;
-                background-color: rgba(5, 10, 18, 0.92) !important;
+                background-color: rgba(5, 10, 18, 0.94) !important;
                 display: flex !important;
                 justify-content: center !important;
                 align-items: center !important;
@@ -314,40 +354,34 @@
                 opacity: 1 !important;
                 pointer-events: auto !important;
             }
+
             .host-overlay-hidden {
                 display: none !important;
                 opacity: 0 !important;
                 pointer-events: none !important;
             }
+
             .host-confirm-box {
                 width: 88%;
                 max-width: 380px;
                 padding: 28px 20px 22px;
                 border-radius: 18px;
-                border: 1.5px solid var(--gc-gold);
-                background: var(--gc-surface);
-                box-shadow: 0 20px 50px rgba(0, 0, 0, 0.6);
+                border: 2px solid var(--gc-gold);
+                background: var(--gc-blue-dark);
+                box-shadow: 0 20px 50px rgba(0, 0, 0, 0.7);
                 text-align: center;
                 display: flex;
                 flex-direction: column;
                 align-items: center;
                 gap: 14px;
             }
+
             #custom-alert-modal .modal-alert-box {
-                background: var(--gc-surface) !important;
-                border: 1.5px solid var(--gc-gold) !important;
+                background: var(--gc-blue-dark) !important;
+                border: 2px solid var(--gc-gold) !important;
                 border-radius: 14px !important;
-                box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5) !important;
-            }
-            #btn-modal-close {
-                background: var(--gc-gold) !important;
-                color: #2a1f0e !important;
-                border: 0 !important;
-                padding: 9px 26px !important;
-                font-family: "Alexandria", sans-serif !important;
-                font-weight: 700 !important;
-                border-radius: 10px !important;
-                cursor: pointer !important;
+                box-shadow: 0 8px 24px rgba(0, 0, 0, 0.6) !important;
+                color: #fff !important;
             }
         </style>
     </head>
@@ -393,6 +427,7 @@
             </header>
 
             <main class="gc-main">
+                <h1 class="gc-header-title" id="game-main-title">موسوعة القضايا</h1>
                 <p class="gc-subtitle" id="game-main-subtitle">
                     اختر حبكة الجريمة لبدء توزيع كروت الأدوار السرية وتحقيق المحكمة
                 </p>
@@ -416,7 +451,7 @@
                 <div
                     style="
                         font-family: &quot;Harmattan&quot;, sans-serif;
-                        color: #fff;
+                        color: var(--gc-cream, #2e2517);
                         font-size: 1.35rem;
                         line-height: 1.5;
                         text-align: center;
@@ -533,7 +568,7 @@
                     <!-- مجموعة قوانين القاضي -->
                     <div
                         style="
-                            background: rgba(5, 10, 18, 0.4);
+                            background: rgba(184, 134, 59, 0.08);
                             padding: 10px;
                             border-radius: 8px;
                             border-right: 4px solid var(--gold-glow);
@@ -551,29 +586,29 @@
                             style="
                                 font-family: &quot;Harmattan&quot;;
                                 font-size: 1.15rem;
-                                color: #fff;
+                                color: var(--gc-cream, #2e2517);
                                 line-height: 1.4;
                                 margin: 0;
                             ">
-                            • استجوابين (حكم صحيح): <span style="color: #52ff7d; font-weight: 700">+20 نقطة</span><br />
-                            • استجوابين (حكم خاطئ): <span style="color: #ff5252; font-weight: 700">-15 نقطة</span><br />
-                            • 3 استجوابات (حكم صحيح): <span style="color: #52ff7d; font-weight: 700">+17 نقطة</span
+                            • استجوابين (حكم صحيح): <span style="color: #1f8a4c; font-weight: 700">+20 نقطة</span><br />
+                            • استجوابين (حكم خاطئ): <span style="color: #c0392b; font-weight: 700">-15 نقطة</span><br />
+                            • 3 استجوابات (حكم صحيح): <span style="color: #1f8a4c; font-weight: 700">+17 نقطة</span
                             ><br />
-                            • 3 استجوابات (حكم خاطئ): <span style="color: #ff5252; font-weight: 700">-12 نقطة</span
+                            • 3 استجوابات (حكم خاطئ): <span style="color: #c0392b; font-weight: 700">-12 نقطة</span
                             ><br />
                             • المرحلة العامة (إدانة جاني/براءة بريء):
-                            <span style="color: #52ff7d; font-weight: 700">+10 نقاط</span><br />
+                            <span style="color: #1f8a4c; font-weight: 700">+10 نقاط</span><br />
                             • المرحلة العامة (خطأ قضائي / تبرئة جاني):
-                            <span style="color: #ff5252; font-weight: 700">-10 نقاط</span><br />
+                            <span style="color: #c0392b; font-weight: 700">-10 نقاط</span><br />
                             • تخطي الاستجواب 9 ومضاعفاتها:
-                            <span style="color: #ff5252; font-weight: 700">خصم -5 نقاط</span> (عقوبة تشتيت الجلسة)
+                            <span style="color: #c0392b; font-weight: 700">خصم -5 نقاط</span> (عقوبة تشتيت الجلسة)
                         </p>
                     </div>
 
                     <!-- مجموعة قوانين محامي الادعاء -->
                     <div
                         style="
-                            background: rgba(5, 10, 18, 0.4);
+                            background: rgba(184, 134, 59, 0.08);
                             padding: 10px;
                             border-radius: 8px;
                             border-right: 4px solid #cbb747;
@@ -591,36 +626,36 @@
                             style="
                                 font-family: &quot;Harmattan&quot;;
                                 font-size: 1.15rem;
-                                color: #fff;
+                                color: var(--gc-cream, #2e2517);
                                 line-height: 1.4;
                                 margin: 0;
                             ">
-                            • اتهام ذكي صحيح (بالرادار): <span style="color: #52ff7d; font-weight: 700">+15 نقطة</span
+                            • اتهام ذكي صحيح (بالرادار): <span style="color: #1f8a4c; font-weight: 700">+15 نقطة</span
                             ><br />
-                            • اتهام ذكي خاطئ (بالرادار): <span style="color: #ff5252; font-weight: 700">-15 نقطة</span
+                            • اتهام ذكي خاطئ (بالرادار): <span style="color: #c0392b; font-weight: 700">-15 نقطة</span
                             ><br />
                             • اتهام مباشر صحيح (دون رادار):
-                            <span style="color: #52ff7d; font-weight: 700">+10 نقاط</span><br />
+                            <span style="color: #1f8a4c; font-weight: 700">+10 نقاط</span><br />
                             • اتهام مباشر خاطئ (دون رادار):
-                            <span style="color: #ff5252; font-weight: 700">-10 نقاط</span><br />
+                            <span style="color: #c0392b; font-weight: 700">-10 نقاط</span><br />
                             • خمول وتخاذل عن أداء الواجب:
-                            <span style="color: #ff5252; font-weight: 700">خصم -10 نقاط</span> (عقوبة إنهاء الجلسة)
+                            <span style="color: #c0392b; font-weight: 700">خصم -10 نقاط</span> (عقوبة إنهاء الجلسة)
                         </p>
                     </div>
 
                     <!-- مجموعة قوانين محامي الدفاع والمتهمين -->
                     <div
                         style="
-                            background: rgba(5, 10, 18, 0.4);
+                            background: rgba(184, 134, 59, 0.08);
                             padding: 10px;
                             border-radius: 8px;
-                            border-right: 4px solid #ff5252;
+                            border-right: 4px solid #c0392b;
                         ">
                         <h4
                             style="
                                 font-family: &quot;Alexandria&quot;;
                                 font-size: 0.85rem;
-                                color: #ff5252;
+                                color: #c0392b;
                                 margin-bottom: 6px;
                             ">
                             👥 الدفاع والاشتباك السحابي:
@@ -629,38 +664,38 @@
                             style="
                                 font-family: &quot;Harmattan&quot;;
                                 font-size: 1.15rem;
-                                color: #fff;
+                                color: var(--gc-cream, #2e2517);
                                 line-height: 1.4;
                                 margin: 0;
                             ">
-                            • إدانة الجاني الحقيقي: <span style="color: #ff5252; font-weight: 700">الجاني -10</span> |
-                            <span style="color: #ff5252; font-weight: 700">محامي الدفاع -5</span><br />
+                            • إدانة الجاني الحقيقي: <span style="color: #c0392b; font-weight: 700">الجاني -10</span> |
+                            <span style="color: #c0392b; font-weight: 700">محامي الدفاع -5</span><br />
                             • إدانة المشتبه به (دون رادار):
-                            <span style="color: #52ff7d; font-weight: 700">المشتبه به +10</span> |
-                            <span style="color: #ff5252; font-weight: 700">الدفاع -5</span><br />
+                            <span style="color: #1f8a4c; font-weight: 700">المشتبه به +10</span> |
+                            <span style="color: #c0392b; font-weight: 700">الدفاع -5</span><br />
                             • إدانة المشتبه به (بالرادار):
-                            <span style="color: #52ff7d; font-weight: 700">المشتبه به +5</span> |
-                            <span style="color: #ff5252; font-weight: 700">الدفاع -10</span><br />
-                            • إدانة لاعب بريء تماماً: <span style="color: #52ff7d; font-weight: 700">البريء +10</span> |
-                            <span style="color: #ff5252; font-weight: 700">الدفاع -15</span><br />
-                            • تبرئة الجاني الحقيقي: <span style="color: #52ff7d; font-weight: 700">الجاني +10</span> |
-                            <span style="color: #52ff7d; font-weight: 700">الدفاع +20</span> (مكافأة التضليل الكبرى)
+                            <span style="color: #1f8a4c; font-weight: 700">المشتبه به +5</span> |
+                            <span style="color: #c0392b; font-weight: 700">الدفاع -10</span><br />
+                            • إدانة لاعب بريء تماماً: <span style="color: #1f8a4c; font-weight: 700">البريء +10</span> |
+                            <span style="color: #c0392b; font-weight: 700">الدفاع -15</span><br />
+                            • تبرئة الجاني الحقيقي: <span style="color: #1f8a4c; font-weight: 700">الجاني +10</span> |
+                            <span style="color: #1f8a4c; font-weight: 700">الدفاع +20</span> (مكافأة التضليل الكبرى)
                         </p>
                     </div>
 
                     <!-- مجموعة قوانين الحضور والتضليل -->
                     <div
                         style="
-                            background: rgba(5, 10, 18, 0.4);
+                            background: rgba(184, 134, 59, 0.08);
                             padding: 10px;
                             border-radius: 8px;
-                            border-right: 4px solid #52ff7d;
+                            border-right: 4px solid #1f8a4c;
                         ">
                         <h4
                             style="
                                 font-family: &quot;Alexandria&quot;;
                                 font-size: 0.85rem;
-                                color: #52ff7d;
+                                color: #1f8a4c;
                                 margin-bottom: 6px;
                             ">
                             🎭 مكافآت الحضور والتضليل:
@@ -669,14 +704,14 @@
                             style="
                                 font-family: &quot;Harmattan&quot;;
                                 font-size: 1.15rem;
-                                color: #fff;
+                                color: var(--gc-cream, #2e2517);
                                 line-height: 1.4;
                                 margin: 0;
                             ">
                             • تضليل القاضي (إدانة شخص آخر):
-                            <span style="color: #52ff7d; font-weight: 700">الجاني الحقيقي +10 نقاط</span><br />
+                            <span style="color: #1f8a4c; font-weight: 700">الجاني الحقيقي +10 نقاط</span><br />
                             • الحضور المخفي الحذر:
-                            <span style="color: #52ff7d; font-weight: 700">المشتبه غير المستهدف +5 نقاط</span> (تُمنح
+                            <span style="color: #1f8a4c; font-weight: 700">المشتبه غير المستهدف +5 نقاط</span> (تُمنح
                             تلقائياً لمن لم يُكشف بالرادار أو يُدان بالجلسة)
                         </p>
                     </div>
