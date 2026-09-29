@@ -23,7 +23,8 @@ const readerState = {
     isPlaying: false,
     isPaused: false,
     currentRate: 1.0,
-    selectedVoiceId: "ar-SA-HamedNeural", // الصوت الرجالي العصبي الفخم الأقرب للبشر
+    selectedVoiceMode: "direct", // "direct" (صوت مباشر بدون سيرفر) أو "device" (صوت الجهاز المحلي)
+    selectedVoiceURI: null,
     activeElement: null,
     activeWrapper: null,
     clickToReadEnabled: false,
@@ -131,51 +132,65 @@ export function splitIntoChunks(text, max = TTS_CONFIG.maxChunkChars) {
 // 2️⃣ محرك تشغيل الصوت (HTML5 Audio مع بديل المتصفح المباشر)
 // ==========================================================================
 
-// تشغيل مقطع عبر مسار الصوت المدمج في الخادم بدون أي مكتبة خارجية
-function playAudioChunk(chunkText, token) {
+// تشغيل مقطع صوتي عبر مسار الصوت عالي الدقة مع بديل المتصفح
+async function playAudioChunk(chunkText, token) {
+    if (token !== readerState.token) return false;
+
+    // الطبقة 1: تجربة مسار الصوت عالي النقاء (/api/speak)
+    // يعمل في الخادم المحلي وفي Vercel Serverless Function مجاناً وبدون أي متطلبات
+    if (nativeAudioPlayer) {
+        const audioUrl = `/api/speak?text=${encodeURIComponent(chunkText)}&voice=ar-SA-HamedNeural`;
+        const serverOk = await tryPlayAudioUrl(audioUrl, token);
+        if (serverOk) return true;
+        if (token !== readerState.token) return false;
+    }
+
+    // الطبقة 2: بديل محرك المتصفح المحلي (Web Speech API)
+    if ("speechSynthesis" in window) {
+        const browserOk = await speakWithBrowserUtterance(chunkText, token);
+        if (browserOk) return true;
+    }
+
+    return false;
+}
+
+// دالة مساعدة لتشغيل رابط صوت عبر مشغل HTML5
+function tryPlayAudioUrl(url, token) {
     return new Promise((resolve) => {
         if (!nativeAudioPlayer) {
             resolve(false);
             return;
         }
 
-        const encodedText = encodeURIComponent(chunkText);
-        const voiceParam = encodeURIComponent(readerState.selectedVoiceId || "ar-SA-HamedNeural");
-        const streamUrl = `/api/speak?text=${encodedText}&voice=${voiceParam}`;
-
-        let resolved = false;
-        const finish = (ok) => {
-            if (resolved) return;
-            resolved = true;
+        let finished = false;
+        const cleanup = (result) => {
+            if (finished) return;
+            finished = true;
             nativeAudioPlayer.onended = null;
             nativeAudioPlayer.onerror = null;
-            resolve(ok);
+            resolve(result);
         };
 
-        nativeAudioPlayer.src = streamUrl;
-        nativeAudioPlayer.playbackRate = readerState.currentRate;
+        try {
+            nativeAudioPlayer.pause();
+            nativeAudioPlayer.src = url;
+            nativeAudioPlayer.playbackRate = readerState.currentRate;
 
-        nativeAudioPlayer.onended = () => {
-            finish(true);
-        };
+            nativeAudioPlayer.onended = () => cleanup(true);
+            nativeAudioPlayer.onerror = () => cleanup(false);
 
-        nativeAudioPlayer.onerror = () => {
-            // في حال فشل الاتصال بالمسار، التراجع لميزة المتصفح المحلية
-            speakWithBrowserUtterance(chunkText).then(finish);
-        };
-
-        const playPromise = nativeAudioPlayer.play();
-        if (playPromise && playPromise.catch) {
-            playPromise.catch((err) => {
-                console.warn("تعذر تشغيل الصوت عبر HTML5 Audio، تجربة محرك المتصفح:", err);
-                speakWithBrowserUtterance(chunkText).then(finish);
-            });
+            const p = nativeAudioPlayer.play();
+            if (p && p.catch) {
+                p.catch(() => cleanup(false));
+            }
+        } catch (e) {
+            cleanup(false);
         }
     });
 }
 
-// بديل المتصفح المحلي (SpeechSynthesis) إذا كان الجهاز أوفلاين
-function speakWithBrowserUtterance(text) {
+// محرك المتصفح المحلي (SpeechSynthesis) مع كشف التخطي الصامت
+function speakWithBrowserUtterance(text, token) {
     return new Promise((resolve) => {
         if (!("speechSynthesis" in window) || typeof SpeechSynthesisUtterance === "undefined") {
             resolve(false);
@@ -183,22 +198,66 @@ function speakWithBrowserUtterance(text) {
         }
 
         try {
+            window.speechSynthesis.cancel();
             if (window.speechSynthesis.paused) {
                 window.speechSynthesis.resume();
             }
 
             const utter = new SpeechSynthesisUtterance(text);
-            utter.lang = "ar-SA";
             utter.rate = readerState.currentRate;
 
-            // محاولة اختيار صوت عربي مناسب
             const voices = window.speechSynthesis.getVoices() || [];
-            const arVoice = voices.find((v) => /^ar/i.test(v.lang));
-            if (arVoice) utter.voice = arVoice;
+            let chosenVoice = null;
 
-            utter.onend = () => resolve(true);
-            utter.onerror = () => resolve(false);
+            if (readerState.selectedVoiceURI) {
+                chosenVoice = voices.find(
+                    (v) =>
+                        (v.voiceURI && v.voiceURI === readerState.selectedVoiceURI) ||
+                        v.name === readerState.selectedVoiceURI
+                );
+            }
 
+            if (!chosenVoice) {
+                const arVoices = voices.filter((v) => /^ar/i.test(v.lang) || /arabic/i.test(v.name));
+                chosenVoice =
+                    arVoices.find((v) => /hamed|shakir|naayf|maged|tariq|male|ذكر|hoda/i.test(v.name)) ||
+                    arVoices[0] ||
+                    null;
+            }
+
+            if (chosenVoice) {
+                utter.voice = chosenVoice;
+                utter.lang = chosenVoice.lang || "ar";
+            } else {
+                utter.lang = "ar";
+            }
+
+            const startTime = Date.now();
+            let resolved = false;
+            const finish = (val) => {
+                if (resolved) return;
+                resolved = true;
+                window._activeReaderUtterance = null;
+                resolve(val);
+            };
+
+            utter.onend = () => {
+                const elapsed = Date.now() - startTime;
+                // كشف مشكلة التخطي الصامت في كروم عندما لا يكون الصوت العربي مثبتاً في الويندوز
+                if (elapsed < 120 && text.trim().length > 4) {
+                    console.warn("Silent skip detected in SpeechSynthesis (no sound was produced)");
+                    finish(false);
+                } else {
+                    finish(true);
+                }
+            };
+
+            utter.onerror = (e) => {
+                console.warn("SpeechSynthesis error:", e && e.error);
+                finish(false);
+            };
+
+            window._activeReaderUtterance = utter;
             window.speechSynthesis.speak(utter);
         } catch (e) {
             resolve(false);
@@ -254,7 +313,15 @@ export async function speakText(rawText, options = {}) {
         updateReaderUi();
 
         const ok = await playAudioChunk(chunks[i], token);
-        if (token !== readerState.token || !ok) break;
+        if (!ok) {
+            if (token === readerState.token) {
+                stopSpeech();
+                showReaderToast(
+                    "⚠️ تعذر تشغيل الصوت. إذا كنت تشغل المشروع محلياً، تأكد من تشغيل الأمر: node server.js"
+                );
+            }
+            return false;
+        }
     }
 
     if (token === readerState.token) {
@@ -410,7 +477,14 @@ export async function readCurrentPage() {
             if (token !== readerState.token) break;
             readerState.statusText = chunk;
             updateReaderUi();
-            await playAudioChunk(chunk, token);
+            const ok = await playAudioChunk(chunk, token);
+            if (!ok) {
+                if (token === readerState.token) {
+                    stopSpeech();
+                    showReaderToast("⚠️ تعذر تشغيل الصوت. إذا كنت تشغل المشروع محلياً، تأكد من تشغيل: node server.js");
+                }
+                return;
+            }
         }
     }
 
@@ -855,11 +929,16 @@ export function initGlobalTextReader() {
 
             <div class="tts-dock-voice-row" style="display:flex;align-items:center;justify-content:space-between;padding-top:6px;border-top:1px solid rgba(255,255,255,0.08);font-size:0.72rem;color:#cbd5e1;">
                 <span>صوت المتحدث:</span>
-                <select id="tts-voice-select" style="background:#0a1118;border:1px solid rgba(213,167,92,0.5);color:var(--gold-glow,#d5a75c);border-radius:6px;padding:3px 6px;font-family:inherit;font-size:0.68rem;cursor:pointer;outline:none;">
-                    <option value="ar-SA-HamedNeural" selected>🎙️ حامد (رجالي فخم - الأقرب للبشر)</option>
-                    <option value="ar-EG-ShakirNeural">🎙️ شاكر (رجالي هادئ)</option>
-                    <option value="ar-SA-ZariyahNeural">🎙️ زارية (نسائي طبيعي)</option>
+                <select id="tts-voice-select" style="background:#0a1118;border:1px solid rgba(213,167,92,0.5);color:var(--gold-glow,#d5a75c);border-radius:6px;padding:3px 6px;font-family:inherit;font-size:0.68rem;cursor:pointer;outline:none;max-width:180px;">
+                    <option value="__device_auto__" selected>🎙️ صوت النظام الافتراضي (Web Speech)</option>
                 </select>
+            </div>
+
+            <div class="tts-dock-actions" style="margin-top:6px;">
+                <button type="button" id="tts-dock-test" class="tts-dock-btn" style="border-color:#4ade80;color:#4ade80;" title="فحص نطق الصوت في متصفحك">
+                    <span>🧪</span>
+                    <span>فحص الصوت في جهازك</span>
+                </button>
             </div>
         </div>
 
@@ -927,11 +1006,57 @@ export function initGlobalTextReader() {
     });
 
     const voiceSelect = root.querySelector("#tts-voice-select");
+
+    function populateLocalVoices() {
+        if (!voiceSelect || !("speechSynthesis" in window)) return;
+        const voices = window.speechSynthesis.getVoices() || [];
+        const arVoices = voices.filter((v) => /^ar/i.test(v.lang) || /arabic/i.test(v.name));
+
+        voiceSelect.innerHTML = "";
+
+        if (arVoices.length > 0) {
+            arVoices.forEach((v, idx) => {
+                const opt = document.createElement("option");
+                opt.value = v.voiceURI || v.name;
+                opt.textContent = `🎙️ ${v.name}`;
+                if (idx === 0) opt.selected = true;
+                voiceSelect.appendChild(opt);
+            });
+            readerState.selectedVoiceURI = voiceSelect.value;
+        } else {
+            const opt = document.createElement("option");
+            opt.value = "__device_auto__";
+            opt.textContent = "🎙️ صوت النظام الافتراضي (Web Speech)";
+            opt.selected = true;
+            voiceSelect.appendChild(opt);
+            readerState.selectedVoiceURI = null;
+        }
+    }
+
+    populateLocalVoices();
+    if ("speechSynthesis" in window && window.speechSynthesis.onvoiceschanged !== undefined) {
+        window.speechSynthesis.onvoiceschanged = populateLocalVoices;
+    }
+
     if (voiceSelect) {
         voiceSelect.addEventListener("change", (e) => {
-            readerState.selectedVoiceId = e.target.value;
+            const val = e.target.value;
+            readerState.selectedVoiceURI = val === "__device_auto__" ? null : val;
             const selectedText = e.target.options[e.target.selectedIndex].text;
             showReaderToast(`تم تفعيل: ${selectedText}`);
+        });
+    }
+
+    const testBtn = root.querySelector("#tts-dock-test");
+    if (testBtn) {
+        testBtn.addEventListener("click", () => {
+            unlockAudioContext();
+            showReaderToast("⏳ جارٍ فحص الصوت في جهازك...");
+            speakText("مرحباً بك، هذا فحص عمل الصوت في متصفحك.").then((ok) => {
+                if (ok) {
+                    showReaderToast("✅ الصوت يعمل بنجاح في جهازك!");
+                }
+            });
         });
     }
 
