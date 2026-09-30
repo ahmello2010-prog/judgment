@@ -888,7 +888,7 @@ export function initGlobalTextReader() {
     root.id = "tts-global-root";
     root.className = "tts-floating-container";
     root.innerHTML = `
-        <button type="button" id="tts-fab-toggle" class="tts-fab-btn" aria-label="فتح القارئ الصوتي الذاتي">
+        <button type="button" id="tts-fab-toggle" class="tts-fab-btn" aria-label="فتح القارئ الصوتي الذاتي" style="touch-action: none !important;">
             <span class="tts-fab-icon">🔈</span>
             <span>القارئ الذاتي</span>
         </button>
@@ -983,7 +983,7 @@ export function initGlobalTextReader() {
         }
     }
 
-    // استعادة الموقع المحفوظ للاعب
+    // استعادة الموقع المحفوظ للاعب فور تحميل الصفحة
     const savedTransformX = localStorage.getItem("tts-trans-x");
     const savedTransformY = localStorage.getItem("tts-trans-y");
     if (savedTransformX !== null && savedTransformY !== null) {
@@ -1026,9 +1026,9 @@ export function initGlobalTextReader() {
             const deltaX = e.clientX - startX;
             const deltaY = e.clientY - startY;
 
-            if (Math.abs(deltaX) > 5 || Math.abs(deltaY) > 5) {
+            if (Math.abs(deltaX) > 4 || Math.abs(deltaY) > 4) {
                 if (!hasMoved) {
-                    // تفعيل الاستحواذ فقط وفوراً عندما يتأكد المتصفح أن اللاعب يسحب فعلياً وليس ينقر
+                    // تفعيل الاستحواذ القسري للمؤشر فور بدء حركة السحب الفعلية لإجبار الموبايل على التحريك
                     try {
                         container.setPointerCapture(e.pointerId);
                     } catch (err) {}
@@ -1037,6 +1037,9 @@ export function initGlobalTextReader() {
             }
 
             if (hasMoved) {
+                // منع اهتزاز المتصفح والسكرو الافتراضي للشاشة أثناء سحب إصبع المستخدم
+                if (e.cancelable) e.preventDefault();
+
                 currentX += deltaX;
                 currentY += deltaY;
 
@@ -1059,7 +1062,6 @@ export function initGlobalTextReader() {
             if (!isDragging) return;
 
             if (hasMoved) {
-                // منع تشغيل الـ click الافتراضي للزر إذا كان اللاعب يقوم بعملية سحب حقيقية
                 e.preventDefault();
                 e.stopPropagation();
                 try {
@@ -1082,7 +1084,6 @@ export function initGlobalTextReader() {
     const selectionPill = root.querySelector("#tts-selection-pill");
     const speedChips = root.querySelectorAll(".tts-speed-chip");
 
-    // مستمع النقر مستقر ومستقل تماماً لضمان عمل الفتح على كافة المتصفحات والأجهزة
     fab.addEventListener("click", (e) => {
         e.preventDefault();
         e.stopPropagation();
