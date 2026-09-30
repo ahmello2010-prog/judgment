@@ -625,14 +625,19 @@ function injectReaderStyles() {
             50% { box-shadow: 0 0 0 8px rgba(213, 167, 92, 0); }
         }
 
-        .tts-floating-container {
-            position: fixed;
-            bottom: 16px;
-            left: 16px;
-            z-index: 99999;
-            direction: rtl;
-            font-family: 'Alexandria', system-ui, sans-serif;
-        }
+.tts-floating-container {
+    position: fixed;
+    bottom: 16px;
+    left: 16px;
+    z-index: 999999999999999999999999 !important;
+    direction: rtl;
+    font-family: 'Alexandria', system-ui, sans-serif;
+
+    touch-action: none;
+    user-select: none;
+    -webkit-user-select: none;
+}
+
         .tts-fab-btn {
             background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
             border: 1.5px solid var(--gold-glow, #d5a75c);
@@ -950,6 +955,77 @@ export function initGlobalTextReader() {
 
     document.body.appendChild(root);
 
+    // استعادة الموقع المحفوظ للزر من ذاكرة المتصفح المحلية فور تحميل اللعبة
+    const savedX = localStorage.getItem("tts-position-x");
+    const savedY = localStorage.getItem("tts-position-y");
+    if (savedX !== null && savedY !== null) {
+        root.style.bottom = "auto";
+        root.style.left = savedX;
+        root.style.top = savedY;
+    }
+
+    // تفعيل ميزة السحب والتحريك الحر وحفظ الإحداثيات
+    makeReaderButtonDraggable(root);
+
+    function makeReaderButtonDraggable(container) {
+        let isDragging = false;
+        let startX, startY;
+        let initialX, initialY;
+
+        container.addEventListener("mousedown", dragStart);
+        container.addEventListener("touchstart", dragStart, { passive: true });
+        document.addEventListener("mousemove", dragMove);
+        document.addEventListener("touchmove", dragMove, { passive: false });
+        document.addEventListener("mouseup", dragEnd);
+        document.addEventListener("touchend", dragEnd);
+
+        function dragStart(e) {
+            // منع السحب تماماً عند النقر على لوحة الإعدادات لعدم تعارض الأزرار والـ select
+            if (
+                e.target.closest("#tts-dock-panel") ||
+                e.target.closest("button") ||
+                e.target.closest(".tts-speed-chip") ||
+                e.target.closest("select")
+            ) {
+                return;
+            }
+            isDragging = true;
+            const clientX = e.type === "touchstart" ? e.touches.clientX : e.clientX;
+            const clientY = e.type === "touchstart" ? e.touches.clientY : e.clientY;
+            const rect = container.getBoundingClientRect();
+            initialX = rect.left;
+            initialY = rect.top;
+            startX = clientX;
+            startY = clientY;
+        }
+
+        function dragMove(e) {
+            if (!isDragging) return;
+            if (e.type === "touchmove") e.preventDefault();
+            const clientX = e.type === "touchmove" ? e.touches.clientX : e.clientX;
+            const clientY = e.type === "touchmove" ? e.touches.clientY : e.clientY;
+
+            let newX = initialX + (clientX - startX);
+            let newY = initialY + (clientY - startY);
+
+            const padding = 12;
+            newX = Math.max(padding, Math.min(newX, window.innerWidth - container.offsetWidth - padding));
+            newY = Math.max(padding, Math.min(newY, window.innerHeight - container.offsetHeight - padding));
+
+            container.style.bottom = "auto";
+            container.style.left = `${newX}px`;
+            container.style.top = `${newY}px`;
+        }
+
+        function dragEnd() {
+            if (isDragging) {
+                // حفظ الموقع الجديد فوراً في ذاكرة المتصفح المحلية للاعب
+                localStorage.setItem("tts-position-x", container.style.left);
+                localStorage.setItem("tts-position-y", container.style.top);
+            }
+            isDragging = false;
+        }
+    }
     const fab = root.querySelector("#tts-fab-toggle");
     const panel = root.querySelector("#tts-dock-panel");
     const closeBtn = root.querySelector("#tts-dock-close");
