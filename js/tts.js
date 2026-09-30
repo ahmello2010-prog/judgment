@@ -652,6 +652,13 @@ function injectReaderStyles() {
             font-size: 0.8rem;
             transition: all 0.25s ease;
             outline: none;
+            /* 🔧 [إصلاح جوهري - سحب الموبايل]: يجب أن يحمل مقبض السحب نفسه touch-action:none
+               صراحةً (لا يكفي وجودها على الحاوية الأب فقط)، حتى يقرر متصفح الموبايل من أول
+               إطار للمس أن هذا العنصر ليس هدف تمرير، قبل أن يبدأ أي محرك تعرّف على الإيماءات */
+            touch-action: none;
+            -webkit-user-select: none;
+            user-select: none;
+            -webkit-tap-highlight-color: transparent;
         }
         .tts-fab-btn:hover {
             transform: translateY(-2px);
@@ -678,15 +685,31 @@ function injectReaderStyles() {
             padding: 14px;
             box-shadow: 0 16px 36px rgba(0, 0, 0, 0.6);
             color: #fff;
-            display: none;
+            /* 🔧 [إصلاح جوهري - التموضع الذكي]: اللوحة تبقى display:flex دائماً (لا display:none)
+               حتى نقدر نقيس أبعادها الحقيقية عبر getBoundingClientRect() في أي وقت — حتى وهي
+               "مغلقة" بصرياً — لأن القياس أثناء display:none يعيد دائماً صفراً ويكسر منطق
+               اختيار الاتجاه الذكي. الإخفاء الفعلي يتم بـ visibility + opacity بدلاً من ذلك. */
+            display: flex;
             flex-direction: column;
             gap: 10px;
-            animation: ttsFadeSlide 0.25s ease forwards;
+            visibility: hidden;
+            opacity: 0;
+            pointer-events: none;
+            transform: translateY(8px);
+            transition:
+                opacity 0.2s ease,
+                transform 0.2s ease,
+                visibility 0s linear 0.2s;
         }
-        .tts-dock-panel.is-open { display: flex; }
-        @keyframes ttsFadeSlide {
-            from { opacity: 0; transform: translateY(10px); }
-            to { opacity: 1; transform: translateY(0); }
+        .tts-dock-panel.is-open {
+            visibility: visible;
+            opacity: 1;
+            pointer-events: auto;
+            transform: translateY(0);
+            transition:
+                opacity 0.2s ease,
+                transform 0.2s ease,
+                visibility 0s linear 0s;
         }
 
         .tts-dock-header {
@@ -957,29 +980,42 @@ export function initGlobalTextReader() {
     let currentX = 0;
     let currentY = 0;
 
-    // دالة فحص وتحديث اتجاه فتح المودال في المحاور الأربعة الكلية
+    // ==========================================================================
+    // 🧭 [التموضع الذكي للوحة]: نقيس أبعاد اللوحة الحقيقية (تبقى display:flex دائماً،
+    // فقط visibility/opacity تتغيران) ونحسب المساحة المتاحة في الاتجاهات الأربعة حول
+    // الزر، ثم نختار الاتجاه الذي تتسع فيه اللوحة فعلياً بدل تخمين عرض ثابت (320px).
+    // ==========================================================================
     function adjustPanelDirection() {
         const panel = root.querySelector("#tts-dock-panel");
         if (!panel) return;
 
-        const rect = root.getBoundingClientRect();
+        const btnRect = fabBtn.getBoundingClientRect();
+        const panelWidth = panel.offsetWidth || 310;
+        const panelHeight = panel.offsetHeight || 260;
         const screenWidth = window.innerWidth;
         const screenHeight = window.innerHeight;
+        const margin = 8;
 
-        if (rect.top < screenHeight / 2) {
-            panel.style.bottom = "auto";
+        // المحور الرأسي: نفتح لأسفل إن كانت المساحة السفلية كافية، وإلا لأعلى، وإلا الأوسع منهما
+        const spaceBelow = screenHeight - btnRect.bottom - margin;
+        const spaceAbove = btnRect.top - margin;
+        if (spaceBelow >= panelHeight || spaceBelow >= spaceAbove) {
             panel.style.top = "54px";
+            panel.style.bottom = "auto";
         } else {
-            panel.style.top = "auto";
             panel.style.bottom = "54px";
+            panel.style.top = "auto";
         }
 
-        if (rect.left > screenWidth - 320) {
-            panel.style.left = "auto";
-            panel.style.right = "0px";
-        } else {
-            panel.style.right = "auto";
+        // المحور الأفقي: نفتح لليسار (غرب) إن كانت المساحة اليمينية غير كافية، وإلا لليمين (شرق)
+        const spaceRight = screenWidth - btnRect.left - margin;
+        const spaceLeft = btnRect.right - margin;
+        if (spaceRight >= panelWidth || spaceRight >= spaceLeft) {
             panel.style.left = "0px";
+            panel.style.right = "auto";
+        } else {
+            panel.style.right = "0px";
+            panel.style.left = "auto";
         }
     }
 
@@ -987,26 +1023,67 @@ export function initGlobalTextReader() {
     const savedTransformX = localStorage.getItem("tts-trans-x");
     const savedTransformY = localStorage.getItem("tts-trans-y");
     if (savedTransformX !== null && savedTransformY !== null) {
-        currentX = parseInt(savedTransformX, 10);
-        currentY = parseInt(savedTransformY, 10);
+        currentX = parseInt(savedTransformX, 10) || 0;
+        currentY = parseInt(savedTransformY, 10) || 0;
         root.style.transform = `translate3d(${currentX}px, ${currentY}px, 0)`;
-        setTimeout(adjustPanelDirection, 50);
     }
 
-    makeReaderButtonDraggable(root);
+    // إعادة تثبيت الزر داخل حدود الشاشة (يُستدعى عند التحميل، وعند تدوير الشاشة، وعند
+    // تغيّر ارتفاع الـ viewport بسبب ظهور/اختفاء لوحة مفاتيح الموبايل)
+    function clampToViewport() {
+        const rect = root.getBoundingClientRect();
+        let dx = 0;
+        let dy = 0;
+        if (rect.left < 0) dx = -rect.left;
+        if (rect.top < 0) dy = -rect.top;
+        if (rect.right > window.innerWidth) dx = window.innerWidth - rect.right;
+        if (rect.bottom > window.innerHeight) dy = window.innerHeight - rect.bottom;
+        if (dx !== 0 || dy !== 0) {
+            currentX += dx;
+            currentY += dy;
+            root.style.transform = `translate3d(${currentX}px, ${currentY}px, 0)`;
+        }
+    }
+    clampToViewport();
+    window.addEventListener("resize", () => {
+        clampToViewport();
+        adjustPanelDirection();
+    });
+    window.addEventListener("orientationchange", () => {
+        setTimeout(() => {
+            clampToViewport();
+            adjustPanelDirection();
+        }, 250);
+    });
 
-    function makeReaderButtonDraggable(container) {
-        let isDragging = false;
-        let hasMoved = false;
-        let startX = 0,
-            startY = 0;
+    const fabBtn = root.querySelector("#tts-fab-toggle");
 
-        container.addEventListener("pointerdown", dragStart);
-        document.addEventListener("pointermove", dragMove);
-        document.addEventListener("pointerup", dragEnd);
-        document.addEventListener("pointercancel", dragEnd);
+    // ==========================================================================
+    // 🔧 [محرك السحب الموحّد للموبايل والكمبيوتر]: السبب الجذري لتجمّد السحب على
+    // الموبايل هو أن متصفحات اللمس تقرر خلال أول إطارات قليلة من اللمس ما إذا كانت
+    // الإيماءة "تمرير صفحة" أم "تفاعل مع عنصر" — وإن لم نستحوذ على المؤشر فوراً
+    // (setPointerCapture) من لحظة pointerdown مباشرة، فقد يسبقنا المتصفح بالقرار
+    // ويُخصّص اللمسة للتمرير قبل أن يصل حدث pointermove الأول إلى الجافاسكريبت،
+    // وعندها يصبح استدعاء preventDefault() متأخراً جداً ولا يوقف شيئاً.
+    // الحل: استحواذ فوري غير مشروط + touch-action:none على عنصر المقبض نفسه (وليس
+    // الحاوية الأب فقط) + الاعتماد على pointerup وحده (لا على click) لتمييز
+    // "نقرة" من "سحب"، فنتجنّب كلياً تعارض touch/click الذي يسبب فتح اللوحة ثم
+    // اختفاءها فوراً بسبب حدثين منفصلين يصلان بفارق زمني ضئيل لنفس اللمسة.
+    // ==========================================================================
+    function makeReaderButtonDraggable(handleEl, containerEl) {
+        const DRAG_THRESHOLD_PX = 6;
+        let isPointerDown = false;
+        let dragStartedMoving = false;
+        let startClientX = 0;
+        let startClientY = 0;
+        let startOffsetX = 0;
+        let startOffsetY = 0;
+        let activePointerId = null;
 
-        function dragStart(e) {
+        handleEl.addEventListener("pointerdown", onPointerDown);
+
+        function onPointerDown(e) {
+            // لا نبدأ سحباً إن كانت اللمسة على عناصر تفاعلية داخلية (اللوحة، القوائم، الأزرار الفرعية)
             if (
                 e.target.closest("#tts-dock-panel") ||
                 e.target.closest(".tts-speed-chip") ||
@@ -1014,68 +1091,115 @@ export function initGlobalTextReader() {
             ) {
                 return;
             }
-            isDragging = true;
-            hasMoved = false;
-            startX = e.clientX;
-            startY = e.clientY;
-        }
 
-        function dragMove(e) {
-            if (!isDragging) return;
+            isPointerDown = true;
+            dragStartedMoving = false;
+            activePointerId = e.pointerId;
+            startClientX = e.clientX;
+            startClientY = e.clientY;
+            startOffsetX = currentX;
+            startOffsetY = currentY;
 
-            const deltaX = e.clientX - startX;
-            const deltaY = e.clientY - startY;
-
-            if (Math.abs(deltaX) > 4 || Math.abs(deltaY) > 4) {
-                if (!hasMoved) {
-                    // تفعيل الاستحواذ القسري للمؤشر فور بدء حركة السحب الفعلية لإجبار الموبايل على التحريك
-                    try {
-                        container.setPointerCapture(e.pointerId);
-                    } catch (err) {}
-                }
-                hasMoved = true;
+            // 🎯 الاستحواذ الفوري وغير المشروط على المؤشر — هذا هو الإصلاح الجوهري:
+            // نطلبه من لحظة pointerdown مباشرة بلا انتظار أي عتبة حركة، لنضمن أن كل
+            // أحداث pointermove/pointerup التالية لهذه اللمسة تصل لهذا العنصر تحديداً
+            // بصرف النظر عمّا تحت الإصبع أثناء الحركة، ولنُعلم محرك اللمس في المتصفح
+            // مبكراً جداً أن هذا العنصر يملك الإيماءة حصرياً فلا يخصّصها للتمرير.
+            try {
+                handleEl.setPointerCapture(e.pointerId);
+            } catch (err) {
+                /* بعض المتصفحات القديمة لا تدعمها؛ نكمل بدونها بأمان */
             }
 
-            if (hasMoved) {
-                // منع اهتزاز المتصفح والسكرو الافتراضي للشاشة أثناء سحب إصبع المستخدم
+            handleEl.addEventListener("pointermove", onPointerMove, { passive: false });
+            handleEl.addEventListener("pointerup", onPointerUp, { passive: false });
+            handleEl.addEventListener("pointercancel", onPointerCancel, { passive: false });
+        }
+
+        function onPointerMove(e) {
+            if (!isPointerDown || e.pointerId !== activePointerId) return;
+
+            const deltaX = e.clientX - startClientX;
+            const deltaY = e.clientY - startClientY;
+            const totalDistance = Math.hypot(deltaX, deltaY);
+
+            if (totalDistance > DRAG_THRESHOLD_PX) {
+                dragStartedMoving = true;
+            }
+
+            if (dragStartedMoving) {
+                // يمنع تمرير الصفحة الافتراضي طوال مدة السحب الفعلي (طبقة حماية ثانية فوق touch-action)
                 if (e.cancelable) e.preventDefault();
 
-                currentX += deltaX;
-                currentY += deltaY;
+                // الموقع المقترح الجديد اعتماداً على الإزاحة الكلية منذ بداية اللمسة (لا تراكم أخطاء تقريب)
+                currentX = startOffsetX + deltaX;
+                currentY = startOffsetY + deltaY;
+                containerEl.style.transform = `translate3d(${currentX}px, ${currentY}px, 0)`;
 
-                const rect = container.getBoundingClientRect();
-                if (rect.left < 0) currentX -= rect.left;
-                if (rect.top < 0) currentY -= rect.top;
-                if (rect.right > window.innerWidth) currentX -= rect.right - window.innerWidth;
-                if (rect.bottom > window.innerHeight) currentY -= rect.bottom - window.innerHeight;
+                // تثبيت داخل حدود الشاشة أثناء السحب نفسه لمنع خروج الزر عنها في أي لحظة
+                const liveRect = containerEl.getBoundingClientRect();
+                let clampDx = 0;
+                let clampDy = 0;
+                if (liveRect.left < 0) clampDx = -liveRect.left;
+                if (liveRect.top < 0) clampDy = -liveRect.top;
+                if (liveRect.right > window.innerWidth) clampDx = window.innerWidth - liveRect.right;
+                if (liveRect.bottom > window.innerHeight) clampDy = window.innerHeight - liveRect.bottom;
+                if (clampDx !== 0 || clampDy !== 0) {
+                    currentX += clampDx;
+                    currentY += clampDy;
+                    containerEl.style.transform = `translate3d(${currentX}px, ${currentY}px, 0)`;
+                }
 
-                container.style.transform = `translate3d(${currentX}px, ${currentY}px, 0)`;
-            }
-
-            startX = e.clientX;
-            startY = e.clientY;
-
-            adjustPanelDirection();
-        }
-
-        function dragEnd(e) {
-            if (!isDragging) return;
-
-            if (hasMoved) {
-                e.preventDefault();
-                e.stopPropagation();
-                try {
-                    container.releasePointerCapture(e.pointerId);
-                } catch (err) {}
-                localStorage.setItem("tts-trans-x", currentX);
-                localStorage.setItem("tts-trans-y", currentY);
                 adjustPanelDirection();
             }
+        }
 
-            isDragging = false;
+        function endGesture(e, wasCancelled) {
+            if (!isPointerDown || e.pointerId !== activePointerId) return;
+
+            handleEl.removeEventListener("pointermove", onPointerMove);
+            handleEl.removeEventListener("pointerup", onPointerUp);
+            handleEl.removeEventListener("pointercancel", onPointerCancel);
+            try {
+                handleEl.releasePointerCapture(e.pointerId);
+            } catch (err) {}
+
+            if (dragStartedMoving) {
+                // كان سحباً فعلياً: نحفظ الموقع الجديد، ونمنع أي click وهمي قد يُطلقه المتصفح لاحقاً
+                localStorage.setItem("tts-trans-x", String(currentX));
+                localStorage.setItem("tts-trans-y", String(currentY));
+                adjustPanelDirection();
+                suppressNextClick = true;
+            } else if (!wasCancelled) {
+                // لم تتحرك اللمسة عملياً: هذه "نقرة" حقيقية، نتعامل معها هنا مباشرة بدل
+                // انتظار حدث click منفصل، فتتوحد نقطة القرار ويستحيل تعارض توقيت اللمس/النقر
+                handleTap();
+            }
+
+            isPointerDown = false;
+            dragStartedMoving = false;
+            activePointerId = null;
+        }
+
+        function onPointerUp(e) {
+            endGesture(e, false);
+        }
+        function onPointerCancel(e) {
+            endGesture(e, true);
         }
     }
-    const fab = root.querySelector("#tts-fab-toggle");
+
+    let suppressNextClick = false;
+
+    function handleTap() {
+        unlockAudioContext();
+        adjustPanelDirection();
+        panel.classList.toggle("is-open");
+    }
+
+    makeReaderButtonDraggable(fabBtn, root);
+
+    const fab = fabBtn;
     const panel = root.querySelector("#tts-dock-panel");
     const closeBtn = root.querySelector("#tts-dock-close");
     const playPauseBtn = root.querySelector("#tts-dock-playpause");
@@ -1084,14 +1208,16 @@ export function initGlobalTextReader() {
     const selectionPill = root.querySelector("#tts-selection-pill");
     const speedChips = root.querySelectorAll(".tts-speed-chip");
 
+    // 🛡️ [صمام أمان]: بعض محركات المتصفحات (خصوصاً بعض إصدارات WebView على أندرويد) قد
+    // تُطلق حدث click وهمياً بعد تسلسل pointer حتى مع استدعاء preventDefault أثناء
+    // pointermove — هذا المستمع شبكة أمان إضافية تُحيّد أي click وهمي متبقٍ من سحب فعلي،
+    // بينما الفتح/الإغلاق الحقيقي لا يعتمد على click إطلاقاً بل على pointerup مباشرة أعلاه.
     fab.addEventListener("click", (e) => {
-        e.preventDefault();
-        e.stopPropagation();
-        unlockAudioContext();
-        if (typeof adjustPanelDirection === "function") {
-            adjustPanelDirection();
+        if (suppressNextClick) {
+            e.preventDefault();
+            e.stopPropagation();
+            suppressNextClick = false;
         }
-        panel.classList.toggle("is-open");
     });
 
     closeBtn.addEventListener("click", () => {
