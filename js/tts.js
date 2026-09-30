@@ -642,14 +642,14 @@ function injectReaderStyles() {
             border: 1.5px solid var(--gold-glow, #d5a75c);
             color: var(--gold-glow, #d5a75c);
             border-radius: 50px;
-            padding: 10px 16px;
+            padding: 8px 8px;
             display: flex;
             align-items: center;
             gap: 8px;
             cursor: pointer;
             box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
             font-weight: 700;
-            font-size: 0.8rem;
+            font-size: 0.67rem;
             transition: all 0.25s ease;
             outline: none;
             /* 🔧 [إصلاح جوهري - سحب الموبايل]: يجب أن يحمل مقبض السحب نفسه touch-action:none
@@ -912,14 +912,18 @@ export function initGlobalTextReader() {
     root.className = "tts-floating-container";
     root.innerHTML = `
         <button type="button" id="tts-fab-toggle" class="tts-fab-btn" aria-label="فتح القارئ الصوتي الذاتي" style="touch-action: none !important;">
-            <span class="tts-fab-icon">🔈</span>
-            <span>القارئ الذاتي</span>
+         <span>القارئ الذاتي</span>
+         <span class="tts-fab-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 5 6 9H3v6h3l5 4V5Z"/><path d="M15.5 8.5a5 5 0 0 1 0 7"/><path d="M18.5 5.5a9 9 0 0 1 0 13"/></svg>
+          </span>
         </button>
 
         <div id="tts-dock-panel" class="tts-dock-panel">
             <div class="tts-dock-header">
                 <h4 class="tts-dock-title">
-                    <span>🎙️</span>
+                    <span aria-hidden="true">
+                        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0"/><path d="M12 18v3"/><path d="M8 21h8"/></svg>
+                    </span>
                     <span>القارئ الصوتي الذاتي</span>
                 </h4>
                 <button type="button" id="tts-dock-close" class="tts-dock-close" aria-label="إغلاق">&times;</button>
@@ -929,18 +933,24 @@ export function initGlobalTextReader() {
 
             <div class="tts-dock-actions">
                 <button type="button" id="tts-dock-playpause" class="tts-dock-btn" title="قراءة محتوى الصفحة">
-                    <span>▶️</span>
+                    <span aria-hidden="true">
+                        <svg viewBox="0 0 24 24" width="17" height="17" fill="currentColor"><path d="M8 5.2v13.6c0 .9 1 1.45 1.8.98l10.2-6.8a1.18 1.18 0 0 0 0-1.96L9.8 4.22C9 3.75 8 4.3 8 5.2Z"/></svg>
+                    </span>
                     <span>قراءة الصفحة</span>
                 </button>
                 <button type="button" id="tts-dock-stop" class="tts-dock-btn" title="إيقاف القراءة">
-                    <span>⏹️</span>
+                    <span aria-hidden="true">
+                        <svg viewBox="0 0 24 24" width="17" height="17" fill="currentColor"><rect x="6" y="6" width="12" height="12" rx="1.5"/></svg>
+                    </span>
                     <span>إيقاف</span>
                 </button>
             </div>
 
             <div class="tts-dock-actions">
                 <button type="button" id="tts-dock-clickread" class="tts-dock-btn" title="انقر على أي فقرة أو سؤال لسماعه">
-                    <span>👆</span>
+                    <span aria-hidden="true">
+                        <svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M9.5 11V6.8a1.7 1.7 0 0 1 3.4 0v5.1"/><path d="M12.9 10.2V8.7a1.6 1.6 0 0 1 3.2 0v3.6"/><path d="M16.1 11V9.9a1.5 1.5 0 0 1 3 0v4.2c0 4-2.6 6.6-6.2 6.6h-.7c-2.4 0-4.4-1.1-5.6-3.1l-1.8-3a1.6 1.6 0 0 1 2.8-1.6l1.9 2.4V11a1.5 1.5 0 0 1 3 0Z"/></svg>
+                    </span>
                     <span>انقر للقراءة</span>
                 </button>
             </div>
@@ -957,20 +967,24 @@ export function initGlobalTextReader() {
             <div class="tts-dock-voice-row" style="display:flex;align-items:center;justify-content:space-between;padding-top:6px;border-top:1px solid rgba(255,255,255,0.08);font-size:0.72rem;color:#cbd5e1;">
                 <span>صوت المتحدث:</span>
                 <select id="tts-voice-select" style="background:#0a1118;border:1px solid rgba(213,167,92,0.5);color:var(--gold-glow,#d5a75c);border-radius:6px;padding:3px 6px;font-family:inherit;font-size:0.68rem;cursor:pointer;outline:none;max-width:180px;">
-                    <option value="__device_auto__" selected>🎙️ صوت النظام الافتراضي (Web Speech)</option>
+                    <option value="__device_auto__" selected>صوت النظام الافتراضي (Web Speech)</option>
                 </select>
             </div>
 
             <div class="tts-dock-actions" style="margin-top:6px;">
                 <button type="button" id="tts-dock-test" class="tts-dock-btn" style="border-color:#4ade80;color:#4ade80;" title="فحص نطق الصوت في متصفحك">
-                    <span>🧪</span>
+                    <span aria-hidden="true">
+                        <svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 3 6 0"/><path d="M10 3v6.2L5.5 17a3 3 0 0 0 2.6 4.5h7.8a3 3 0 0 0 2.6-4.5L14 9.2V3"/><path d="M8 15h8"/></svg>
+                    </span>
                     <span>فحص الصوت في جهازك</span>
                 </button>
             </div>
         </div>
 
         <button type="button" id="tts-selection-pill" class="tts-selection-pill">
-            <span>🔊</span>
+            <span aria-hidden="true">
+                <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 5 6 9H3v6h3l5 4V5Z"/><path d="M15.5 8.5a5 5 0 0 1 0 7"/><path d="M18.5 5.5a9 9 0 0 1 0 13"/></svg>
+            </span>
             <span>استمع للمحدد</span>
         </button>
     `;
@@ -981,7 +995,7 @@ export function initGlobalTextReader() {
     let currentY = 0;
 
     // ==========================================================================
-    // 🧭 [التموضع الذكي للوحة]: نقيس أبعاد اللوحة الحقيقية (تبقى display:flex دائماً،
+    // [التموضع الذكي للوحة]: نقيس أبعاد اللوحة الحقيقية (تبقى display:flex دائماً،
     // فقط visibility/opacity تتغيران) ونحسب المساحة المتاحة في الاتجاهات الأربعة حول
     // الزر، ثم نختار الاتجاه الذي تتسع فيه اللوحة فعلياً بدل تخمين عرض ثابت (320px).
     // ==========================================================================
@@ -1059,7 +1073,7 @@ export function initGlobalTextReader() {
     const fabBtn = root.querySelector("#tts-fab-toggle");
 
     // ==========================================================================
-    // 🔧 [محرك السحب الموحّد للموبايل والكمبيوتر]: السبب الجذري لتجمّد السحب على
+    // [محرك السحب الموحّد للموبايل والكمبيوتر]: السبب الجذري لتجمّد السحب على
     // الموبايل هو أن متصفحات اللمس تقرر خلال أول إطارات قليلة من اللمس ما إذا كانت
     // الإيماءة "تمرير صفحة" أم "تفاعل مع عنصر" — وإن لم نستحوذ على المؤشر فوراً
     // (setPointerCapture) من لحظة pointerdown مباشرة، فقد يسبقنا المتصفح بالقرار
@@ -1100,7 +1114,7 @@ export function initGlobalTextReader() {
             startOffsetX = currentX;
             startOffsetY = currentY;
 
-            // 🎯 الاستحواذ الفوري وغير المشروط على المؤشر — هذا هو الإصلاح الجوهري:
+            // [الاستحواذ الفوري وغير المشروط على المؤشر] — هذا هو الإصلاح الجوهري:
             // نطلبه من لحظة pointerdown مباشرة بلا انتظار أي عتبة حركة، لنضمن أن كل
             // أحداث pointermove/pointerup التالية لهذه اللمسة تصل لهذا العنصر تحديداً
             // بصرف النظر عمّا تحت الإصبع أثناء الحركة، ولنُعلم محرك اللمس في المتصفح
@@ -1208,7 +1222,7 @@ export function initGlobalTextReader() {
     const selectionPill = root.querySelector("#tts-selection-pill");
     const speedChips = root.querySelectorAll(".tts-speed-chip");
 
-    // 🛡️ [صمام أمان]: بعض محركات المتصفحات (خصوصاً بعض إصدارات WebView على أندرويد) قد
+    // [صمام أمان]: بعض محركات المتصفحات (خصوصاً بعض إصدارات WebView على أندرويد) قد
     // تُطلق حدث click وهمياً بعد تسلسل pointer حتى مع استدعاء preventDefault أثناء
     // pointermove — هذا المستمع شبكة أمان إضافية تُحيّد أي click وهمي متبقٍ من سحب فعلي،
     // بينما الفتح/الإغلاق الحقيقي لا يعتمد على click إطلاقاً بل على pointerup مباشرة أعلاه.
@@ -1270,10 +1284,30 @@ export function initGlobalTextReader() {
         voiceSelect.innerHTML = "";
 
         if (arVoices.length > 0) {
-            arVoices.forEach((v, idx) => {
+            // نفضّل صوتًا عربيًا رجاليًا معروفًا إذا كان متاحًا على الجهاز.
+            // لا يوجد معيار رسمي للجنس في Web Speech API، لذلك نعتمد فقط على
+            // أسماء أصوات عربية معروفة ولا نغيّر أي صوت إذا لم نجد تطابقًا واضحًا.
+            const maleNamePatterns = [
+                /\bham(e|i)d\b/i,
+                /\bnaayf\b/i,
+                /\btariq\b/i,
+                /\bmajed\b/i,
+                /\bmaged\b/i,
+                /\bkarim\b/i,
+                /\bahmed\b/i,
+                /\bomar\b/i,
+                /\byoussef\b/i,
+                /\byusuf\b/i
+            ];
+            const preferredMaleVoice = arVoices.find((v) => maleNamePatterns.some((pattern) => pattern.test(v.name)));
+            const orderedVoices = preferredMaleVoice
+                ? [preferredMaleVoice, ...arVoices.filter((v) => v !== preferredMaleVoice)]
+                : arVoices;
+
+            orderedVoices.forEach((v, idx) => {
                 const opt = document.createElement("option");
                 opt.value = v.voiceURI || v.name;
-                opt.textContent = `🎙️ ${v.name}`;
+                opt.textContent = `${v.name}${idx === 0 && preferredMaleVoice ? " — صوت رجالي مفضل" : idx === 0 ? " — صوت عربي مفضل" : ""}`;
                 if (idx === 0) opt.selected = true;
                 voiceSelect.appendChild(opt);
             });
@@ -1281,7 +1315,7 @@ export function initGlobalTextReader() {
         } else {
             const opt = document.createElement("option");
             opt.value = "__device_auto__";
-            opt.textContent = "🎙️ صوت النظام الافتراضي (Web Speech)";
+            opt.textContent = "صوت النظام الافتراضي (Web Speech)";
             opt.selected = true;
             voiceSelect.appendChild(opt);
             readerState.selectedVoiceURI = null;
@@ -1306,10 +1340,10 @@ export function initGlobalTextReader() {
     if (testBtn) {
         testBtn.addEventListener("click", () => {
             unlockAudioContext();
-            showReaderToast("⏳ جارٍ فحص الصوت في جهازك...");
+            showReaderToast("جارٍ فحص الصوت في جهازك...");
             speakText("مرحباً بك، هذا فحص عمل الصوت في متصفحك.").then((ok) => {
                 if (ok) {
-                    showReaderToast("✅ الصوت يعمل بنجاح في جهازك!");
+                    showReaderToast("الصوت يعمل بنجاح في جهازك!");
                 }
             });
         });
