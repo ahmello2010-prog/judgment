@@ -515,7 +515,9 @@
                 Object.keys(sessionStorage).forEach((key) => {
                     if (
                         key.startsWith("remaining_questions_case_") ||
-                        key.startsWith("remaining_prosecutor_questions_case_")
+                        key.startsWith("remaining_prosecutor_questions_case_") ||
+                        key.startsWith("network_link_used_") ||
+                        key === "objection_cards_count"
                     ) {
                         sessionStorage.removeItem(key);
                     }
@@ -622,7 +624,18 @@
                             caseId: "none",
                             assignments: {},
                             last_verdict_outcome: null,
-                            scores_at_round_start: {}
+                            scores_at_round_start: {},
+                            active_question_prompt: null,
+                            active_evidence_confrontation: null,
+                            evidence_response: null,
+                            private_network_message: null,
+                            network_reveal: null,
+                            radar_revealed_players: null,
+                            court_lawyer_action: null,
+                            lastSpeakRequestName: null,
+                            requestTimestamp: null,
+                            bribery_offer: null,
+                            bribery_response: null
                         }).catch((err) => {
                             console.error("فشل بث إعادة التوجيه الجماعي:", err);
                             btnReturn.disabled = false;

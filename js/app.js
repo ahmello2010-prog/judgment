@@ -607,6 +607,10 @@ function activateCasesClickEngine() {
                             playersList.push({ id: child.val().uid, name: child.val().name });
                         });
                         const totalPlayersInRoom = playersList.length;
+                        if (totalPlayersInRoom < 3) {
+                            alert("تحتاج اللعبة إلى 3 لاعبين على الأقل لبدء القضية.");
+                            return;
+                        }
 
                         try {
                             const response = await fetch("cases.json");
@@ -614,7 +618,7 @@ function activateCasesClickEngine() {
                             const activeCase = allCases.find((c) => c.id == caseId); // تعديل أمان لضمان قراءة النص والرقم
                             if (!activeCase) return;
 
-                            playersList.sort(() => Math.random() - 0.5);
+                            fyShuffle(playersList);
                             let assignments = {};
 
                             const isSerialKillerCase = activeCase.title.includes("قاتل متسلسل") || caseId === "1";
@@ -717,7 +721,7 @@ function activateCasesClickEngine() {
                                     },
                                     selectedSuspectCard
                                 ];
-                                finalRolesToDistribute.sort(() => Math.random() - 0.5);
+                                fyShuffle(finalRolesToDistribute);
                             } else {
                                 // 🌟 [تحديث حاسم لـ 4 لاعبين فأكثر]: ضمان حقن الجاني الحقيقي إجبارياً قطعياً
                                 // 1. حقن وتثبيت الأدوار السيادية الأساسية للغرفة (القاضي والدفاع)
@@ -768,7 +772,7 @@ function activateCasesClickEngine() {
                                 }));
 
                                 // خلط المشتبه بهم العاديين بصورة عشوائية
-                                regularSuspectsCards.sort(() => Math.random() - 0.5);
+                                fyShuffle(regularSuspectsCards);
 
                                 // 4. شرط حقن محامي الادعاء بالحق المدني (إذا كان العدد 5 لاعبين أو أكثر)
                                 if (totalPlayersInRoom >= 5) {
@@ -808,8 +812,18 @@ function activateCasesClickEngine() {
                                 }
                             }
 
+                            // [FIX] ensure every player gets a card even when the suspects pool is smaller than the room
+                            while (finalRolesToDistribute.length < totalPlayersInRoom) {
+                                finalRolesToDistribute.push({
+                                    role_name: "مشتبه به إضافي " + (finalRolesToDistribute.length + 1),
+                                    public_story: "أنكر التهمة الموجهة إلي كلياً.",
+                                    secret_interest: "إثبات البراءة النزيهة.",
+                                    is_guilty: false,
+                                    role_type: "suspect"
+                                });
+                            }
                             // خلط المقاعد النهائي لجميع الأدوار (بما فيهم الجاني والسياديين) لعدم كشف موضع كرسيه قبل التوزيع السحابي
-                            finalRolesToDistribute.sort(() => Math.random() - 0.5);
+                            fyShuffle(finalRolesToDistribute);
                             playersList.forEach((player, index) => {
                                 assignments[player.id] = finalRolesToDistribute[index];
                             });
@@ -820,7 +834,7 @@ function activateCasesClickEngine() {
                             );
                             Object.keys(assignments).forEach((uid) => {
                                 const c = assignments[uid];
-                                if (c && c.role_type === "suspect") {
+                                if (c && (c.role_type === "suspect" || c.role_type === "innocent_impostor")) {
                                     const src = claimSources.find((x) => x && x.role_name === c.role_name);
                                     if (src && src.claims) c.claims = src.claims;
                                 }
@@ -852,7 +866,9 @@ function activateCasesClickEngine() {
                             // 🌟 [البند 3]: اختيار موكل عشوائي واحد وثابت لمحامي الدفاع من بين كل المشتبه بهم (شامل الجاني الحقيقي)
                             // يتم اختياره لمرة واحدة فقط هنا عند بداية الجولة، ويبقى ثابتاً طوال الجلسة بدل إعادة اختياره عشوائياً في كل مرة يُفتح فيها المودال
                             const allSuspectUIDs = Object.keys(assignments).filter(
-                                (uid) => assignments[uid].role_type === "suspect"
+                                (uid) =>
+                                    assignments[uid].role_type === "suspect" ||
+                                    assignments[uid].role_type === "innocent_impostor"
                             );
                             const randomClientUID =
                                 allSuspectUIDs.length > 0
@@ -872,7 +888,18 @@ function activateCasesClickEngine() {
                                 emergency_lines: activeCase.emergency_lines || [],
                                 bribe_uses: null,
                                 bribery_offer: null,
-                                bribery_response: null
+                                bribery_response: null,
+                                active_question_prompt: null,
+                                active_evidence_confrontation: null,
+                                evidence_response: null,
+                                private_network_message: null,
+                                network_reveal: null,
+                                radar_revealed_players: null,
+                                court_lawyer_action: null,
+                                lastSpeakRequestName: null,
+                                requestTimestamp: null,
+                                activeSpeakerUID: "none",
+                                isInterrogatingMode: false
                             }).then(() => {
                                 window.location.href = `lobby.html?id=${caseId}`;
                             });
@@ -965,7 +992,9 @@ function listenToFinalLobby() {
                 Object.keys(sessionStorage).forEach((key) => {
                     if (
                         key.startsWith("remaining_questions_case_") ||
-                        key.startsWith("remaining_prosecutor_questions_case_")
+                        key.startsWith("remaining_prosecutor_questions_case_") ||
+                        key.startsWith("network_link_used_") ||
+                        key === "objection_cards_count"
                     ) {
                         sessionStorage.removeItem(key);
                     }
@@ -1032,20 +1061,28 @@ function listenToFinalLobby() {
                 reopenBtn.setAttribute("aria-label", "إظهار بطاقة دوري");
                 reopenBtn.innerHTML = "&#8249;";
                 reopenBtn.style.cssText = `
-                    position: fixed; top: 50%; left: 0; transform: translateY(-50%);
-                    z-index: 999990; width: 30px; height: 64px; border: none;
-                    border-radius: 0 12px 12px 0; background: var(--gold-glow, #d5a75c);
+                    position: fixed; top: 50%; left: 14px; transform: translateY(-50%); touch-action: manipulation; -webkit-tap-highlight-color: transparent;
+                    z-index: 2147483000; width: 44px; height: 72px; border: none;
+                    border-radius: 14px; background: var(--gold-glow, #d5a75c);
                     color: #101820; font-size: 1.3rem; font-weight: 900; cursor: pointer;
                     box-shadow: 2px 0 12px rgba(0, 0, 0, 0.4); display: flex;
                     align-items: center; justify-content: center; padding: 0;
                 `;
-                reopenBtn.addEventListener("click", () => {
-                    stopSpeech();
-                    openSecretRoleSecondModal(
-                        window.myCurrentRoleCard || {},
-                        window.myCurrentDefenseClientName || null
-                    );
-                });
+                let lastReopenAt = 0;
+                ["pointerup", "click"].forEach((evtName) =>
+                    reopenBtn.addEventListener(evtName, (ev) => {
+                        ev.preventDefault();
+                        ev.stopPropagation();
+                        const nowTs = Date.now();
+                        if (nowTs - lastReopenAt < 600) return;
+                        lastReopenAt = nowTs;
+                        stopSpeech();
+                        openSecretRoleSecondModal(
+                            window.myCurrentRoleCard || {},
+                            window.myCurrentDefenseClientName || null
+                        );
+                    })
+                );
                 document.body.appendChild(reopenBtn);
             }
 
@@ -1085,6 +1122,25 @@ function listenToFinalLobby() {
             }
 
             window.currentEmergencyLines = gameState.emergency_lines || [];
+
+            // [FIX stale-replay] Messages written before this page was opened belong to an earlier round/visit:
+            // mark them as already processed so the kill-feed / response boxes are not replayed.
+            if (!window.__staleSeeded) {
+                window.__staleSeeded = true;
+                const entryTs = window.courtRoomEntryTimestamp || Date.now();
+                [
+                    ["active_question_prompt", "lastProcessedQuestionPromptTimestamp"],
+                    ["active_evidence_confrontation", "lastProcessedEvidenceConfrontationTimestamp"],
+                    ["evidence_response", "lastProcessedEvidenceResponseTimestamp"],
+                    ["private_network_message", "lastProcessedPrivateNetworkMessageTimestamp"],
+                    ["network_reveal", "lastProcessedNetworkRevealTimestamp"],
+                    ["bribery_offer", "lastProcessedBriberyOfferTimestamp"],
+                    ["bribery_response", "lastProcessedBriberyResponseTimestamp"]
+                ].forEach(([node, winKey]) => {
+                    const v = gameState[node];
+                    if (v && v.timestamp && v.timestamp < entryTs - 8000) window[winKey] = v.timestamp;
+                });
+            }
 
             // ==========================================================================
             // 💰 [الرشوة]: عرض رشوة جديد يظهر للمرشي فقط (قبول/رفض)، وإشعار قبول يصل للراشي فقط
@@ -1281,7 +1337,9 @@ function listenToFinalLobby() {
                     Object.keys(sessionStorage).forEach((key) => {
                         if (
                             key.startsWith("remaining_questions_case_") ||
-                            key.startsWith("remaining_prosecutor_questions_case_")
+                            key.startsWith("remaining_prosecutor_questions_case_") ||
+                            key.startsWith("network_link_used_") ||
+                            key === "objection_cards_count"
                         ) {
                             sessionStorage.removeItem(key);
                         }
@@ -3310,7 +3368,7 @@ function injectLawyerActionControls(
 
     // دالة مساعدة داخلية لتحديث الأرصدة التراكمية بسلاسة دون تصفير
     const updateScore = (scoreRef, points) => {
-        if (!scoreRef) return;
+        if (!scoreRef || scoreRef.key === "none") return; // [FIX] no guilty/defense in this round -> do not write players_scores/none
         get(scoreRef).then((snap) => {
             const current = snap.exists() ? snap.val() : 0;
             set(scoreRef, current + points);
@@ -5353,7 +5411,7 @@ function executeVerdictEndGame(
 
 // دالة تتبع وتحديث الأرصدة التراكمية بسلاسة دون تصفير
 const updateScore = (scoreRef, points) => {
-    if (!scoreRef) return;
+    if (!scoreRef || scoreRef.key === "none") return; // [FIX] no guilty/defense in this round -> do not write players_scores/none
     get(scoreRef).then((snap) => {
         const current = snap.exists() ? snap.val() : 0;
         set(scoreRef, current + points);
@@ -5370,7 +5428,12 @@ const endCurrentCourtSession = (verdictOutcomeData) => {
     // 1️⃣ تنظيف الذاكرة المحلية والـ Session للجهاز الحالي للاستعداد للجولة القادمة
     sessionStorage.removeItem("lobby_initial_card_opened");
     Object.keys(sessionStorage).forEach((key) => {
-        if (key.startsWith("remaining_questions_case_") || key.startsWith("remaining_prosecutor_questions_case_")) {
+        if (
+            key.startsWith("remaining_questions_case_") ||
+            key.startsWith("remaining_prosecutor_questions_case_") ||
+            key.startsWith("network_link_used_") ||
+            key === "objection_cards_count"
+        ) {
             sessionStorage.removeItem(key);
         }
     });
@@ -5742,4 +5805,13 @@ function openSecretRoleSecondModal(roleCard, defenseClientName) {
     if (btnOpenBribery) {
         btnOpenBribery.addEventListener("click", () => openBriberyPopover(btnOpenBribery, roleCard));
     }
+}
+
+// [FIX] unbiased Fisher-Yates shuffle (replaces sort(() => Math.random() - 0.5))
+function fyShuffle(arr) {
+    for (let i = arr.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [arr[i], arr[j]] = [arr[j], arr[i]];
+    }
+    return arr;
 }
