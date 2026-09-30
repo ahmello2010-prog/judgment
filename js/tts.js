@@ -889,7 +889,7 @@ export function initGlobalTextReader() {
     root.className = "tts-floating-container";
     root.innerHTML = `
         <button type="button" id="tts-fab-toggle" class="tts-fab-btn" aria-label="فتح القارئ الصوتي الذاتي">
-
+            <span class="tts-fab-icon">🔈</span>
             <span>القارئ الذاتي</span>
         </button>
 
@@ -957,7 +957,7 @@ export function initGlobalTextReader() {
     let currentX = 0;
     let currentY = 0;
 
-    // دالة فحص وتحديث اتجاه فتح المودال بناءً على المحاور الأربعة للشاشة
+    // دالة فحص وتحديث اتجاه فتح المودال في المحاور الأربعة
     function adjustPanelDirection() {
         const panel = root.querySelector("#tts-dock-panel");
         if (!panel) return;
@@ -966,7 +966,6 @@ export function initGlobalTextReader() {
         const screenWidth = window.innerWidth;
         const screenHeight = window.innerHeight;
 
-        // أولاً: تكييف المحور العمودي (شمال / جنوب)
         if (rect.top < screenHeight / 2) {
             panel.style.bottom = "auto";
             panel.style.top = "54px";
@@ -975,8 +974,6 @@ export function initGlobalTextReader() {
             panel.style.bottom = "54px";
         }
 
-        // ثانياً: تكييف المحور الأفقي (شرق / غرب)
-        // إذا كان الزر قريباً من الحافة اليمنى (الشرق)، يفتح المودال بالكامل نحو اليسار (الغرب)
         if (rect.left > screenWidth - 320) {
             panel.style.left = "auto";
             panel.style.right = "0px";
@@ -986,7 +983,7 @@ export function initGlobalTextReader() {
         }
     }
 
-    // استعادة الموقع المحفوظ للاعب
+    // استعادة الموقع الفيزيائي المحفوظ للاعب فور تحميل اللعبة
     const savedTransformX = localStorage.getItem("tts-trans-x");
     const savedTransformY = localStorage.getItem("tts-trans-y");
     if (savedTransformX !== null && savedTransformY !== null) {
@@ -1000,11 +997,13 @@ export function initGlobalTextReader() {
 
     function makeReaderButtonDraggable(container) {
         let isDragging = false;
+        let hasMoved = false; // تتبع هل قام اللاعب بالتحريك الفعلي أم مجرد نقرة خفيفة
         let startX = 0,
             startY = 0;
+        let startTime = 0;
 
         container.addEventListener("mousedown", dragStart);
-        container.addEventListener("touchstart", dragStart, { passive: false });
+        container.addEventListener("touchstart", dragStart, { passive: true }); // تغيير الـ passive لضمان معالجة الهواتف بسلاسة
 
         document.addEventListener("mousemove", dragMove);
         document.addEventListener("touchmove", dragMove, { passive: false });
@@ -1020,15 +1019,17 @@ export function initGlobalTextReader() {
             ) {
                 return;
             }
+
             isDragging = true;
+            hasMoved = false;
+            startTime = Date.now(); // حساب وقت بدء الضغطة
+
             startX = e.type === "touchstart" ? e.touches.clientX : e.clientX;
             startY = e.type === "touchstart" ? e.touches.clientY : e.clientY;
-            if (e.cancelable) e.preventDefault();
         }
 
         function dragMove(e) {
             if (!isDragging) return;
-            if (e.cancelable) e.preventDefault();
 
             const clientX = e.type === "touchmove" ? e.touches.clientX : e.clientX;
             const clientY = e.type === "touchmove" ? e.touches.clientY : e.clientY;
@@ -1036,16 +1037,25 @@ export function initGlobalTextReader() {
             const deltaX = clientX - startX;
             const deltaY = clientY - startY;
 
-            currentX += deltaX;
-            currentY += deltaY;
+            // إذا تحرك الكائن أكثر من 3 بكسل، نعتبرها حركة سحب وليس نقرة
+            if (Math.abs(deltaX) > 3 || Math.abs(deltaY) > 3) {
+                hasMoved = true;
+            }
 
-            const rect = container.getBoundingClientRect();
-            if (rect.left < 0) currentX -= rect.left;
-            if (rect.top < 0) currentY -= rect.top;
-            if (rect.right > window.innerWidth) currentX -= rect.right - window.innerWidth;
-            if (rect.bottom > window.innerHeight) currentY -= rect.bottom - window.innerHeight;
+            if (hasMoved) {
+                if (e.cancelable) e.preventDefault(); // كسر السحب الافتراضي للشاشة فقط عند السحب الفعلي
 
-            container.style.transform = `translate3d(${currentX}px, ${currentY}px, 0)`;
+                currentX += deltaX;
+                currentY += deltaY;
+
+                const rect = container.getBoundingClientRect();
+                if (rect.left < 0) currentX -= rect.left;
+                if (rect.top < 0) currentY -= rect.top;
+                if (rect.right > window.innerWidth) currentX -= rect.right - window.innerWidth;
+                if (rect.bottom > window.innerHeight) currentY -= rect.bottom - window.innerHeight;
+
+                container.style.transform = `translate3d(${currentX}px, ${currentY}px, 0)`;
+            }
 
             startX = clientX;
             startY = clientY;
@@ -1053,12 +1063,24 @@ export function initGlobalTextReader() {
             adjustPanelDirection();
         }
 
-        function dragEnd() {
-            if (isDragging) {
+        function dragEnd(e) {
+            if (!isDragging) return;
+
+            const clickDuration = Date.now() - startTime;
+
+            // إذا لم يتحرك الإصبع وكان وقت الضغطة قصيراً، نقوم بمحاكاة وتفعيل حدث الفتح يدوياً للهواتف
+            if (!hasMoved && clickDuration < 250) {
+                const fabToggle = container.querySelector("#tts-fab-toggle");
+                if (fabToggle && e.target.closest("#tts-fab-toggle")) {
+                    e.preventDefault();
+                    fabToggle.click(); // إجبار الموبايل على تشغيل دالة الفتح
+                }
+            } else if (hasMoved) {
                 localStorage.setItem("tts-trans-x", currentX);
                 localStorage.setItem("tts-trans-y", currentY);
                 adjustPanelDirection();
             }
+
             isDragging = false;
         }
     }
