@@ -624,15 +624,14 @@ function injectReaderStyles() {
             0%, 100% { box-shadow: 0 0 0 0 rgba(213, 167, 92, 0.6); }
             50% { box-shadow: 0 0 0 8px rgba(213, 167, 92, 0); }
         }
-
 .tts-floating-container {
     position: fixed;
     bottom: 16px;
     left: 16px;
-    z-index: 999999999999999999999999 !important;
+    /* استخدام أعلى قيمة رسمية مدعومة عالمياً في جميع المتصفحات والهواتف */
+    z-index: 2147483647 !important;
     direction: rtl;
     font-family: 'Alexandria', system-ui, sans-serif;
-
     touch-action: none;
     user-select: none;
     -webkit-user-select: none;
@@ -872,11 +871,11 @@ function updateReaderUi() {
 
     if (playPauseBtn) {
         if (!readerState.isPlaying) {
-            playPauseBtn.innerHTML = "<span>▶️</span><span>قراءة الصفحة</span>";
+            playPauseBtn.innerHTML = "<span>قراءة الصفحة</span>";
         } else if (readerState.isPaused) {
-            playPauseBtn.innerHTML = "<span>▶️</span><span>استئناف</span>";
+            playPauseBtn.innerHTML = "<span>استئناف</span>";
         } else {
-            playPauseBtn.innerHTML = "<span>⏸️</span><span>إيقاف مؤقت</span>";
+            playPauseBtn.innerHTML = "<span>إيقاف مؤقت</span>";
         }
     }
 }
@@ -890,7 +889,7 @@ export function initGlobalTextReader() {
     root.className = "tts-floating-container";
     root.innerHTML = `
         <button type="button" id="tts-fab-toggle" class="tts-fab-btn" aria-label="فتح القارئ الصوتي الذاتي">
-            <span class="tts-fab-icon">🔈</span>
+
             <span>القارئ الذاتي</span>
         </button>
 
@@ -955,73 +954,110 @@ export function initGlobalTextReader() {
 
     document.body.appendChild(root);
 
-    // استعادة الموقع المحفوظ للزر من ذاكرة المتصفح المحلية فور تحميل اللعبة
-    const savedX = localStorage.getItem("tts-position-x");
-    const savedY = localStorage.getItem("tts-position-y");
-    if (savedX !== null && savedY !== null) {
-        root.style.bottom = "auto";
-        root.style.left = savedX;
-        root.style.top = savedY;
+    let currentX = 0;
+    let currentY = 0;
+
+    // دالة فحص وتحديث اتجاه فتح المودال بناءً على المحاور الأربعة للشاشة
+    function adjustPanelDirection() {
+        const panel = root.querySelector("#tts-dock-panel");
+        if (!panel) return;
+
+        const rect = root.getBoundingClientRect();
+        const screenWidth = window.innerWidth;
+        const screenHeight = window.innerHeight;
+
+        // أولاً: تكييف المحور العمودي (شمال / جنوب)
+        if (rect.top < screenHeight / 2) {
+            panel.style.bottom = "auto";
+            panel.style.top = "54px";
+        } else {
+            panel.style.top = "auto";
+            panel.style.bottom = "54px";
+        }
+
+        // ثانياً: تكييف المحور الأفقي (شرق / غرب)
+        // إذا كان الزر قريباً من الحافة اليمنى (الشرق)، يفتح المودال بالكامل نحو اليسار (الغرب)
+        if (rect.left > screenWidth - 320) {
+            panel.style.left = "auto";
+            panel.style.right = "0px";
+        } else {
+            panel.style.right = "auto";
+            panel.style.left = "0px";
+        }
     }
 
-    // تفعيل ميزة السحب والتحريك الحر وحفظ الإحداثيات
+    // استعادة الموقع المحفوظ للاعب
+    const savedTransformX = localStorage.getItem("tts-trans-x");
+    const savedTransformY = localStorage.getItem("tts-trans-y");
+    if (savedTransformX !== null && savedTransformY !== null) {
+        currentX = parseInt(savedTransformX, 10);
+        currentY = parseInt(savedTransformY, 10);
+        root.style.transform = `translate3d(${currentX}px, ${currentY}px, 0)`;
+        setTimeout(adjustPanelDirection, 50);
+    }
+
     makeReaderButtonDraggable(root);
 
     function makeReaderButtonDraggable(container) {
         let isDragging = false;
-        let startX, startY;
-        let initialX, initialY;
+        let startX = 0,
+            startY = 0;
 
         container.addEventListener("mousedown", dragStart);
-        container.addEventListener("touchstart", dragStart, { passive: true });
+        container.addEventListener("touchstart", dragStart, { passive: false });
+
         document.addEventListener("mousemove", dragMove);
         document.addEventListener("touchmove", dragMove, { passive: false });
+
         document.addEventListener("mouseup", dragEnd);
         document.addEventListener("touchend", dragEnd);
 
         function dragStart(e) {
-            // منع السحب تماماً عند النقر على لوحة الإعدادات لعدم تعارض الأزرار والـ select
             if (
                 e.target.closest("#tts-dock-panel") ||
-                e.target.closest("button") ||
                 e.target.closest(".tts-speed-chip") ||
                 e.target.closest("select")
             ) {
                 return;
             }
             isDragging = true;
-            const clientX = e.type === "touchstart" ? e.touches.clientX : e.clientX;
-            const clientY = e.type === "touchstart" ? e.touches.clientY : e.clientY;
-            const rect = container.getBoundingClientRect();
-            initialX = rect.left;
-            initialY = rect.top;
-            startX = clientX;
-            startY = clientY;
+            startX = e.type === "touchstart" ? e.touches.clientX : e.clientX;
+            startY = e.type === "touchstart" ? e.touches.clientY : e.clientY;
+            if (e.cancelable) e.preventDefault();
         }
 
         function dragMove(e) {
             if (!isDragging) return;
-            if (e.type === "touchmove") e.preventDefault();
+            if (e.cancelable) e.preventDefault();
+
             const clientX = e.type === "touchmove" ? e.touches.clientX : e.clientX;
             const clientY = e.type === "touchmove" ? e.touches.clientY : e.clientY;
 
-            let newX = initialX + (clientX - startX);
-            let newY = initialY + (clientY - startY);
+            const deltaX = clientX - startX;
+            const deltaY = clientY - startY;
 
-            const padding = 12;
-            newX = Math.max(padding, Math.min(newX, window.innerWidth - container.offsetWidth - padding));
-            newY = Math.max(padding, Math.min(newY, window.innerHeight - container.offsetHeight - padding));
+            currentX += deltaX;
+            currentY += deltaY;
 
-            container.style.bottom = "auto";
-            container.style.left = `${newX}px`;
-            container.style.top = `${newY}px`;
+            const rect = container.getBoundingClientRect();
+            if (rect.left < 0) currentX -= rect.left;
+            if (rect.top < 0) currentY -= rect.top;
+            if (rect.right > window.innerWidth) currentX -= rect.right - window.innerWidth;
+            if (rect.bottom > window.innerHeight) currentY -= rect.bottom - window.innerHeight;
+
+            container.style.transform = `translate3d(${currentX}px, ${currentY}px, 0)`;
+
+            startX = clientX;
+            startY = clientY;
+
+            adjustPanelDirection();
         }
 
         function dragEnd() {
             if (isDragging) {
-                // حفظ الموقع الجديد فوراً في ذاكرة المتصفح المحلية للاعب
-                localStorage.setItem("tts-position-x", container.style.left);
-                localStorage.setItem("tts-position-y", container.style.top);
+                localStorage.setItem("tts-trans-x", currentX);
+                localStorage.setItem("tts-trans-y", currentY);
+                adjustPanelDirection();
             }
             isDragging = false;
         }
@@ -1038,6 +1074,9 @@ export function initGlobalTextReader() {
     fab.addEventListener("click", (e) => {
         e.stopPropagation();
         unlockAudioContext();
+        if (typeof adjustPanelDirection === "function") {
+            adjustPanelDirection();
+        }
         panel.classList.toggle("is-open");
     });
 
