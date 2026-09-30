@@ -1,5 +1,5 @@
 // ==========================================================================
-// 🔊 js/tts.js — قارئ النصوص الذاتي المدمج لمحكمة الأدوار
+// js/tts.js — قارئ النصوص الذاتي المدمج لمحكمة الأدوار
 // نظام صوتي مدمج 100% بدون أي مكتبات خارجية (HTML5 Audio + Web Speech API)
 // ==========================================================================
 
@@ -58,7 +58,7 @@ if (HAS_DOM) {
 }
 
 // ==========================================================================
-// 1️⃣ تنظيف ومعالجة النصوص وقواعد السرية
+// 1. تنظيف ومعالجة النصوص وقواعد السرية
 // ==========================================================================
 export function sanitizeForSpeech(raw) {
     return String(raw == null ? "" : raw)
@@ -129,7 +129,7 @@ export function splitIntoChunks(text, max = TTS_CONFIG.maxChunkChars) {
 }
 
 // ==========================================================================
-// 2️⃣ محرك تشغيل الصوت (HTML5 Audio مع بديل المتصفح المباشر)
+// 2. محرك تشغيل الصوت (HTML5 Audio مع بديل المتصفح المباشر)
 // ==========================================================================
 
 // تشغيل مقطع صوتي عبر مسار الصوت عالي الدقة مع بديل المتصفح
@@ -266,7 +266,7 @@ function speakWithBrowserUtterance(text, token) {
 }
 
 // ==========================================================================
-// 3️⃣ الدالة المركزية للقراءة (speakText)
+// 3. الدالة المركزية للقراءة (speakText)
 // ==========================================================================
 export async function speakText(rawText, options = {}) {
     unlockAudioContext();
@@ -279,7 +279,7 @@ export async function speakText(rawText, options = {}) {
         kind === "secret" ||
         (targetElement && targetElement.closest && targetElement.closest('[data-tts-block="secret"]'))
     ) {
-        showReaderToast("🔒 المصلحة السرية لا تُقرأ بصوتٍ عالٍ حفاظاً على سرية اللعبة.");
+        showReaderToast("المصلحة السرية لا تُقرأ بصوتٍ عالٍ حفاظاً على سرية اللعبة.");
         return false;
     }
 
@@ -287,7 +287,7 @@ export async function speakText(rawText, options = {}) {
     if (!text) return false;
 
     if (isForbiddenSpeech(text)) {
-        showReaderToast("🔒 هذا النص يتضمن معلومة سرية ولن يُقرأ بصوتٍ عالٍ.");
+        showReaderToast("هذا النص يتضمن معلومة سرية ولن يُقرأ بصوتٍ عالٍ.");
         return false;
     }
 
@@ -316,9 +316,7 @@ export async function speakText(rawText, options = {}) {
         if (!ok) {
             if (token === readerState.token) {
                 stopSpeech();
-                showReaderToast(
-                    "⚠️ تعذر تشغيل الصوت. إذا كنت تشغل المشروع محلياً، تأكد من تشغيل الأمر: node server.js"
-                );
+                showReaderToast("تعذر تشغيل الصوت. إذا كنت تشغل المشروع محلياً، تأكد من تشغيل الأمر: node server.js");
             }
             return false;
         }
@@ -402,7 +400,7 @@ export function isSpeaking() {
 }
 
 // ==========================================================================
-// 4️⃣ تمييز النصوص بصرياً
+// 4. تمييز النصوص بصرياً
 // ==========================================================================
 function highlightElement(el) {
     unhighlightElement();
@@ -424,7 +422,7 @@ function unhighlightElement() {
 }
 
 // ==========================================================================
-// 5️⃣ قراءة الصفحة كاملة تلقائياً بالتسلسل
+// 5. قراءة الصفحة كاملة تلقائياً بالتسلسل
 // ==========================================================================
 export async function readCurrentPage() {
     if (!HAS_DOM) return;
@@ -481,7 +479,7 @@ export async function readCurrentPage() {
             if (!ok) {
                 if (token === readerState.token) {
                     stopSpeech();
-                    showReaderToast("⚠️ تعذر تشغيل الصوت. إذا كنت تشغل المشروع محلياً، تأكد من تشغيل: node server.js");
+                    showReaderToast("تعذر تشغيل الصوت. إذا كنت تشغل المشروع محلياً، تأكد من تشغيل: node server.js");
                 }
                 return;
             }
@@ -495,7 +493,7 @@ export async function readCurrentPage() {
 }
 
 // ==========================================================================
-// 6️⃣ أدوات العناصر المضمنة (الأزرار على البطاقات والأسئلة والأدلة)
+// 6. أدوات العناصر المضمنة (الأزرار على البطاقات والأسئلة والأدلة)
 // ==========================================================================
 const mountedWeak = new WeakMap();
 
@@ -529,11 +527,15 @@ export function mountVoiceControls(targetEl, options = {}) {
     wrapper.dataset.ttsState = "idle";
     wrapper.innerHTML = `
         <button type="button" class="tts-inline-btn tts-play" aria-label="قراءة النص صوتياً">
-            <span aria-hidden="true">🔊</span>
+            <span aria-hidden="true">
+                <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 5 6 9H3v6h3l5 4V5Z"/><path d="M15.5 8.5a5 5 0 0 1 0 7"/></svg>
+            </span>
             <span class="tts-play-label">استمع</span>
         </button>
         <button type="button" class="tts-inline-btn tts-stop" aria-label="إيقاف">
-            <span aria-hidden="true">⏹</span>
+            <span aria-hidden="true">
+                <svg viewBox="0 0 24 24" width="13" height="13" fill="currentColor"><rect x="6" y="6" width="12" height="12" rx="1.5"/></svg>
+            </span>
         </button>
     `;
 
@@ -571,7 +573,7 @@ export function mountVoiceControlsAll(root, selector, options = {}) {
 }
 
 // ==========================================================================
-// 7️⃣ واجهة القارئ الذاتي العائم الشامل في كل صفحات الموقع
+// 7. واجهة القارئ الذاتي العائم الشامل في كل صفحات الموقع
 // ==========================================================================
 function injectReaderStyles() {
     if (!HAS_DOM || document.getElementById("native-tts-styles")) return;
@@ -642,7 +644,7 @@ function injectReaderStyles() {
             border: 1.5px solid var(--gold-glow, #d5a75c);
             color: var(--gold-glow, #d5a75c);
             border-radius: 50px;
-            padding: 8px 8px;
+            padding: 8px 12px;
             display: flex;
             align-items: center;
             gap: 8px;
@@ -885,7 +887,11 @@ function updateReaderUi() {
     if (fab) {
         fab.classList.toggle("is-active", readerState.isPlaying);
         const icon = fab.querySelector(".tts-fab-icon");
-        if (icon) icon.textContent = readerState.isPlaying ? "🔊" : "🔈";
+        if (icon) {
+            icon.innerHTML = readerState.isPlaying
+                ? `<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><path d="M15.54 8.46a5 5 0 0 1 0 7.07"></path><path d="M19.07 4.93a10 10 0 0 1 0 14.14"></path></svg>`
+                : `<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 5 6 9H3v6h3l5 4V5Z"/><path d="M15.5 8.5a5 5 0 0 1 0 7"/><path d="M18.5 5.5a9 9 0 0 1 0 13"/></svg>`;
+        }
     }
 
     if (dockStatus) {
@@ -894,11 +900,26 @@ function updateReaderUi() {
 
     if (playPauseBtn) {
         if (!readerState.isPlaying) {
-            playPauseBtn.innerHTML = "<span>قراءة الصفحة</span>";
+            playPauseBtn.innerHTML = `
+                <span aria-hidden="true">
+                    <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><path d="M8 5.2v13.6c0 .9 1 1.45 1.8.98l10.2-6.8a1.18 1.18 0 0 0 0-1.96L9.8 4.22C9 3.75 8 4.3 8 5.2Z"/></svg>
+                </span>
+                <span>قراءة الصفحة</span>
+            `;
         } else if (readerState.isPaused) {
-            playPauseBtn.innerHTML = "<span>استئناف</span>";
+            playPauseBtn.innerHTML = `
+                <span aria-hidden="true">
+                    <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><path d="M8 5.2v13.6c0 .9 1 1.45 1.8.98l10.2-6.8a1.18 1.18 0 0 0 0-1.96L9.8 4.22C9 3.75 8 4.3 8 5.2Z"/></svg>
+                </span>
+                <span>استئناف</span>
+            `;
         } else {
-            playPauseBtn.innerHTML = "<span>إيقاف مؤقت</span>";
+            playPauseBtn.innerHTML = `
+                <span aria-hidden="true">
+                    <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><rect x="6" y="5" width="4" height="14" rx="1"/><rect x="14" y="5" width="4" height="14" rx="1"/></svg>
+                </span>
+                <span>إيقاف مؤقت</span>
+            `;
         }
     }
 }
