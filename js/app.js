@@ -520,7 +520,28 @@ async function loadAndDisplayCases() {
 
             let innerHTML = "";
             if (item.is_pinned) {
-                innerHTML += `<span style="background-color: var(--gold-glow); color: var(--shadow-black); font-family: 'Alexandria', sans-serif; font-weight: 700; font-size: 0.75rem; padding: 2px 8px; border-radius: 4px; margin-bottom: 12px; display: inline-block;">📌 قضية مثبتة (تتطلب ${item.required_players} لاعبين)</span>`;
+                innerHTML += `
+        <span style="
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            background-color: rgba(181, 148, 91, 0.12);
+            color: var(--gc-gold, #b5945b);
+            border: 1px solid rgba(181, 148, 91, 0.25);
+            font-family: 'Alexandria', system-ui, sans-serif;
+            font-weight: 700;
+            font-size: 0.7rem;
+            padding: 4px 10px;
+            border-radius: 6px;
+            margin-bottom: 8px;
+            box-shadow: 0 0 10px rgba(181, 148, 91, 0.1);
+        ">
+            <!-- أيقونة النجمة الرباعية الحادة والسينمائية -->
+            <svg viewBox="0 0 24 24" width="12" height="12" fill="currentColor" style="flex-shrink: 0;">
+                <path d="M12 2l2.4 7.6L22 12l-7.6 2.4L12 22l-2.4-7.6L2 12l7.6-2.4Z"/>
+            </svg>
+
+        </span>`;
             }
 
             // تحديد مسار الصورة ديناميكياً بناءً على الـ id الخاص بكل قضية (مثال: assets/cases/1.png)
