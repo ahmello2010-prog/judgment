@@ -1001,6 +1001,33 @@ function listenToFinalLobby() {
             // 🎭🔊 نمط الجولة الحالي وبطاقتي: يستخدمهما توجيه الارتجال وحارس سرية المتحدث الصوتي
             window.currentGameMode = normalizeGameMode(gameState.gameMode);
             window.myCurrentRoleCard = myRoleCard;
+
+            // 🌟 [زر إعادة فتح بطاقة الدور]: زر جانبي ثابت بعلامة سهم، يعيد فتح مودال الدور (بتاباته
+            // الثلاثة) في أي وقت أثناء المحاكمة، لا في أول دخول فقط. يُبنى مرة واحدة فقط ثم يبقى ظاهراً.
+            if (!document.getElementById("btn-reopen-role-card") && myRoleCard.role_name) {
+                const reopenBtn = document.createElement("button");
+                reopenBtn.id = "btn-reopen-role-card";
+                reopenBtn.type = "button";
+                reopenBtn.setAttribute("aria-label", "إظهار بطاقة دوري");
+                reopenBtn.innerHTML = "&#8249;";
+                reopenBtn.style.cssText = `
+                    position: fixed; top: 50%; left: 0; transform: translateY(-50%);
+                    z-index: 999990; width: 30px; height: 64px; border: none;
+                    border-radius: 0 12px 12px 0; background: var(--gold-glow, #d5a75c);
+                    color: #101820; font-size: 1.3rem; font-weight: 900; cursor: pointer;
+                    box-shadow: 2px 0 12px rgba(0, 0, 0, 0.4); display: flex;
+                    align-items: center; justify-content: center; padding: 0;
+                `;
+                reopenBtn.addEventListener("click", () => {
+                    stopSpeech();
+                    openSecretRoleSecondModal(
+                        window.myCurrentRoleCard || {},
+                        window.myCurrentDefenseClientName || null
+                    );
+                });
+                document.body.appendChild(reopenBtn);
+            }
+
             // 🎨 [تمييز الدور]: توهج لوني خفيف حول الطاولة وشارة هوية بحسب دور اللاعب الحالي
             document.body.classList.remove("role-judge", "role-lawyer", "role-suspect");
             const roleBadge = document.getElementById("role-identity-badge");
@@ -5367,6 +5394,9 @@ const endCurrentCourtSession = (verdictOutcomeData) => {
 // 1️⃣ المودال الأول: منصة عرض السيناريو وملف الجريمة العام للغرفة (حجم مكبر فخم)
 // ==========================================================================
 function openCaseStoryFirstModal(roleCard, activeCase, defenseClientName) {
+    // 🌟 [زر إعادة فتح الدور]: نحفظ اسم الموكل عالمياً هنا أيضاً، حتى يقدر زر السهم الجانبي
+    // إعادة فتح بطاقة الدور الكاملة (بتاباتها) في أي لحظة من المحاكمة، لا أول دخول فقط
+    window.myCurrentDefenseClientName = defenseClientName || null;
     const modal = document.getElementById("custom-alert-modal");
     if (!modal) return;
 

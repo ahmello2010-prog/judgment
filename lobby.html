@@ -258,6 +258,104 @@
             /* ==========================================================================
    التجاوب مع الشاشات الصغيرة والهواتف (Responsive)
    ========================================================================== */
+
+            /* ==========================================================================
+   🗂️ [تابات الهوية/التوجيه/السوق السوداء] داخل بطاقة الدور السرية — تنسيق مطلوب لعمل
+   الميزة بصرياً، مُضاف هنا فقط لأنه غير موجود في تنسيقك الحالي؛ لم أُعِد أي تنسيق عام آخر.
+   ========================================================================== */
+            .role-tabs-bar {
+                display: flex;
+                gap: 6px;
+                margin-bottom: 16px;
+                border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+                padding-bottom: 0;
+            }
+            .role-tab-btn {
+                flex: 1;
+                padding: 10px 4px;
+                background: transparent;
+                border: none;
+                border-bottom: 3px solid transparent;
+                color: #8d99a8;
+                font-family: "Alexandria", sans-serif;
+                font-weight: 700;
+                font-size: 0.72rem;
+                cursor: pointer;
+                transition:
+                    color 0.2s,
+                    border-color 0.2s;
+            }
+            .role-tab-btn.active {
+                color: var(--gold-glow, #d5a75c);
+                border-bottom-color: var(--gold-glow, #d5a75c);
+            }
+            .role-tab-pane {
+                display: none;
+                animation: tabFadeIn 0.25s ease-out;
+            }
+            .role-tab-pane.active {
+                display: block;
+            }
+            @keyframes tabFadeIn {
+                from {
+                    opacity: 0;
+                    transform: translateY(4px);
+                }
+                to {
+                    opacity: 1;
+                    transform: translateY(0);
+                }
+            }
+
+            /* ==========================================================================
+   💰 [مودال الرشوة]: بوب أوفر صغير جانبي، لا يغطي الشاشة كبقية المودالات
+   ========================================================================== */
+            #bribery-popover {
+                position: fixed;
+                z-index: 2147483200;
+                width: 270px;
+                max-width: 88vw;
+                background: #10151d;
+                border: 1px solid #ffb84d;
+                border-radius: 12px;
+                padding: 12px;
+                box-shadow: 0 10px 35px rgba(0, 0, 0, 0.65);
+                direction: rtl;
+                font-family: "Alexandria", sans-serif;
+            }
+            .bribery-preset-chip {
+                display: block;
+                width: 100%;
+                text-align: right;
+                background: rgba(255, 184, 77, 0.08);
+                border: 1px solid rgba(255, 184, 77, 0.4);
+                color: #ffe9b3;
+                border-radius: 6px;
+                padding: 6px 8px;
+                font-size: 0.66rem;
+                margin-bottom: 4px;
+                cursor: pointer;
+                font-family: "Alexandria", sans-serif;
+            }
+            .bribery-stepper-btn {
+                width: 30px;
+                height: 30px;
+                border-radius: 50%;
+                border: 1px solid #ffb84d;
+                background: transparent;
+                color: #ffb84d;
+                font-size: 1rem;
+                font-weight: 700;
+                cursor: pointer;
+            }
+
+            /* ==========================================================================
+   🔖 [زر إعادة فتح بطاقة الدور]: حالة hover/active بسيطة فوق التنسيق الأساسي المضبوط
+   بالجافاسكريبت مباشرة (انظر btn-reopen-role-card في app.js)
+   ========================================================================== */
+            #btn-reopen-role-card:active {
+                transform: translateY(-50%) scale(0.94);
+            }
         </style>
     </head>
     <body class="body3">
