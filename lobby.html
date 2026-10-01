@@ -356,6 +356,18 @@
             #btn-reopen-role-card:active {
                 transform: translateY(-50%) scale(0.94);
             }
+
+            /* ⚡ [أداء/تحميل فعلي]: الشاشة فوق كل العناصر، ومنع التفاعل مع ما خلفها حتى تكتمل التهيئة */
+            #lobby-loading-screen {
+                z-index: 2147483647 !important;
+                contain: layout paint;
+            }
+            .loading-blurred-backdrop {
+                will-change: transform;
+            }
+            body.lobby-initializing > *:not(#lobby-loading-screen):not(script) {
+                pointer-events: none !important;
+            }
         </style>
     </head>
     <body class="body3">
@@ -366,8 +378,8 @@
                 <button id="btn-end-trial" style="display: none" class="your-admin-button-style">إنهاء المحكمة</button>
             </div>
         </nav>
-        <!-- شاشة التحميل السينمائية لساحة اللعب (مخفية افتراضياً وتظهر عند بدء القضية) -->
-        <div id="lobby-loading-screen" class="modern-loading-overlay" style="display: none">
+        <!-- شاشة التحميل السينمائية لساحة اللعب: ظاهرة من أول رسم وتُخفى فقط عند اكتمال تهيئة اللوبي فعلياً (انظر runLobbyLoadingEngine في app.js) -->
+        <div id="lobby-loading-screen" class="modern-loading-overlay" style="display: flex; opacity: 1">
             <div class="loading-blurred-backdrop"></div>
 
             <div class="loading-card-content">
@@ -538,6 +550,16 @@
         </div>
 
         <script type="module" src="js/app.js"></script>
+        <script>
+            // صمام أمان: لو لم يبدأ محرك التحميل (فشل تحميل app.js مثلاً) لا تبقى الشاشة للأبد
+            setTimeout(function () {
+                var l = document.getElementById("lobby-loading-screen");
+                if (l && !window.__lobbyEngineStarted) {
+                    l.style.display = "none";
+                    document.body.classList.remove("lobby-initializing");
+                }
+            }, 15000);
+        </script>
         <canvas id="wood-grain-canvas"></canvas>
 
         <script>
@@ -587,8 +609,23 @@
                 }
 
                 // تشغيل التوليد عند فتح الصفحة وضبط الأبعاد تلقائياً عند تغيير حجم النافذة
-                window.addEventListener("resize", resizeCanvas);
-                resizeCanvas();
+                // [أداء] تأجيل الرسم الأول لوقت الخمول كي لا ينافس تهيئة اللوبي، وتجميع أحداث resize المتتابعة،
+                // وتجاهل تغيّر الارتفاع فقط (شريط المتصفح في الهاتف) ما دام الكانفاس يغطي الشاشة.
+                let resizeTimer = null;
+                let drawnWidth = 0;
+                const drawGrain = () => {
+                    drawnWidth = window.innerWidth;
+                    resizeCanvas();
+                };
+                window.addEventListener("resize", () => {
+                    clearTimeout(resizeTimer);
+                    resizeTimer = setTimeout(() => {
+                        if (window.innerWidth === drawnWidth && window.innerHeight <= canvas.height) return;
+                        drawGrain();
+                    }, 150);
+                });
+                if (window.requestIdleCallback) window.requestIdleCallback(drawGrain, { timeout: 500 });
+                else setTimeout(drawGrain, 50);
             });
         </script>
     </body>
