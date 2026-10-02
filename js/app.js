@@ -154,14 +154,25 @@ function mountGameModeToggle(slot) {
 
 const btnHamburger = document.getElementById("btn-hamburger");
 const sidebarDrawer = document.getElementById("sidebar-drawer");
-if (btnHamburger && sidebarDrawer) {
+if (btnHamburger && sidebarDrawer && !window.__sidebarBound) {
+    window.__sidebarBound = true;
+    const setSidebar = function (open) {
+        sidebarDrawer.classList.toggle("sidebar-drawer-active", open);
+        btnHamburger.setAttribute("aria-expanded", String(open));
+    };
     btnHamburger.addEventListener("click", function (e) {
         e.stopPropagation();
-        sidebarDrawer.classList.toggle("sidebar-drawer-active");
+        setSidebar(!sidebarDrawer.classList.contains("sidebar-drawer-active"));
     });
     document.addEventListener("click", function (e) {
-        if (!sidebarDrawer.contains(e.target) && e.target !== btnHamburger)
-            sidebarDrawer.classList.remove("sidebar-drawer-active");
+        // contains() بدل المقارنة المباشرة: الضغط على الأيقونة SVG داخل الزر يُحسب ضغطاً على الزر
+        if (!sidebarDrawer.contains(e.target) && !btnHamburger.contains(e.target)) setSidebar(false);
+    });
+    sidebarDrawer.addEventListener("click", function (e) {
+        if (e.target.closest("a")) setSidebar(false);
+    });
+    document.addEventListener("keydown", function (e) {
+        if (e.key === "Escape") setSidebar(false);
     });
 }
 

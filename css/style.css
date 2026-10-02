@@ -334,18 +334,35 @@ html {
 #sidebar-drawer {
     position: fixed;
     top: 0;
-    left: -280px;
+    left: 0;
     width: 260px;
+    max-width: 85vw;
     height: 100vh;
+    height: 100dvh;
+    overflow-y: auto;
     background-color: var(--shadow-black);
     border-right: 2px solid var(--gold-glow);
     z-index: 350;
-    transition: left 0.4s cubic-bezier(0.25, 1, 0.5, 1);
-    box-shadow: 5px 0 25px rgba(5, 10, 18, 0.6);
+    /* مغلقة: خارج الشاشة بالكامل، مخفية، ولا تستقبل لمس، وبدون ظل يتسرب للحافة */
+    transform: translateX(-110%);
+    visibility: hidden;
+    pointer-events: none;
+    box-shadow: none;
+    transition:
+        transform 0.4s cubic-bezier(0.25, 1, 0.5, 1),
+        box-shadow 0.4s ease,
+        visibility 0s linear 0.4s;
 }
 
 #sidebar-drawer.sidebar-drawer-active {
-    left: 0;
+    transform: translateX(0);
+    visibility: visible;
+    pointer-events: auto;
+    box-shadow: 5px 0 25px rgba(5, 10, 18, 0.6);
+    transition:
+        transform 0.4s cubic-bezier(0.25, 1, 0.5, 1),
+        box-shadow 0.4s ease,
+        visibility 0s;
 }
 
 .sidebar-content {
@@ -1812,7 +1829,7 @@ body.body3 #btn-verdict-trigger:active:not(:disabled) {
     border-bottom: 1px solid rgba(213, 167, 92, 0.2) !important;
     cursor: pointer !important;
     color: var(--text-white, #ffffff) !important;
-    font-family: 'Harmattan', system-ui, sans-serif !important;
+    font-family: "Harmattan", system-ui, sans-serif !important;
     font-size: 1.3rem !important;
     font-weight: 600 !important;
     transition: all 0.2s ease !important;
@@ -1840,7 +1857,7 @@ body.body3 #btn-verdict-trigger:active:not(:disabled) {
 }
 
 .radio-status-tag {
-    font-family: 'Alexandria', system-ui, sans-serif;
+    font-family: "Alexandria", system-ui, sans-serif;
     font-size: 0.68rem;
     font-weight: 700;
     padding: 3px 8px;
@@ -1899,7 +1916,9 @@ body.body3 #btn-verdict-trigger:active:not(:disabled) {
     border: 1.5px solid var(--gold-glow, #d5a75c);
     border-radius: 14px;
     padding: 12px 14px;
-    box-shadow: 0 14px 40px rgba(0, 0, 0, 0.8), 0 0 20px rgba(213, 167, 92, 0.2);
+    box-shadow:
+        0 14px 40px rgba(0, 0, 0, 0.8),
+        0 0 20px rgba(213, 167, 92, 0.2);
     color: #fff;
     box-sizing: border-box;
     display: flex;
@@ -1939,7 +1958,7 @@ body.body3 #btn-verdict-trigger:active:not(:disabled) {
 
 .radio-brand-title {
     margin: 0;
-    font-family: 'Alexandria', system-ui, sans-serif;
+    font-family: "Alexandria", system-ui, sans-serif;
     font-size: 0.88rem;
     font-weight: 700;
     color: var(--gold-glow, #d5a75c);
@@ -1987,7 +2006,7 @@ body.body3 #btn-verdict-trigger:active:not(:disabled) {
 }
 
 .radio-freq-badge {
-    font-family: 'Alexandria', monospace, sans-serif;
+    font-family: "Alexandria", monospace, sans-serif;
     font-size: 0.68rem;
     font-weight: 700;
     color: var(--gold-glow, #d5a75c);
@@ -1998,7 +2017,7 @@ body.body3 #btn-verdict-trigger:active:not(:disabled) {
 }
 
 .radio-onair-badge {
-    font-family: 'Alexandria', system-ui, sans-serif;
+    font-family: "Alexandria", system-ui, sans-serif;
     font-size: 0.62rem;
     font-weight: 700;
     padding: 2px 6px;
@@ -2020,12 +2039,18 @@ body.body3 #btn-verdict-trigger:active:not(:disabled) {
 }
 
 @keyframes onAirPulse {
-    0%, 100% { opacity: 0.85; }
-    50% { opacity: 1; box-shadow: 0 0 8px rgba(82, 255, 125, 0.4); }
+    0%,
+    100% {
+        opacity: 0.85;
+    }
+    50% {
+        opacity: 1;
+        box-shadow: 0 0 8px rgba(82, 255, 125, 0.4);
+    }
 }
 
 .radio-station-title {
-    font-family: 'Alexandria', system-ui, sans-serif;
+    font-family: "Alexandria", system-ui, sans-serif;
     font-size: 0.84rem;
     font-weight: 700;
     color: #ffffff;
@@ -2048,7 +2073,9 @@ body.body3 #btn-verdict-trigger:active:not(:disabled) {
     background: var(--gold-glow, #d5a75c);
     border-radius: 2px;
     opacity: 0.3;
-    transition: height 0.2s ease, opacity 0.2s ease;
+    transition:
+        height 0.2s ease,
+        opacity 0.2s ease;
 }
 
 .radio-wave-bars.is-active .r-bar {
@@ -2056,23 +2083,43 @@ body.body3 #btn-verdict-trigger:active:not(:disabled) {
     animation: waveBounce 0.8s infinite ease-in-out alternate;
 }
 
-.radio-wave-bars.is-active .r-bar-1 { animation-delay: 0.1s; }
-.radio-wave-bars.is-active .r-bar-2 { animation-delay: 0.3s; }
-.radio-wave-bars.is-active .r-bar-3 { animation-delay: 0.5s; }
-.radio-wave-bars.is-active .r-bar-4 { animation-delay: 0.2s; }
-.radio-wave-bars.is-active .r-bar-5 { animation-delay: 0.4s; }
-.radio-wave-bars.is-active .r-bar-6 { animation-delay: 0.6s; }
-.radio-wave-bars.is-active .r-bar-7 { animation-delay: 0.15s; }
-.radio-wave-bars.is-active .r-bar-8 { animation-delay: 0.35s; }
+.radio-wave-bars.is-active .r-bar-1 {
+    animation-delay: 0.1s;
+}
+.radio-wave-bars.is-active .r-bar-2 {
+    animation-delay: 0.3s;
+}
+.radio-wave-bars.is-active .r-bar-3 {
+    animation-delay: 0.5s;
+}
+.radio-wave-bars.is-active .r-bar-4 {
+    animation-delay: 0.2s;
+}
+.radio-wave-bars.is-active .r-bar-5 {
+    animation-delay: 0.4s;
+}
+.radio-wave-bars.is-active .r-bar-6 {
+    animation-delay: 0.6s;
+}
+.radio-wave-bars.is-active .r-bar-7 {
+    animation-delay: 0.15s;
+}
+.radio-wave-bars.is-active .r-bar-8 {
+    animation-delay: 0.35s;
+}
 
 @keyframes waveBounce {
-    0% { height: 3px; }
-    100% { height: 13px; }
+    0% {
+        height: 3px;
+    }
+    100% {
+        height: 13px;
+    }
 }
 
 /* قائمة المحطات المدمجة */
 .radio-section-label {
-    font-family: 'Alexandria', system-ui, sans-serif;
+    font-family: "Alexandria", system-ui, sans-serif;
     font-size: 0.68rem;
     font-weight: 700;
     color: var(--gold-glow, #d5a75c);
@@ -2116,7 +2163,7 @@ body.body3 #btn-verdict-trigger:active:not(:disabled) {
 }
 
 .station-card-freq {
-    font-family: 'Alexandria', monospace, sans-serif;
+    font-family: "Alexandria", monospace, sans-serif;
     font-size: 0.65rem;
     font-weight: 700;
     color: var(--gold-glow, #d5a75c);
@@ -2135,7 +2182,7 @@ body.body3 #btn-verdict-trigger:active:not(:disabled) {
 }
 
 .station-card-name {
-    font-family: 'Alexandria', system-ui, sans-serif;
+    font-family: "Alexandria", system-ui, sans-serif;
     font-size: 0.76rem;
     font-weight: 600;
     color: #ffffff;
@@ -2255,14 +2302,13 @@ body.body3 #btn-verdict-trigger:active:not(:disabled) {
 }
 
 .radio-vol-percent {
-    font-family: 'Alexandria', monospace, sans-serif;
+    font-family: "Alexandria", monospace, sans-serif;
     font-size: 0.65rem;
     font-weight: 700;
     color: #cbd5e1;
     min-width: 26px;
     text-align: left;
 }
-
 
 /* ==========================================================================
    🎬 Cinematic Page Transition (Fade-In / Fade-Out)
@@ -2288,16 +2334,16 @@ body.body3 #btn-verdict-trigger:active:not(:disabled) {
 
 /* حركة التلاشي الناعمة لدخول الصفحة السينمائية */
 @keyframes cinematicPageEntrance {
-    0% {
+    from {
         opacity: 0;
-        filter: brightness(0.85);
     }
-    100% {
+    to {
         opacity: 1;
-        filter: brightness(1);
     }
 }
 
+/* بدون forwards وبدون filter: أي filter/transform يبقى على body يحوّله لمرجع
+   لكل العناصر position:fixed (ومنها القائمة الجانبية) فتخرج عن الشاشة */
 body.cinematic-fade-ready {
-    animation: cinematicPageEntrance 0.38s cubic-bezier(0.25, 1, 0.5, 1) forwards;
+    animation: cinematicPageEntrance 0.38s cubic-bezier(0.25, 1, 0.5, 1);
 }

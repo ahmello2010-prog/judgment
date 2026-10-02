@@ -11,6 +11,19 @@ export const TTS_CONFIG = {
 
 const HAS_DOM = typeof document !== "undefined" && typeof window !== "undefined";
 
+// القارئ الذاتي العائم (الزر الكبير) متوقف افتراضياً، ولا يُبنى ولا يعمل أي من مستمعاته
+// إلا بعد أن يفعّله اللاعب من القائمة الجانبية. الاختيار محفوظ ليستمر في كل صفحات الموقع.
+const READER_ENABLED_KEY = "court_tts_reader_enabled";
+let readerTeardown = null;
+
+export function isReaderEnabled() {
+    try {
+        return localStorage.getItem(READER_ENABLED_KEY) === "on";
+    } catch (e) {
+        return false;
+    }
+}
+
 // مشغل HTML5 Audio الموحد (يعمل على كافة الأجهزة والمتصفحات بدون مشاكل أو أخطاء نطق)
 const nativeAudioPlayer = HAS_DOM ? new Audio() : null;
 if (nativeAudioPlayer) {
@@ -644,14 +657,14 @@ function injectReaderStyles() {
             border: 1.2px solid var(--gold-glow, #d5a75c);
             color: var(--gold-glow, #d5a75c);
             border-radius: 50px;
-            padding: 5px 9px;
+            padding: 9px 16px;
             display: flex;
             align-items: center;
-            gap: 5px;
+            gap: 8px;
             cursor: pointer;
             box-shadow: 0 6px 18px rgba(0, 0, 0, 0.45);
             font-weight: 700;
-            font-size: 0.62rem;
+            font-size: 0.82rem;
             transition: all 0.25s ease;
             outline: none;
             /* 🔧 [إصلاح جوهري - سحب الموبايل]: يجب أن يحمل مقبض السحب نفسه touch-action:none
@@ -668,8 +681,8 @@ function injectReaderStyles() {
             justify-content: center;
         }
         .tts-fab-icon svg {
-            width: 15px;
-            height: 15px;
+            width: 21px;
+            height: 21px;
         }
         .tts-fab-btn:hover {
             transform: translateY(-2px);
@@ -1021,6 +1034,10 @@ export function initGlobalTextReader() {
 
     document.body.appendChild(root);
 
+    // كل مستمعي document/window أدناه مربوطون بهذه الإشارة ليُزالوا دفعة واحدة عند الإلغاء
+    const listenerCtl = new AbortController();
+    const sig = listenerCtl.signal;
+
     let currentX = 0;
     let currentY = 0;
 
@@ -1089,16 +1106,24 @@ export function initGlobalTextReader() {
         }
     }
     clampToViewport();
-    window.addEventListener("resize", () => {
-        clampToViewport();
-        adjustPanelDirection();
-    });
-    window.addEventListener("orientationchange", () => {
-        setTimeout(() => {
+    window.addEventListener(
+        "resize",
+        () => {
             clampToViewport();
             adjustPanelDirection();
-        }, 250);
-    });
+        },
+        { signal: sig }
+    );
+    window.addEventListener(
+        "orientationchange",
+        () => {
+            setTimeout(() => {
+                clampToViewport();
+                adjustPanelDirection();
+            }, 250);
+        },
+        { signal: sig }
+    );
 
     const fabBtn = root.querySelector("#tts-fab-toggle");
 
@@ -1384,6 +1409,7 @@ export function initGlobalTextReader() {
         (e) => {
             if (!readerState.clickToReadEnabled) return;
             if (root.contains(e.target)) return;
+            if (e.target.closest("#sidebar-drawer, #btn-hamburger")) return;
 
             const target = e.target.closest(
                 "p, h1, h2, h3, h4, li, span, button, .accordion-trigger, .guide-text, .image-showcase-box"
@@ -1398,29 +1424,33 @@ export function initGlobalTextReader() {
                 speakText(text, { targetElement: target });
             }
         },
-        true
+        { capture: true, signal: sig }
     );
 
-    document.addEventListener("selectionchange", () => {
-        const selection = window.getSelection();
-        const selectedText = selection ? selection.toString().trim() : "";
+    document.addEventListener(
+        "selectionchange",
+        () => {
+            const selection = window.getSelection();
+            const selectedText = selection ? selection.toString().trim() : "";
 
-        if (selectedText.length >= 2 && !isForbiddenSpeech(selectedText)) {
-            try {
-                const range = selection.getRangeAt(0);
-                const rect = range.getBoundingClientRect();
-                if (rect.width > 0 && rect.height > 0) {
-                    selectionPill.style.top = `${Math.max(10, rect.top + window.scrollY - 10)}px`;
-                    selectionPill.style.left = `${rect.left + rect.width / 2 + window.scrollX}px`;
-                    selectionPill.style.display = "inline-flex";
-                    return;
+            if (selectedText.length >= 2 && !isForbiddenSpeech(selectedText)) {
+                try {
+                    const range = selection.getRangeAt(0);
+                    const rect = range.getBoundingClientRect();
+                    if (rect.width > 0 && rect.height > 0) {
+                        selectionPill.style.top = `${Math.max(10, rect.top + window.scrollY - 10)}px`;
+                        selectionPill.style.left = `${rect.left + rect.width / 2 + window.scrollX}px`;
+                        selectionPill.style.display = "inline-flex";
+                        return;
+                    }
+                } catch (err) {
+                    // تجاهل
                 }
-            } catch (err) {
-                // تجاهل
             }
-        }
-        selectionPill.style.display = "none";
-    });
+            selectionPill.style.display = "none";
+        },
+        { signal: sig }
+    );
 
     selectionPill.addEventListener("mousedown", (e) => {
         e.preventDefault();
@@ -1434,23 +1464,117 @@ export function initGlobalTextReader() {
         }
     });
 
-    document.addEventListener("click", (e) => {
-        if (!root.contains(e.target)) {
-            panel.classList.remove("is-open");
-        }
-    });
+    document.addEventListener(
+        "click",
+        (e) => {
+            if (!root.contains(e.target)) {
+                panel.classList.remove("is-open");
+            }
+        },
+        { signal: sig }
+    );
 
-    document.addEventListener("visibilitychange", () => {
-        if (document.hidden) stopSpeech();
+    document.addEventListener(
+        "visibilitychange",
+        () => {
+            if (document.hidden) stopSpeech();
+        },
+        { signal: sig }
+    );
+    window.addEventListener("pagehide", stopSpeech, { signal: sig });
+    window.addEventListener("beforeunload", stopSpeech, { signal: sig });
+
+    // إلغاء القارئ بالكامل: إيقاف الصوت، إزالة كل المستمعين، وحذف الزر واللوحة من الصفحة
+    readerTeardown = () => {
+        listenerCtl.abort();
+        stopSpeech();
+        readerState.clickToReadEnabled = false;
+        selectionPill.style.display = "none";
+        root.remove();
+        const toast = document.getElementById("native-tts-toast");
+        if (toast) toast.remove();
+        readerTeardown = null;
+    };
+}
+
+// ==========================================================================
+// تفعيل/إلغاء القارئ الذاتي من القائمة الجانبية (يعمل في كل الصفحات)
+// ==========================================================================
+export function setGlobalTextReaderEnabled(enabled) {
+    if (!HAS_DOM) return;
+    try {
+        localStorage.setItem(READER_ENABLED_KEY, enabled ? "on" : "off");
+    } catch (e) {
+        // تجاهل
+    }
+    if (enabled) {
+        initGlobalTextReader();
+        showReaderToast("تم تفعيل القارئ الذاتي، ستجده أسفل الشاشة ويمكنك سحبه.");
+    } else {
+        if (readerTeardown) readerTeardown();
+        showReaderToast("تم إلغاء القارئ الذاتي.");
+    }
+    updateReaderSidebarUi();
+}
+
+function updateReaderSidebarUi() {
+    const on = isReaderEnabled();
+    const tag = document.getElementById("sidebar-tts-tag");
+    const btn = document.getElementById("btn-sidebar-tts");
+    if (tag) {
+        tag.textContent = on ? "مفعّل" : "متوقف";
+        tag.className = "radio-status-tag " + (on ? "is-playing" : "is-stopped");
+    }
+    if (btn) btn.setAttribute("aria-pressed", String(on));
+}
+
+export function attachReaderSidebarToggle() {
+    if (!HAS_DOM) return;
+    document.querySelectorAll("#sidebar-drawer .sidebar-content").forEach((content) => {
+        let btn = content.querySelector("#btn-sidebar-tts");
+        if (!btn) {
+            btn = document.createElement("button");
+            btn.id = "btn-sidebar-tts";
+            btn.className = "sidebar-link btn-sidebar-radio";
+            btn.type = "button";
+            btn.innerHTML = `
+                <span class="sidebar-radio-title">
+                    <span class="sidebar-radio-icon">
+                        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 5 6 9H3v6h3l5 4V5Z"/><path d="M15.5 8.5a5 5 0 0 1 0 7"/><path d="M18.5 5.5a9 9 0 0 1 0 13"/></svg>
+                    </span>
+                    <span>القارئ الذاتي</span>
+                </span>
+                <span id="sidebar-tts-tag" class="radio-status-tag is-stopped">متوقف</span>
+            `;
+            const radioBtn = content.querySelector("#btn-sidebar-radio");
+            if (radioBtn) radioBtn.after(btn);
+            else content.appendChild(btn);
+        }
+        btn.onclick = (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            setGlobalTextReaderEnabled(!isReaderEnabled());
+        };
     });
-    window.addEventListener("pagehide", stopSpeech);
-    window.addEventListener("beforeunload", stopSpeech);
+    updateReaderSidebarUi();
 }
 
 if (HAS_DOM) {
+    const bootReader = () => {
+        if (isReaderEnabled()) initGlobalTextReader();
+        attachReaderSidebarToggle();
+    };
     if (document.readyState === "loading") {
-        document.addEventListener("DOMContentLoaded", initGlobalTextReader);
+        document.addEventListener("DOMContentLoaded", bootReader);
     } else {
-        initGlobalTextReader();
+        bootReader();
     }
+
+    // لو غيّر اللاعب الحالة من تبويب آخر مفتوح للموقع
+    window.addEventListener("storage", (e) => {
+        if (e.key !== READER_ENABLED_KEY) return;
+        if (isReaderEnabled()) initGlobalTextReader();
+        else if (readerTeardown) readerTeardown();
+        updateReaderSidebarUi();
+    });
 }

@@ -129,6 +129,8 @@
             body.rm-body #sidebar-drawer {
                 background-color: #262320;
                 border-right: 1px solid var(--rm-line);
+            }
+            body.rm-body #sidebar-drawer.sidebar-drawer-active {
                 box-shadow: 4px 0 14px rgba(0, 0, 0, 0.4);
             }
             body.rm-body .sidebar-link {
@@ -462,6 +464,33 @@
                     }
                 });
             });
+        </script>
+
+        <!-- ربط القائمة الجانبية مستقلاً عن app.js: يعمل حتى لو تأخر تحميل Firebase أو فشل استيراد ملف -->
+        <script>
+            (function () {
+                var btn = document.getElementById("btn-hamburger");
+                var drawer = document.getElementById("sidebar-drawer");
+                if (!btn || !drawer || window.__sidebarBound) return;
+                window.__sidebarBound = true;
+                function setSidebar(open) {
+                    drawer.classList.toggle("sidebar-drawer-active", open);
+                    btn.setAttribute("aria-expanded", String(open));
+                }
+                btn.addEventListener("click", function (e) {
+                    e.stopPropagation();
+                    setSidebar(!drawer.classList.contains("sidebar-drawer-active"));
+                });
+                document.addEventListener("click", function (e) {
+                    if (!drawer.contains(e.target) && !btn.contains(e.target)) setSidebar(false);
+                });
+                drawer.addEventListener("click", function (e) {
+                    if (e.target.closest("a")) setSidebar(false);
+                });
+                document.addEventListener("keydown", function (e) {
+                    if (e.key === "Escape") setSidebar(false);
+                });
+            })();
         </script>
 
         <!-- استدعاء ملف الجافا سكريبت الموحد -->
