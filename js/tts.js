@@ -665,7 +665,7 @@ function injectReaderStyles() {
             box-shadow: 0 6px 18px rgba(0, 0, 0, 0.45);
             font-weight: 700;
             font-size: 0.82rem;
-            transition: box-shadow 0.25s ease, border-color 0.25s ease, color 0.25s ease;
+            transition: all 0.25s ease;
             outline: none;
             /* 🔧 [إصلاح جوهري - سحب الموبايل]: يجب أن يحمل مقبض السحب نفسه touch-action:none
                صراحةً (لا يكفي وجودها على الحاوية الأب فقط)، حتى يقرر متصفح الموبايل من أول
@@ -684,12 +684,10 @@ function injectReaderStyles() {
             width: 21px;
             height: 21px;
         }
-        @media (hover: hover) {
-            .tts-fab-btn:hover {
-                transform: translateY(-2px);
-                box-shadow: 0 10px 28px rgba(213, 167, 92, 0.25);
-                background: #1e293b;
-            }
+        .tts-fab-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 28px rgba(213, 167, 92, 0.25);
+            background: #1e293b;
         }
         .tts-fab-btn.is-active {
             border-color: #4ade80;
@@ -703,7 +701,9 @@ function injectReaderStyles() {
             left: 0;
             width: 310px;
             max-width: 90vw;
-            background: rgba(13, 23, 38, 0.98);
+            background: rgba(13, 23, 38, 0.96);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
             border: 1.5px solid rgba(213, 167, 92, 0.5);
             border-radius: 16px;
             padding: 14px;
@@ -946,25 +946,8 @@ function updateReaderUi() {
     }
 }
 
-// 🧹 حماية من النسخ المكررة للزر العائم: أي زر/لوحة/كبسولة للقارئ الذاتي موجودة خارج الحاوية الحية
-// (نسخة ثابتة في ملف HTML، أو بقايا نسخة قديمة، أو حقن مكرر من سكربت آخر) تُزال فوراً،
-// فيبقى زر واحد فقط هو القابل للسحب ولا يتبقى "شبح" في المكان القديم.
-const STALE_READER_SELECTOR =
-    ".tts-floating-container, .tts-fab-btn, .tts-dock-panel, .tts-selection-pill, #tts-fab-toggle, #tts-dock-panel, #tts-selection-pill";
-
-function purgeStaleReaderCopies(liveRoot) {
-    document.querySelectorAll(STALE_READER_SELECTOR).forEach((el) => {
-        if (liveRoot && (el === liveRoot || liveRoot.contains(el))) return;
-        el.remove();
-    });
-}
-
 export function initGlobalTextReader() {
-    if (!HAS_DOM) return;
-    const existingRoot = document.getElementById("tts-global-root");
-    if (existingRoot && existingRoot.dataset.ttsLive === "1") return;
-    // نسخة قديمة/ثابتة بدون مستمعين: نحذفها ونبني الحية بدلها
-    purgeStaleReaderCopies(null);
+    if (!HAS_DOM || document.getElementById("tts-global-root")) return;
     injectReaderStyles();
 
     const root = document.createElement("div");
@@ -1049,16 +1032,7 @@ export function initGlobalTextReader() {
         </button>
     `;
 
-    root.dataset.ttsLive = "1";
     document.body.appendChild(root);
-
-    // مراقب يزيل أي نسخة مكررة تظهر لاحقاً خارج الحاوية الحية
-    const staleObserver = new MutationObserver(() => {
-        if (document.querySelectorAll(".tts-fab-btn, .tts-floating-container").length > 1) {
-            purgeStaleReaderCopies(root);
-        }
-    });
-    staleObserver.observe(document.body, { childList: true, subtree: true });
 
     // كل مستمعي document/window أدناه مربوطون بهذه الإشارة ليُزالوا دفعة واحدة عند الإلغاء
     const listenerCtl = new AbortController();
@@ -1067,22 +1041,14 @@ export function initGlobalTextReader() {
     let currentX = 0;
     let currentY = 0;
 
-    // 🔧 [إصلاح النسخة الشبحية على الهواتف]: الزر يتحرك الآن بتغيير left/bottom الحقيقيين بدل
-    // transform:translate3d. الـ translate3d كان يرفع الحاوية لطبقة GPU مستقلة، وبعض متصفحات
-    // الأندرويد تترك "صورة قديمة" من تلك الطبقة في مكانها الأصلي عند السحب فتظهر كزر ثانٍ.
-    // القيمتان المحفوظتان (tts-trans-x / tts-trans-y) بنفس معناهما القديم فلا يضيع موقع أحد.
-    const BASE_OFFSET_PX = 16;
+    // الموضع يُطبَّق عبر left/bottom بدل transform:translate3d: الـ translate3d كان يحوّل الحاوية لطبقة GPU
+    // مستقلة في منتصف اللمسة الأولى فتترك بعض متصفحات الموبايل صورة شبحية في مكانها القديم.
+    // قيمتا tts-trans-x / tts-trans-y المحفوظتان بنفس معناهما (إزاحة عن الموضع الأساسي) فلا يضيع مكان أحد.
+    const baseLeftPx = parseFloat(getComputedStyle(root).left) || 16;
+    const baseBottomPx = parseFloat(getComputedStyle(root).bottom) || 16;
     function applyReaderPosition() {
-        root.style.transform = "none";
-        root.style.left = `${BASE_OFFSET_PX + currentX}px`;
-        root.style.bottom = `${BASE_OFFSET_PX - currentY}px`;
-    }
-
-    // يجبر المتصفح على إعادة رسم المنطقة بالكامل ويمسح أي بقايا رسم قديمة
-    function forceReaderRepaint() {
-        root.style.display = "none";
-        void root.offsetHeight;
-        root.style.display = "";
+        root.style.left = `${baseLeftPx + currentX}px`;
+        root.style.bottom = `${baseBottomPx - currentY}px`;
     }
 
     // ==========================================================================
@@ -1283,7 +1249,6 @@ export function initGlobalTextReader() {
                 localStorage.setItem("tts-trans-y", String(currentY));
                 adjustPanelDirection();
                 suppressNextClick = true;
-                forceReaderRepaint();
             } else if (!wasCancelled) {
                 // لم تتحرك اللمسة عملياً: هذه "نقرة" حقيقية، نتعامل معها هنا مباشرة بدل
                 // انتظار حدث click منفصل، فتتوحد نقطة القرار ويستحيل تعارض توقيت اللمس/النقر
@@ -1531,7 +1496,6 @@ export function initGlobalTextReader() {
 
     // إلغاء القارئ بالكامل: إيقاف الصوت، إزالة كل المستمعين، وحذف الزر واللوحة من الصفحة
     readerTeardown = () => {
-        staleObserver.disconnect();
         listenerCtl.abort();
         stopSpeech();
         readerState.clickToReadEnabled = false;
