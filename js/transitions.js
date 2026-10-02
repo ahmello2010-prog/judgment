@@ -260,6 +260,31 @@ function waitForVisualReady(callback, minimumDelay = 0) {
     void finish();
 }
 
+// إشعار الوحدات الأخرى بتغيّر حالة الـiframe viewport (إنشاء/إزالة) دون معرفة من يستمع
+function notifyViewportChange() {
+    try {
+        window.dispatchEvent(new CustomEvent("court-viewport-change"));
+    } catch (e) {}
+}
+
+// إزالة الـiframe viewport والعودة لعرض الصفحة الحاضنة، مع إشعار تغيّر الحالة
+export function closeSeamlessViewport() {
+    const frame = document.getElementById("court-app-viewport");
+    if (!frame) return;
+
+    viewportNavigationToken++;
+    frame.__courtPendingNavigation = null;
+    frame.remove();
+
+    sessionStorage.removeItem("court_page_transitioning");
+
+    if (transitionOverlay) {
+        transitionOverlay.classList.remove("is-exiting");
+    }
+
+    notifyViewportChange();
+}
+
 // تشغيل إطار العرض السينمائي الكامل لضمان استمرار البث الصوتي
 // بنفس الـ Audio Instance.
 //
@@ -293,6 +318,9 @@ function launchSeamlessViewport(targetUrl, skipTransition = false) {
         `;
 
         document.body.appendChild(frame);
+
+        // إشعار فقط: الـviewport أصبح موجوداً (ملكية القارئ تُدار في tts.js)
+        notifyViewportChange();
 
         frame.addEventListener("load", () => {
             const pending = frame.__courtPendingNavigation;

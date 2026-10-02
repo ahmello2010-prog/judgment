@@ -946,8 +946,23 @@ function updateReaderUi() {
     }
 }
 
+// ==========================================================================
+// ملكية القارئ بين الـparent والـiframe viewport (court-app-viewport)
+// - داخل iframe: هذا الـdocument هو المالك.
+// - في الـdocument الذي يحتضن iframe viewport حيّاً: لا يملك القارئ.
+// - الملكية مشتقة من حالة الـiframe الفعلية في DOM، فلا توجد حالة مخزّنة قد تعلق.
+// ==========================================================================
+function canOwnReader() {
+    try {
+        if (window.frameElement) return true;
+        return !document.getElementById("court-app-viewport");
+    } catch (e) {
+        return true;
+    }
+}
+
 export function initGlobalTextReader() {
-    if (!HAS_DOM || document.getElementById("tts-global-root")) return;
+    if (!HAS_DOM || document.getElementById("tts-global-root") || !canOwnReader()) return;
     injectReaderStyles();
 
     const root = document.createElement("div");
@@ -1579,6 +1594,17 @@ if (HAS_DOM) {
     } else {
         bootReader();
     }
+
+    // عند إنشاء/إزالة iframe viewport: الـparent يتخلى عن القارئ أو يستعيده بحسب الحالة الفعلية
+    const syncReaderOwnership = () => {
+        if (!canOwnReader()) {
+            if (readerTeardown) readerTeardown();
+        } else if (isReaderEnabled()) {
+            initGlobalTextReader();
+        }
+    };
+    window.addEventListener("court-viewport-change", syncReaderOwnership);
+    window.addEventListener("pageshow", syncReaderOwnership);
 
     // لو غيّر اللاعب الحالة من تبويب آخر مفتوح للموقع
     window.addEventListener("storage", (e) => {
