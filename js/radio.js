@@ -1,14 +1,13 @@
 // ==========================================================================
-// 📻 js/radio.js — مشغل راديو محكمة الأدوار (Courtroom Radio Player)
-// - إلغاء الساوند تراك التلقائي والزر العائم الخارجي
-// - مشغل راديو تفاعلي أنيق يتم فتحه من القائمة الجانبية (Sidebar)
-// - اختيار المحطات وضبط مستوى الصوت وتأثيرات الأمواج الصوتية
-// - استمرار البث بسلاسة بين الصفحات فقط إذا قام اللاعب بتشغيله
+// 📻 js/radio.js — مشغل راديو محكمة الأدوار الشامل (Persistent Global Radio)
+// - كائن صوتي واحد دائم (Single Audio Instance) يعمل باستمرار طوال الجلسة
+// - لا يتم تدمير أو إعادة إنشاء الصوت عند التنقل بين صفحات الموقع
+// - بدون إعادة تشغيل أو فجوات زمنية أو اعتماد على currentTime
 // ==========================================================================
 
 import "./transitions.js";
 
-const RADIO_STATIONS = [
+export const RADIO_STATIONS = [
     {
         id: "classic_court",
         name: "إذاعة محكمة الأدوار",
@@ -29,29 +28,54 @@ const RADIO_STATIONS = [
         freq: "104.2 FM",
         desc: "نغمات التشويق والترقب في قاعة المحاكمة",
         src: "https://res.cloudinary.com/x7aizl6a/video/upload/v1790947454/radioo.mp3"
+    },
+    {
+        id: "court_tension",
+        name: "(2)موسيقى محكمة الأدوار",
+        freq: "107.8 FM",
+        desc: "نغمات التشويق والترقب في قاعة المحاكمة",
+        src: "https://res.cloudinary.com/x7aizl6a/video/upload/v1790953278/radioooo.mp3"
     }
 ];
 
 const STORAGE_POWER_KEY = "court_radio_power";
 const STORAGE_STATION_KEY = "court_radio_station";
 const STORAGE_VOLUME_KEY = "court_radio_volume";
-const STORAGE_TIME_KEY = "court_radio_time";
 
 let radioAudio = null;
 let currentStationIndex = 0;
 let isRadioPowerOn = false;
 let currentVolume = 0.5;
 
+// البحث عن الحاضنة الدائمة للصوت (Single Persistent Audio Host)
+export function getPersistentAudioHost() {
+    try {
+        if (window.__courtRadioHost) return window;
+        if (window.parent && window.parent !== window && window.parent.__courtRadioHost) return window.parent;
+        if (window.top && window.top !== window && window.top.__courtRadioHost) return window.top;
+    } catch (e) {}
+    return null;
+}
+
 export function initCourtRadio() {
     if (typeof window === "undefined" || typeof document === "undefined") return;
 
-    // منع التكرار
-    if (document.getElementById("court-radio-modal")) {
+    // 1. فحص وجود الحاضنة الدائمة للصوت في نافذة الجلسة
+    const host = getPersistentAudioHost();
+    const isChildFrame = host && host !== window;
+
+    if (isChildFrame) {
+        // إطار فرعي: يتصل بالحاضنة الدائمة ولا يُنشئ كائن audio جديد
+        syncStateFromHost();
+        buildRadioModal();
         attachSidebarButton();
+
+        window.addEventListener("storage", syncStateFromHost);
+        window.addEventListener("court-radio-update", syncStateFromHost);
         return;
     }
 
-    // 1. استعادة الإعدادات المخزنة
+    // 2. النافذة الحاضنة الدائمة: تمتلك كائن الصوت الوحيد الفعلي
     const savedPower = localStorage.getItem(STORAGE_POWER_KEY);
     isRadioPowerOn = savedPower === "on";
 
@@ -62,13 +86,14 @@ export function initCourtRadio() {
     const savedVol = parseFloat(localStorage.getItem(STORAGE_VOLUME_KEY) || "0.5");
     currentVolume = isNaN(savedVol) ? 0.5 : Math.max(0, Math.min(1, savedVol));
 
-    // 2. تهيئة عنصر الصوت المشترك للراديو
+    // إنشاء كائن الصوت الموحد الدائم (مرة واحدة فقط للجلسة)
     radioAudio = document.getElementById("courtroom-radio-audio");
     if (!radioAudio) {
         radioAudio = document.createElement("audio");
         radioAudio.id = "courtroom-radio-audio";
         radioAudio.loop = true;
         radioAudio.preload = "auto";
+        radioAudio.setAttribute("playsinline", "");
         radioAudio.style.display = "none";
         document.body.appendChild(radioAudio);
     }
@@ -76,39 +101,27 @@ export function initCourtRadio() {
     radioAudio.src = RADIO_STATIONS[currentStationIndex].src;
     radioAudio.volume = currentVolume;
 
-    // استعادة موضع البث إذا كان الراديو مشغلاً مسبقاً
-    if (isRadioPowerOn) {
-        const savedTime = parseFloat(sessionStorage.getItem(STORAGE_TIME_KEY) || "0");
-        if (savedTime && !isNaN(savedTime) && savedTime > 0) {
-            radioAudio.currentTime = savedTime;
-        }
-    }
+    // تسجيل الحاضنة رسمياً
+    window.__courtRadioHost = {
+        play: playRadio,
+        stop: stopRadio,
+        togglePower: toggleRadioPower,
+        switchStation: switchStation,
+        setVolume: setRadioVolume,
+        openModal: openRadioModal,
+        closeModal: closeRadioModal,
+        getState: () => ({
+            isPowerOn: isRadioPowerOn,
+            stationIndex: currentStationIndex,
+            station: RADIO_STATIONS[currentStationIndex],
+            volume: currentVolume,
+            stations: RADIO_STATIONS
+        })
+    };
 
-    // حفظ موضع البث بصورة مستمرة إذا كان الراديو يعمل
-    radioAudio.addEventListener("timeupdate", () => {
-        if (isRadioPowerOn && radioAudio) {
-            sessionStorage.setItem(STORAGE_TIME_KEY, String(radioAudio.currentTime));
-        }
-    });
-
-    window.addEventListener("beforeunload", () => {
-        if (radioAudio && isRadioPowerOn) {
-            sessionStorage.setItem(STORAGE_TIME_KEY, String(radioAudio.currentTime));
-        }
-    });
-    window.addEventListener("pagehide", () => {
-        if (radioAudio && isRadioPowerOn) {
-            sessionStorage.setItem(STORAGE_TIME_KEY, String(radioAudio.currentTime));
-        }
-    });
-
-    // 3. بناء واجهة مشغل الراديو (Modal UI)
     buildRadioModal();
-
-    // 4. ربط الزر في القائمة الجانبية
     attachSidebarButton();
 
-    // تشغيل الراديو إن كان مفعلاً من قبل اللاعب
     if (isRadioPowerOn) {
         playRadio();
     } else {
@@ -116,7 +129,24 @@ export function initCourtRadio() {
     }
 }
 
+function syncStateFromHost() {
+    const host = getPersistentAudioHost();
+    if (host && host.__courtRadioHost) {
+        const state = host.__courtRadioHost.getState();
+        isRadioPowerOn = state.isPowerOn;
+        currentStationIndex = state.stationIndex;
+        currentVolume = state.volume;
+    } else {
+        isRadioPowerOn = localStorage.getItem(STORAGE_POWER_KEY) === "on";
+        currentStationIndex = parseInt(localStorage.getItem(STORAGE_STATION_KEY) || "0", 10) || 0;
+        currentVolume = parseFloat(localStorage.getItem(STORAGE_VOLUME_KEY) || "0.5") || 0.5;
+    }
+    updateRadioUI();
+}
+
 function buildRadioModal() {
+    if (document.getElementById("court-radio-modal")) return;
+
     const modal = document.createElement("div");
     modal.id = "court-radio-modal";
     modal.className = "court-radio-overlay";
@@ -144,16 +174,17 @@ function buildRadioModal() {
                 </button>
             </div>
 
-            <!-- شاشة التردد الرقمية LCD المصغرة -->
+            <!-- شاشة التردد الرقمية LCD -->
             <div class="radio-lcd-screen">
                 <div class="radio-lcd-top">
-                    <span id="radio-freq-display" class="radio-freq-badge">98.4 FM</span>
-                    <span id="radio-onair-badge" class="radio-onair-badge is-off">وضع الاستعداد</span>
+                    <span id="radio-freq-display" class="radio-freq-badge">${RADIO_STATIONS[currentStationIndex].freq}</span>
+                    <span id="radio-onair-badge" class="radio-onair-badge ${isRadioPowerOn ? "is-on" : "is-off"}">
+                        ${isRadioPowerOn ? "مباشر" : "وضع الاستعداد"}
+                    </span>
                 </div>
-                <div id="radio-station-title" class="radio-station-title">إذاعة محكمة الأدوار</div>
+                <div id="radio-station-title" class="radio-station-title">${RADIO_STATIONS[currentStationIndex].name}</div>
 
-                <!-- مؤشر الأمواج الصوتية -->
-                <div id="radio-wave-visualizer" class="radio-wave-bars">
+                <div id="radio-wave-visualizer" class="radio-wave-bars ${isRadioPowerOn ? "is-active" : ""}">
                     <span class="r-bar r-bar-1"></span>
                     <span class="r-bar r-bar-2"></span>
                     <span class="r-bar r-bar-3"></span>
@@ -165,13 +196,13 @@ function buildRadioModal() {
                 </div>
             </div>
 
-            <!-- قائمة المحطات الإذاعية المدمجة -->
+            <!-- قائمة المحطات الإذاعية -->
             <div class="radio-stations-list">
                 <div class="radio-section-label">المحطات المتاحة:</div>
                 <div id="radio-stations-container" class="radio-stations-grid"></div>
             </div>
 
-            <!-- لوحة التحكم السفلية المدمجة -->
+            <!-- أزرار التحكم ومستوى الصوت -->
             <div class="radio-controls-strip">
                 <div class="radio-playback-controls">
                     <button type="button" id="btn-radio-prev" class="radio-ctrl-btn" title="المحطة السابقة" aria-label="المحطة السابقة">
@@ -180,7 +211,7 @@ function buildRadioModal() {
                             <line x1="5" y1="19" x2="5" y2="5" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"></line>
                         </svg>
                     </button>
-                    <button type="button" id="btn-radio-power" class="radio-power-btn is-off" title="تشغيل / إيقاف الراديو" aria-label="تشغيل / إيقاف الراديو">
+                    <button type="button" id="btn-radio-power" class="radio-power-btn ${isRadioPowerOn ? "is-on" : "is-off"}" title="تشغيل / إيقاف الراديو" aria-label="تشغيل / إيقاف الراديو">
                         <svg class="r-power-icon" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
                             <path d="M18.36 6.64a9 9 0 1 1-12.73 0"></path>
                             <line x1="12" y1="2" x2="12" y2="12"></line>
@@ -210,7 +241,6 @@ function buildRadioModal() {
 
     document.body.appendChild(modal);
 
-    // ربط المحطات داخل القائمة بشكل سطر مدمج أنيق
     const stationsContainer = modal.querySelector("#radio-stations-container");
     if (stationsContainer) {
         stationsContainer.innerHTML = RADIO_STATIONS.map(
@@ -233,18 +263,13 @@ function buildRadioModal() {
         });
     }
 
-    // زر الإغلاق
     modal.querySelector("#btn-radio-close").addEventListener("click", closeRadioModal);
     modal.addEventListener("click", (e) => {
-        if (e.target === modal) {
-            closeRadioModal();
-        }
+        if (e.target === modal) closeRadioModal();
     });
 
-    // زر التشغيل والإيقاف الرئيسي
     modal.querySelector("#btn-radio-power").addEventListener("click", toggleRadioPower);
 
-    // أزرار التالي والسابق
     modal.querySelector("#btn-radio-prev").addEventListener("click", () => {
         const nextIdx = (currentStationIndex - 1 + RADIO_STATIONS.length) % RADIO_STATIONS.length;
         switchStation(nextIdx);
@@ -254,66 +279,69 @@ function buildRadioModal() {
         switchStation(nextIdx);
     });
 
-    // شريط الصوت
     const volSlider = modal.querySelector("#radio-volume-slider");
-    const volPercent = modal.querySelector("#radio-vol-percent");
-    const volIcon = modal.querySelector("#radio-vol-icon");
     if (volSlider) {
         volSlider.addEventListener("input", (e) => {
-            const val = parseFloat(e.target.value);
-            currentVolume = val;
-            if (radioAudio) radioAudio.volume = val;
-            localStorage.setItem(STORAGE_VOLUME_KEY, String(val));
-            if (volPercent) volPercent.textContent = `${Math.round(val * 100)}%`;
-            if (volIcon) {
-                if (val === 0) {
-                    volIcon.innerHTML = `<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5" fill="currentColor"></polygon><line x1="23" y1="9" x2="17" y2="15"></line><line x1="17" y1="9" x2="23" y2="15"></line></svg>`;
-                } else if (val < 0.5) {
-                    volIcon.innerHTML = `<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5" fill="currentColor"></polygon><path d="M15.54 8.46a5 5 0 0 1 0 7.07"></path></svg>`;
-                } else {
-                    volIcon.innerHTML = `<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5" fill="currentColor"></polygon><path d="M15.54 8.46a5 5 0 0 1 0 7.07"></path><path d="M19.07 4.93a10 10 0 0 1 0 14.14"></path></svg>`;
-                }
-            }
+            setRadioVolume(parseFloat(e.target.value));
         });
     }
 }
 
 export function openRadioModal() {
-    const modal = document.getElementById("court-radio-modal");
+    const host = getPersistentAudioHost();
+    if (host && host !== window && host.__courtRadioHost) {
+        host.__courtRadioHost.openModal();
+        return;
+    }
+
+    let modal = document.getElementById("court-radio-modal");
     if (!modal) {
         buildRadioModal();
+        modal = document.getElementById("court-radio-modal");
     }
-    const targetModal = document.getElementById("court-radio-modal");
-    if (targetModal) {
-        targetModal.style.display = "flex";
+    if (modal) {
+        modal.style.display = "flex";
         updateRadioUI();
     }
 }
 
 export function closeRadioModal() {
+    const host = getPersistentAudioHost();
+    if (host && host !== window && host.__courtRadioHost) {
+        host.__courtRadioHost.closeModal();
+    }
     const modal = document.getElementById("court-radio-modal");
     if (modal) {
         modal.style.display = "none";
     }
 }
 
-function switchStation(index) {
-    if (index === currentStationIndex && isRadioPowerOn) return;
+export function switchStation(index) {
+    const host = getPersistentAudioHost();
+    if (host && host !== window && host.__courtRadioHost) {
+        host.__courtRadioHost.switchStation(index);
+        return;
+    }
+
     currentStationIndex = index;
     localStorage.setItem(STORAGE_STATION_KEY, String(currentStationIndex));
 
     if (radioAudio) {
         radioAudio.src = RADIO_STATIONS[currentStationIndex].src;
-        radioAudio.currentTime = 0;
-        sessionStorage.setItem(STORAGE_TIME_KEY, "0");
         if (isRadioPowerOn) {
             playRadio();
         }
     }
-    updateRadioUI();
+    broadcastUpdate();
 }
 
-async function playRadio() {
+export async function playRadio() {
+    const host = getPersistentAudioHost();
+    if (host && host !== window && host.__courtRadioHost) {
+        host.__courtRadioHost.play();
+        return;
+    }
+
     if (!radioAudio) return;
     isRadioPowerOn = true;
     localStorage.setItem(STORAGE_POWER_KEY, "on");
@@ -321,27 +349,33 @@ async function playRadio() {
     try {
         await radioAudio.play();
     } catch (err) {
-        // إذا كان المتصفح يتطلب لمسة/نقرة أولى
         const onFirstTouch = () => {
             if (isRadioPowerOn && radioAudio) radioAudio.play().catch(() => {});
             window.removeEventListener("click", onFirstTouch);
             window.removeEventListener("touchstart", onFirstTouch);
         };
         window.addEventListener("click", onFirstTouch, { once: true });
+        window.addEventListener("touchstart", onFirstTouch, { once: true });
     }
-    updateRadioUI();
+    broadcastUpdate();
 }
 
-function stopRadio() {
+export function stopRadio() {
+    const host = getPersistentAudioHost();
+    if (host && host !== window && host.__courtRadioHost) {
+        host.__courtRadioHost.stop();
+        return;
+    }
+
     isRadioPowerOn = false;
     localStorage.setItem(STORAGE_POWER_KEY, "off");
     if (radioAudio) {
         radioAudio.pause();
     }
-    updateRadioUI();
+    broadcastUpdate();
 }
 
-function toggleRadioPower() {
+export function toggleRadioPower() {
     if (isRadioPowerOn) {
         stopRadio();
     } else {
@@ -349,31 +383,51 @@ function toggleRadioPower() {
     }
 }
 
+export function setRadioVolume(val) {
+    const host = getPersistentAudioHost();
+    if (host && host !== window && host.__courtRadioHost) {
+        host.__courtRadioHost.setVolume(val);
+        return;
+    }
+
+    currentVolume = Math.max(0, Math.min(1, val));
+    if (radioAudio) radioAudio.volume = currentVolume;
+    localStorage.setItem(STORAGE_VOLUME_KEY, String(currentVolume));
+    broadcastUpdate();
+}
+
+function broadcastUpdate() {
+    updateRadioUI();
+    window.dispatchEvent(new CustomEvent("court-radio-update"));
+
+    const frame = document.getElementById("court-app-viewport");
+    if (frame && frame.contentWindow) {
+        try {
+            frame.contentWindow.dispatchEvent(new CustomEvent("court-radio-update"));
+        } catch (e) {}
+    }
+}
+
 function updateRadioUI() {
     const modal = document.getElementById("court-radio-modal");
     const st = RADIO_STATIONS[currentStationIndex];
 
-    if (modal) {
-        // تحديث التردد واسم المحطة
+    if (modal && st) {
         const freqDisp = modal.querySelector("#radio-freq-display");
         const titleDisp = modal.querySelector("#radio-station-title");
-        const descDisp = modal.querySelector("#radio-station-desc");
         const onairBadge = modal.querySelector("#radio-onair-badge");
         const waveVis = modal.querySelector("#radio-wave-visualizer");
         const powerBtn = modal.querySelector("#btn-radio-power");
+        const volSlider = modal.querySelector("#radio-volume-slider");
+        const volPercent = modal.querySelector("#radio-vol-percent");
+        const volIcon = modal.querySelector("#radio-vol-icon");
 
         if (freqDisp) freqDisp.textContent = st.freq;
         if (titleDisp) titleDisp.textContent = st.name;
-        if (descDisp) descDisp.textContent = st.desc;
 
         if (onairBadge) {
-            if (isRadioPowerOn) {
-                onairBadge.className = "radio-onair-badge is-on";
-                onairBadge.textContent = "مباشر";
-            } else {
-                onairBadge.className = "radio-onair-badge is-off";
-                onairBadge.textContent = "وضع الاستعداد";
-            }
+            onairBadge.className = `radio-onair-badge ${isRadioPowerOn ? "is-on" : "is-off"}`;
+            onairBadge.textContent = isRadioPowerOn ? "مباشر" : "وضع الاستعداد";
         }
 
         if (waveVis) {
@@ -385,23 +439,28 @@ function updateRadioUI() {
             powerBtn.classList.toggle("is-off", !isRadioPowerOn);
         }
 
-        // تحديث البطاقات
+        if (volSlider) volSlider.value = currentVolume;
+        if (volPercent) volPercent.textContent = `${Math.round(currentVolume * 100)}%`;
+        if (volIcon) {
+            if (currentVolume === 0) {
+                volIcon.innerHTML = `<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5" fill="currentColor"></polygon><line x1="23" y1="9" x2="17" y2="15"></line><line x1="17" y1="9" x2="23" y2="15"></line></svg>`;
+            } else if (currentVolume < 0.5) {
+                volIcon.innerHTML = `<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5" fill="currentColor"></polygon><path d="M15.54 8.46a5 5 0 0 1 0 7.07"></path></svg>`;
+            } else {
+                volIcon.innerHTML = `<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5" fill="currentColor"></polygon><path d="M15.54 8.46a5 5 0 0 1 0 7.07"></path><path d="M19.07 4.93a10 10 0 0 1 0 14.14"></path></svg>`;
+            }
+        }
+
         modal.querySelectorAll(".radio-station-card").forEach((c, idx) => {
             c.classList.toggle("is-active", idx === currentStationIndex);
         });
     }
 
-    // تحديث الشارة في القائمة الجانبية
     const sidebarTag = document.getElementById("sidebar-radio-tag");
     const sidebarBtn = document.getElementById("btn-sidebar-radio");
     if (sidebarTag) {
-        if (isRadioPowerOn) {
-            sidebarTag.textContent = "يعمل";
-            sidebarTag.className = "radio-status-tag is-playing";
-        } else {
-            sidebarTag.textContent = "إيقاف";
-            sidebarTag.className = "radio-status-tag is-stopped";
-        }
+        sidebarTag.textContent = isRadioPowerOn ? "يعمل" : "إيقاف";
+        sidebarTag.className = `radio-status-tag ${isRadioPowerOn ? "is-playing" : "is-stopped"}`;
     }
     if (sidebarBtn) {
         sidebarBtn.classList.toggle("radio-is-playing", isRadioPowerOn);
@@ -434,12 +493,9 @@ export function attachSidebarButton() {
                     ${isRadioPowerOn ? "يعمل" : "إيقاف"}
                 </span>
             `;
-
-            // إدراجه قبل أو بعد روابط القائمة
             content.appendChild(btn);
         }
 
-        // ربط حدث النقر لفتح الراديو وإغلاق القائمة الجانبية
         btn.onclick = (e) => {
             e.preventDefault();
             e.stopPropagation();
@@ -453,7 +509,6 @@ export function attachSidebarButton() {
     updateRadioUI();
 }
 
-// تشغيل ذاتي عند تحميل الصفحة
 if (typeof document !== "undefined") {
     if (document.readyState === "loading") {
         document.addEventListener("DOMContentLoaded", initCourtRadio);
