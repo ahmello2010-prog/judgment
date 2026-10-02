@@ -946,8 +946,25 @@ function updateReaderUi() {
     }
 }
 
+// 🧹 حماية من النسخ المكررة للزر العائم: أي زر/لوحة/كبسولة للقارئ الذاتي موجودة خارج الحاوية الحية
+// (نسخة ثابتة في ملف HTML، أو بقايا نسخة قديمة، أو حقن مكرر من سكربت آخر) تُزال فوراً،
+// فيبقى زر واحد فقط هو القابل للسحب ولا يتبقى "شبح" في المكان القديم.
+const STALE_READER_SELECTOR =
+    ".tts-floating-container, .tts-fab-btn, .tts-dock-panel, .tts-selection-pill, #tts-fab-toggle, #tts-dock-panel, #tts-selection-pill";
+
+function purgeStaleReaderCopies(liveRoot) {
+    document.querySelectorAll(STALE_READER_SELECTOR).forEach((el) => {
+        if (liveRoot && (el === liveRoot || liveRoot.contains(el))) return;
+        el.remove();
+    });
+}
+
 export function initGlobalTextReader() {
-    if (!HAS_DOM || document.getElementById("tts-global-root")) return;
+    if (!HAS_DOM) return;
+    const existingRoot = document.getElementById("tts-global-root");
+    if (existingRoot && existingRoot.dataset.ttsLive === "1") return;
+    // نسخة قديمة/ثابتة بدون مستمعين: نحذفها ونبني الحية بدلها
+    purgeStaleReaderCopies(null);
     injectReaderStyles();
 
     const root = document.createElement("div");
@@ -1032,7 +1049,16 @@ export function initGlobalTextReader() {
         </button>
     `;
 
+    root.dataset.ttsLive = "1";
     document.body.appendChild(root);
+
+    // مراقب يزيل أي نسخة مكررة تظهر لاحقاً خارج الحاوية الحية
+    const staleObserver = new MutationObserver(() => {
+        if (document.querySelectorAll(".tts-fab-btn, .tts-floating-container").length > 1) {
+            purgeStaleReaderCopies(root);
+        }
+    });
+    staleObserver.observe(document.body, { childList: true, subtree: true });
 
     // كل مستمعي document/window أدناه مربوطون بهذه الإشارة ليُزالوا دفعة واحدة عند الإلغاء
     const listenerCtl = new AbortController();
@@ -1486,6 +1512,7 @@ export function initGlobalTextReader() {
 
     // إلغاء القارئ بالكامل: إيقاف الصوت، إزالة كل المستمعين، وحذف الزر واللوحة من الصفحة
     readerTeardown = () => {
+        staleObserver.disconnect();
         listenerCtl.abort();
         stopSpeech();
         readerState.clickToReadEnabled = false;

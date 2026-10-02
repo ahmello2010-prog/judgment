@@ -9,7 +9,12 @@ import {
     update,
     remove
 } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
-import { mountVoiceControls, mountVoiceControlsAll, stopSpeech, registerForbiddenSpeech } from "./tts.js";
+import {
+    mountVoiceControls,
+    mountVoiceControlsAll,
+    stopSpeech as stopTtsSpeech,
+    registerForbiddenSpeech
+} from "./tts.js";
 import {
     GAME_MODES,
     normalizeGameMode,
@@ -1058,11 +1063,9 @@ function listenToFinalLobby() {
                         true
                     );
                 } else {
-                    const spokenQuestion = `سؤال موجّه إلى ${promptData.target_name || "أحد الحاضرين"} من ${promptData.asker_name || "طرف المحكمة"}: ${promptData.question_text}`;
                     triggerKillFeedAlert(
                         `❓ سؤال موجّه لـ (${promptData.target_name || "أحد الحاضرين"}) من ${promptData.asker_name || "طرف المحكمة"}: ${promptData.question_text}`,
-                        true,
-                        { speakable: true, speechText: spokenQuestion }
+                        true
                     );
                 }
 
@@ -1081,11 +1084,9 @@ function listenToFinalLobby() {
             ) {
                 window.lastProcessedEvidenceConfrontationTimestamp = gameState.active_evidence_confrontation.timestamp;
                 const evidenceConfrontation = gameState.active_evidence_confrontation;
-                const spokenEvidence = `دليل جديد يُقدَّم أمام المحكمة ضد ${evidenceConfrontation.target_name || "أحد المتهمين"}: ${evidenceConfrontation.evidence_text}`;
                 triggerKillFeedAlert(
                     `🗂️ ${evidenceConfrontation.presenter_name || "أحد المحامين"} يواجه (${evidenceConfrontation.target_name || "أحد المتهمين"}) بدليل: ${evidenceConfrontation.evidence_text}`,
-                    true,
-                    { speakable: true, speechText: spokenEvidence }
+                    true
                 );
 
                 if (evidenceConfrontation.target_uid === mySecretUID) {
@@ -1104,18 +1105,14 @@ function listenToFinalLobby() {
                 window.lastProcessedEvidenceResponseTimestamp = gameState.evidence_response.timestamp;
                 const evidenceResponse = gameState.evidence_response;
                 if (evidenceResponse.outcome === "justify" || evidenceResponse.outcome === "justified") {
-                    const spokenAnnouncement = `قدّم ${evidenceResponse.target_name || "المتهم"} تبريره الشفهي للدليل أمام المحكمة.`;
                     triggerKillFeedAlert(
                         `🗣️ قدّم (${evidenceResponse.target_name || "المتهم"}) تبريره الشفهي للدليل أمام المحكمة`,
-                        true,
-                        { speakable: true, speechText: spokenAnnouncement }
+                        true
                     );
                 } else {
-                    const spokenSilence = `اختار ${evidenceResponse.target_name || "المتهم"} التزام الصمت رداً على هذا الدليل.`;
                     triggerKillFeedAlert(
                         `🤐 اختار (${evidenceResponse.target_name || "المتهم"}) التزام الصمت رداً على هذا الدليل.`,
-                        true,
-                        { speakable: true, speechText: spokenSilence }
+                        true
                     );
                 }
             }
@@ -1145,11 +1142,9 @@ function listenToFinalLobby() {
             ) {
                 window.lastProcessedNetworkRevealTimestamp = gameState.network_reveal.timestamp;
                 const reveal = gameState.network_reveal;
-                const spokenReveal = `${reveal.from_name || "أحد اللاعبين"} يكشف للمحكمة أن ${reveal.target_name || "أحد الحاضرين"} ${reveal.link_type || "مرتبط بمعرفة سرية"}: ${reveal.link_hint}`;
                 triggerKillFeedAlert(
                     `⚡ ${reveal.from_name || "أحد اللاعبين"} يكشف للمحكمة عن (${reveal.target_name || "أحد الحاضرين"}): ${reveal.link_hint}`,
-                    true,
-                    { speakable: true, speechText: spokenReveal }
+                    true
                 );
             }
 
@@ -4330,17 +4325,6 @@ function triggerKillFeedAlert(alertText, isJudgeReveal = false, options = {}) {
 
     feedContainer.appendChild(alertNode);
 
-    // 🔊 الأسئلة المبثوثة للجميع علنية: نضيف لها زر "تشغيل المتحدث الصوتي" داخل الإشعار نفسه
-    if (options.speakable && isJudgeReveal) {
-        alertNode.style.setProperty("flex-wrap", "wrap", "important");
-        mountVoiceControls(alertNode, {
-            kind: "public",
-            compact: true,
-            placement: "inside-end",
-            getText: () => options.speechText || alertText
-        });
-    }
-
     setTimeout(() => {
         alertNode.style.setProperty("transform", "translateY(0)", "important");
         alertNode.style.setProperty("opacity", "1", "important");
@@ -5062,6 +5046,60 @@ const endCurrentCourtSession = (verdictOutcomeData) => {
         });
 };
 // ==========================================================================
+// 🎧 قارئ بشري لقصة القضية (ملف صوتي مسجل) بدل القارئ الآلي
+// stopSpeech المحلية توقف القارئ الآلي + الصوت المسجل معاً، فكل أماكن الإيقاف القديمة تشتغل عليهما
+// ==========================================================================
+let caseStoryAudioEl = null;
+
+function stopCaseStoryAudio() {
+    if (caseStoryAudioEl) {
+        try {
+            caseStoryAudioEl.pause();
+        } catch (e) {
+            /* تجاهل */
+        }
+        caseStoryAudioEl = null;
+    }
+}
+
+function stopSpeech() {
+    stopTtsSpeech();
+    stopCaseStoryAudio();
+}
+
+function mountCaseStoryAudio(anchorEl, audioUrl) {
+    if (!anchorEl || !audioUrl) return;
+    stopCaseStoryAudio();
+
+    const wrap = document.createElement("div");
+    wrap.className = "case-story-audio";
+    wrap.style.cssText = "margin: 0 0 16px 0; direction: rtl; text-align: right;";
+
+    const label = document.createElement("div");
+    label.textContent = "🎧 استمع إلى راوي القضية";
+    label.style.cssText =
+        "color: var(--gold-glow, #d5a75c); font-family: 'Alexandria', sans-serif; font-size: 0.7rem; font-weight: 700; margin-bottom: 6px;";
+
+    const audio = document.createElement("audio");
+    audio.controls = true;
+    audio.preload = "none";
+    audio.src = audioUrl;
+    audio.style.cssText = "width: 100%; height: 38px;";
+
+    // لو الرابط فيه مشكلة نرجع للقارئ الآلي بدل ما يبقى المستخدم بدون صوت
+    audio.addEventListener("error", () => {
+        wrap.remove();
+        if (caseStoryAudioEl === audio) caseStoryAudioEl = null;
+        mountVoiceControls(anchorEl, { kind: "public" });
+    });
+
+    wrap.appendChild(label);
+    wrap.appendChild(audio);
+    anchorEl.insertAdjacentElement("afterend", wrap);
+    caseStoryAudioEl = audio;
+}
+
+// ==========================================================================
 // 1️⃣ المودال الأول: منصة عرض السيناريو وملف الجريمة العام للغرفة (حجم مكبر فخم)
 // ==========================================================================
 function openCaseStoryFirstModal(roleCard, activeCase, defenseClientName) {
@@ -5107,8 +5145,13 @@ function openCaseStoryFirstModal(roleCard, activeCase, defenseClientName) {
     modal.style.setProperty("display", "flex", "important");
     modal.className = "modal-overlay-active";
 
-    // 🔊 وصف القضية علني للجميع
-    mountVoiceControls(document.getElementById("case-description-text"), { kind: "public" });
+    // 🎧 قصة القضية: قارئ بشري (ملف صوتي). القضايا التي لم يُضف لها رابط بعد تبقى مؤقتاً على القارئ الآلي
+    const caseDescEl = document.getElementById("case-description-text");
+    if (activeCase.story_audio_url) {
+        mountCaseStoryAudio(caseDescEl, activeCase.story_audio_url);
+    } else {
+        mountVoiceControls(caseDescEl, { kind: "public" });
+    }
 
     document.getElementById("btn-next-to-secret-role").addEventListener("click", function (e) {
         e.preventDefault();
