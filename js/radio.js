@@ -27,7 +27,7 @@ export const RADIO_STATIONS = [
         name: "موسيقى محكمة الأدوار",
         freq: "104.2 FM",
         desc: "نغمات التشويق والترقب في قاعة المحاكمة",
-        src: "https://res.cloudinary.com/x7aizl6a/video/upload/v1790947454/radioo.mp3"
+        src: "https://res.cloudinary.com/x7aizl6a/video/upload/v1790955512/radioo.mp3"
     },
     {
         id: "court_tension",
@@ -91,11 +91,20 @@ export function initCourtRadio() {
     if (!radioAudio) {
         radioAudio = document.createElement("audio");
         radioAudio.id = "courtroom-radio-audio";
-        radioAudio.loop = true;
         radioAudio.preload = "auto";
         radioAudio.setAttribute("playsinline", "");
         radioAudio.style.display = "none";
         document.body.appendChild(radioAudio);
+    }
+
+    // بدون إعادة: عند انتهاء الصوت ينتقل تلقائياً إلى الصوت التالي (ويعود للأول بعد الأخير)
+    radioAudio.loop = false;
+    if (!radioAudio.dataset.autoNextBound) {
+        radioAudio.dataset.autoNextBound = "1";
+        radioAudio.addEventListener("ended", () => {
+            if (!isRadioPowerOn) return;
+            switchStation((currentStationIndex + 1) % RADIO_STATIONS.length);
+        });
     }
 
     radioAudio.src = RADIO_STATIONS[currentStationIndex].src;
