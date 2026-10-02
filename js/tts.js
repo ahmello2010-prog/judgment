@@ -641,17 +641,17 @@ function injectReaderStyles() {
 
         .tts-fab-btn {
             background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
-            border: 1.5px solid var(--gold-glow, #d5a75c);
+            border: 1.2px solid var(--gold-glow, #d5a75c);
             color: var(--gold-glow, #d5a75c);
             border-radius: 50px;
-            padding: 8px 12px;
+            padding: 5px 9px;
             display: flex;
             align-items: center;
-            gap: 8px;
+            gap: 5px;
             cursor: pointer;
-            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+            box-shadow: 0 6px 18px rgba(0, 0, 0, 0.45);
             font-weight: 700;
-            font-size: 0.67rem;
+            font-size: 0.62rem;
             transition: all 0.25s ease;
             outline: none;
             /* 🔧 [إصلاح جوهري - سحب الموبايل]: يجب أن يحمل مقبض السحب نفسه touch-action:none
@@ -661,6 +661,15 @@ function injectReaderStyles() {
             -webkit-user-select: none;
             user-select: none;
             -webkit-tap-highlight-color: transparent;
+        }
+        .tts-fab-icon {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .tts-fab-icon svg {
+            width: 15px;
+            height: 15px;
         }
         .tts-fab-btn:hover {
             transform: translateY(-2px);
@@ -889,8 +898,8 @@ function updateReaderUi() {
         const icon = fab.querySelector(".tts-fab-icon");
         if (icon) {
             icon.innerHTML = readerState.isPlaying
-                ? `<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><path d="M15.54 8.46a5 5 0 0 1 0 7.07"></path><path d="M19.07 4.93a10 10 0 0 1 0 14.14"></path></svg>`
-                : `<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 5 6 9H3v6h3l5 4V5Z"/><path d="M15.5 8.5a5 5 0 0 1 0 7"/><path d="M18.5 5.5a9 9 0 0 1 0 13"/></svg>`;
+                ? `<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><path d="M15.54 8.46a5 5 0 0 1 0 7.07"></path><path d="M19.07 4.93a10 10 0 0 1 0 14.14"></path></svg>`
+                : `<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 5 6 9H3v6h3l5 4V5Z"/><path d="M15.5 8.5a5 5 0 0 1 0 7"/><path d="M18.5 5.5a9 9 0 0 1 0 13"/></svg>`;
         }
     }
 
@@ -935,7 +944,7 @@ export function initGlobalTextReader() {
         <button type="button" id="tts-fab-toggle" class="tts-fab-btn" aria-label="فتح القارئ الصوتي الذاتي" style="touch-action: none !important;">
          <span>القارئ الذاتي</span>
          <span class="tts-fab-icon" aria-hidden="true">
-              <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 5 6 9H3v6h3l5 4V5Z"/><path d="M15.5 8.5a5 5 0 0 1 0 7"/><path d="M18.5 5.5a9 9 0 0 1 0 13"/></svg>
+              <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 5 6 9H3v6h3l5 4V5Z"/><path d="M15.5 8.5a5 5 0 0 1 0 7"/><path d="M18.5 5.5a9 9 0 0 1 0 13"/></svg>
           </span>
         </button>
 

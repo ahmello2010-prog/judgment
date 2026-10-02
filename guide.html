@@ -60,19 +60,32 @@
                 background: linear-gradient(180deg, #7d5f3c 0%, #6b5236 100%);
                 border-bottom: 1px solid #4a3a26;
             }
-            .gd-header .hamburger-menu {
-                position: static;
+            .gd-exit-btn {
+                display: flex;
+                align-items: center;
+                justify-content: center;
                 width: 40px;
                 height: 40px;
-                gap: 4px;
-                background: transparent;
-                border: 0;
-                box-shadow: none;
+                border-radius: 10px;
+                background: rgba(0, 0, 0, 0.25);
+                border: 1px solid rgba(201, 162, 90, 0.35);
+                color: var(--gd-cream);
+                text-decoration: none;
+                cursor: pointer;
+                transition: all 0.22s ease;
+                box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
             }
-            .gd-header .hamburger-menu .bar {
-                width: 22px;
-                height: 2.5px;
-                background-color: var(--gd-cream);
+            .gd-exit-btn:hover {
+                background: rgba(255, 82, 82, 0.25);
+                border-color: #ff5252;
+                color: #ff5252;
+                transform: scale(1.06);
+            }
+            .gd-exit-btn:active {
+                transform: scale(0.95);
+            }
+            .gd-exit-btn svg {
+                display: block;
             }
             .gd-header-title {
                 margin: 0;
@@ -83,15 +96,6 @@
             }
             .gd-header-spacer {
                 width: 40px;
-            }
-
-            body.gd-body #sidebar-drawer {
-                background-color: #262320;
-                border-right: 1px solid var(--gd-line);
-                box-shadow: 4px 0 14px rgba(0, 0, 0, 0.4);
-            }
-            body.gd-body .sidebar-link {
-                border-bottom: 1px solid rgba(201, 162, 90, 0.15);
             }
 
             /* ---------- المحتوى ---------- */
@@ -198,22 +202,29 @@
         </style>
     </head>
     <body class="gd-body">
-        <!-- القائمة الجانبية المنزلقة الموحدة للصفحات -->
-        <div id="sidebar-drawer" class="sidebar-drawer-hidden">
-            <div class="sidebar-content">
-                <h3 id="sidebar-title">القائمة الجانبية</h3>
-                <button id="btn-lang-toggle" class="btn-lang">EN</button>
-                <a href="rooms.html" class="sidebar-link">الشاشة الرئيسية</a>
-            </div>
-        </div>
-
         <div class="gd-app">
             <header class="gd-header">
-                <button id="btn-hamburger" class="hamburger-menu" type="button" aria-label="القائمة الجانبية">
-                    <span class="bar"></span>
-                    <span class="bar"></span>
-                    <span class="bar"></span>
-                </button>
+                <!-- زر الخروج والعودة للشاشة الرئيسية مكان القائمة الجانبية -->
+                <a
+                    href="rooms.html"
+                    id="btn-guide-exit"
+                    class="gd-exit-btn"
+                    aria-label="خروج والعودة للشاشة الرئيسية"
+                    title="خروج">
+                    <svg
+                        viewBox="0 0 24 24"
+                        width="22"
+                        height="22"
+                        stroke="currentColor"
+                        stroke-width="2.5"
+                        fill="none"
+                        stroke-linecap="round"
+                        stroke-linejoin="round">
+                        <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+                        <polyline points="16 17 21 12 16 7"></polyline>
+                        <line x1="21" y1="12" x2="9" y2="12"></line>
+                    </svg>
+                </a>
                 <h1 class="gd-header-title">دليل المستخدم</h1>
                 <span class="gd-header-spacer" aria-hidden="true"></span>
             </header>

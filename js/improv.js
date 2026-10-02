@@ -179,10 +179,6 @@ function ensureEightKeys(rawKeys, fallbackKeys) {
             list.push(key);
         }
     }
-    // صمام أمان أخير إذا كان المجموع لا يزال أقل من 8
-    while (list.length < 8) {
-        list.push(`نقطة ارتكاز ${list.length + 1}`);
-    }
     return list.slice(0, 8);
 }
 
@@ -195,6 +191,8 @@ export function resolvePerformanceHelp(context = {}) {
     const item = context.item || {};
     const roleCard = context.roleCard || window.myCurrentRoleCard || {};
     const category = context.category || classifyRole(roleCard);
+    // 🌟 [Judgment]: الـ fallback العام يُستخدم فقط لجسر وضع الارتجال القديم؛ المسار الأساسي يعتمد على بيانات العنصر نفسه
+    const allowFallback = context.allowFallback === true;
     const crime = category === "side_crime" ? extractSideCrime(roleCard.secret_interest) : "";
 
     const fallbackSource = type === "evidence" ? FALLBACK_EVIDENCE_GUIDES : FALLBACK_QUESTION_GUIDES;
@@ -214,7 +212,9 @@ export function resolvePerformanceHelp(context = {}) {
     }
 
     if (!performanceText) {
-        performanceText = fallbackCategoryGuide.performance;
+        performanceText = allowFallback
+            ? fallbackCategoryGuide.performance
+            : "أجب من موقع شخصيتك ودورك في القضية، واستخدم ما تعرفه فقط دون اختراع وقائع جديدة.";
     }
 
     // استبدال {crime} باسم الجريمة الجانبية الحقيقية إن وجدت
@@ -236,7 +236,14 @@ export function resolvePerformanceHelp(context = {}) {
         rawKeys = item.by_category[category].keys;
     }
 
-    const keys = ensureEightKeys(rawKeys, fallbackCategoryGuide.keys);
+    const keys = allowFallback
+        ? ensureEightKeys(rawKeys, fallbackCategoryGuide.keys)
+        : Array.isArray(rawKeys)
+          ? rawKeys
+                .map((k) => String(k).trim())
+                .filter(Boolean)
+                .slice(0, 8)
+          : [];
 
     return {
         type,
@@ -248,7 +255,7 @@ export function resolvePerformanceHelp(context = {}) {
 
 // جسر توافق برمجي للمرجعيات السابقة
 export function buildImprovisationGuidance(responseType, roleCard) {
-    const help = resolvePerformanceHelp({ type: "question", roleCard });
+    const help = resolvePerformanceHelp({ type: "question", roleCard, allowFallback: true });
     return {
         title: "توجيه الأداء والارتجال",
         category: help.category,

@@ -19,6 +19,16 @@ import {
     escapeHtml
 } from "./improv.js";
 import "./soundtrack.js";
+import "./radio.js";
+import "./transitions.js";
+
+const navigateTo = (url) => {
+    if (typeof window !== "undefined" && window.cinematicNavigate) {
+        window.cinematicNavigate(url);
+    } else {
+        window.location.href = url;
+    }
+};
 
 // ==========================================================================
 // 1. إدارة الأرقام العشوائية والبصمة الرقمية والذاكرة المحلية
@@ -267,7 +277,7 @@ if (btnSearchJoin) {
                             }).then(() => {
                                 sessionStorage.setItem("myPlayerKeyInRoom", newPlayerRef.key);
                                 sessionStorage.setItem("activeRoomCode", searchedCode);
-                                window.location.href = "create.html";
+                                navigateTo("create.html");
                             });
                         }
                     });
@@ -359,13 +369,13 @@ if (currentRoomCode && document.getElementById("room-code-number")) {
         const gameState = snapshot.val();
         if (gameState) {
             if (gameState.status === "go-to-game") {
-                window.location.href = "game.html";
+                navigateTo("game.html");
                 return;
             }
             // يلتقط الحالة فوراً دون اشتراط وجود داتا معقدة داخل الـ assignments
             else if (gameState.status === "game_over") {
                 sessionStorage.removeItem("lobby_initial_card_opened");
-                window.location.href = "game.html";
+                navigateTo("game.html");
                 return;
             }
         }
@@ -483,7 +493,7 @@ if (currentRoomCode && document.getElementById("room-code-number")) {
                 // مهلة زمنية دقيقة مدتها ثانيتين ليقرأ رسالة الطرد الفخمة، ثم قذفه للخارج
                 setTimeout(() => {
                     sessionStorage.clear(); // تنظيف الذاكرة لمنع التعليق
-                    window.location.href = "rooms.html"; // سحب وطرد اللاعب إجبارياً لصفحة الغرف
+                    navigateTo("rooms.html"); // سحب وطرد اللاعب إجبارياً لصفحة الغرف
                 }, 2000);
             }
         });
@@ -858,7 +868,7 @@ function activateCasesClickEngine() {
                                 // 🌟 [البند 3]: توثيق هوية موكل محامي الدفاع الثابتة لهذه الجولة سحابياً
                                 defense_client_uid: randomClientUID
                             }).then(() => {
-                                window.location.href = `lobby.html?id=${caseId}`;
+                                navigateTo(`lobby.html?id=${caseId}`);
                             });
                         } catch (err) {
                             console.error("عطل في الخلط بالتفصيل:", err);
@@ -887,7 +897,7 @@ function activateCasesClickEngine() {
                         gameState.caseId !== "none"
                     ) {
                         clearInterval(caseCheckInterval);
-                        window.location.href = `lobby.html?id=${gameState.caseId}`;
+                        navigateTo(`lobby.html?id=${gameState.caseId}`);
                     }
                 }
             })
@@ -975,7 +985,7 @@ function listenToFinalLobby() {
                 window.hasJudgeRadarButtonsInjected = false;
 
                 // 🌟 [شاشة النتائج الكبرى]: التحويل الجماعي المتزامن لجميع الأجهزة إلى صفحة النتائج بدل القفز المباشر لموسوعة القضايا
-                window.location.href = "results.html";
+                navigateTo("results.html");
                 return;
             }
 
@@ -1274,10 +1284,10 @@ function listenToFinalLobby() {
                             remove(exactPlayerPath).then(() => {
                                 sessionStorage.removeItem("activeRoomCode");
                                 sessionStorage.removeItem("myPlayerKeyInRoom");
-                                window.location.href = "rooms.html";
+                                navigateTo("rooms.html");
                             });
                         } else {
-                            window.location.href = "rooms.html";
+                            navigateTo("rooms.html");
                         }
                     });
 
@@ -2167,7 +2177,7 @@ document.addEventListener("click", function (event) {
                     )
                     .then(() => {
                         console.log("تمت المزامنة السحابية بنجاح! جاري التوجيه الفوري لصفحة القضايا...");
-                        window.location.href = "game.html";
+                        navigateTo("game.html");
                     })
                     .catch((err) => {
                         console.error("عطل في تحديث الفايربيس عند البدء:", err);
@@ -2180,13 +2190,13 @@ document.addEventListener("click", function (event) {
     // 4️⃣ محرك شبكة الغرف لصفحة rooms.html المعتمد على الـ closest المانع للتعطيل
     const cardCreate = event.target.closest("#card-create-room");
     if (cardCreate) {
-        window.location.href = "create.html";
+        navigateTo("create.html");
         return;
     }
 
     const cardJoin = event.target.closest("#card-join-room");
     if (cardJoin) {
-        window.location.href = "join.html";
+        navigateTo("join.html");
         return;
     }
 
@@ -2227,7 +2237,7 @@ document.addEventListener("DOMContentLoaded", () => {
 });
 
 // ==========================================================================
-// 4. المحرك السينمائي لتشغيل شاشة لودينج اللوبي المطورة (نسخة العداد المستقر)
+// 4. المحرك السينمائي لتشغيل شاشة لودينج اللوبي (يستغرق 4 ثوانٍ من 0% إلى 100%)
 // ==========================================================================
 function runLobbyLoadingEngine(callback) {
     const loadingScreen = document.getElementById("lobby-loading-screen");
@@ -2245,7 +2255,6 @@ function runLobbyLoadingEngine(callback) {
     loadingScreen.style.display = "flex";
     loadingScreen.style.opacity = "1";
 
-    let progress = 0;
     const hints = [
         { limit: 30, text: "جاري تجميع اللاعبين" },
         { limit: 60, text: "جاري توزيع الأدوار" },
@@ -2253,34 +2262,52 @@ function runLobbyLoadingEngine(callback) {
         { limit: 100, text: "لقد بدأت الجلسة" }
     ];
 
-    const interval = setInterval(() => {
-        progress += 1;
+    // 🌟 مدة التحميل السينمائي: 4 ثوانٍ كاملة (4000ms) من 0% إلى 100%
+    const TOTAL_DURATION_MS = 4000;
+    const startTime = performance.now();
+
+    const animateProgress = (now) => {
+        const elapsed = now - startTime;
+        const progress = Math.min(100, Math.floor((elapsed / TOTAL_DURATION_MS) * 100));
 
         if (progressBar) progressBar.style.width = `${progress}%`;
         if (progressCounter) progressCounter.textContent = `${progress}%`;
 
         // تبديل الجمل والعبارات المشوقة بنعومة تامة
-        const currentHint = hints.find((h) => progress <= h.limit);
+        const currentHint = hints.find((h) => progress <= h.limit) || hints[hints.length - 1];
         if (currentHint && hintText && hintText.textContent !== currentHint.text) {
             hintText.style.opacity = 0;
             setTimeout(() => {
                 hintText.textContent = currentHint.text;
                 hintText.style.opacity = 1;
-            }, 150);
+            }, 120);
         }
 
-        // عند اكتمال الـ 100% تتلاشى الشاشة بنعومة وتختفي لتكشف عن اللوبي الجاهز
-        if (progress >= 100) {
-            clearInterval(interval);
-            loadingScreen.style.transition = "opacity 0.5s ease-out";
-            loadingScreen.style.opacity = "0";
+        if (elapsed < TOTAL_DURATION_MS) {
+            requestAnimationFrame(animateProgress);
+        } else {
+            // اكتمال 100% بعد مرور 4 ثوانٍ كاملة
+            if (progressBar) progressBar.style.width = "100%";
+            if (progressCounter) progressCounter.textContent = "100%";
+            if (hintText) {
+                hintText.textContent = "لقد بدأت الجلسة";
+                hintText.style.opacity = 1;
+            }
 
+            // تلاشي ناعم بعد الوصول إلى 100% للكشف عن قاعة المحاكمة
             setTimeout(() => {
-                loadingScreen.style.display = "none";
-                if (typeof callback === "function") callback(); // إطلاق ساحة المحكمة الأصلية المتزامنة
-            }, 500);
+                loadingScreen.style.transition = "opacity 0.5s ease-out";
+                loadingScreen.style.opacity = "0";
+
+                setTimeout(() => {
+                    loadingScreen.style.display = "none";
+                    if (typeof callback === "function") callback(); // إطلاق ساحة المحكمة الأصلية المتزامنة
+                }, 500);
+            }, 300);
         }
-    }, 50); // يستغرق حوالي 5 ثوانٍ إجمالياً لإعطاء هيبة وتشويق للمحاكمة
+    };
+
+    requestAnimationFrame(animateProgress);
 }
 
 // ==========================================================================
@@ -2377,7 +2404,7 @@ document.addEventListener("DOMContentLoaded", function () {
         sessionStorage.removeItem("lobby_initial_card_opened");
 
         if (hostExitModal) hostExitModal.className = "host-overlay-hidden";
-        window.location.href = "rooms.html"; // قذف المستخدم لصفحة الغرف الرئيسية للبدء من جديد
+        navigateTo("rooms.html"); // قذف المستخدم لصفحة الغرف الرئيسية للبدء من جديد
     };
 
     // 3️⃣ ربط الزر وإدارة آلية الضغط والتنبيهات المخصصة
@@ -2431,7 +2458,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
             // تصفير وتنظيف الذاكرة تماماً لعدم تعليق الأرصدة القديمة عند إنشاء غرفة جديدة
             sessionStorage.clear();
-            window.location.href = "rooms.html";
+            navigateTo("rooms.html");
         }
     });
 });
@@ -2499,7 +2526,7 @@ document.addEventListener("DOMContentLoaded", function () {
             hostExitModal.style.setProperty("display", "none", "important");
             hostExitModal.className = "host-overlay-hidden";
         }
-        window.location.href = "rooms.html";
+        navigateTo("rooms.html");
     };
 
     if (hostExitModal) {
@@ -2595,7 +2622,7 @@ document.addEventListener("DOMContentLoaded", function () {
     onValue(ref(db, "rooms/" + currentRoomCode + "/game_state/status"), (snap) => {
         if (snap.exists() && snap.val() === "host_left") {
             sessionStorage.clear();
-            window.location.href = "rooms.html";
+            navigateTo("rooms.html");
         }
     });
 });
@@ -5015,12 +5042,12 @@ const endCurrentCourtSession = (verdictOutcomeData) => {
         interrogationsCount: 0
     })
         .then(() => {
-            window.location.href = "results.html";
+            navigateTo("results.html");
         })
         .catch((err) => {
             // 🌟 [إصلاح البند 5]: شبكة بطيئة أو عطل مؤقت في الكتابة السحابية لا يجب أن يحبس جهاز القاضي في الجلسة القديمة أبداً
             console.error("⚠️ فشل بث game_over سحابياً، جاري تنفيذ الانتقال المحلي القسري كخطة احتياطية:", err);
-            window.location.href = "results.html";
+            navigateTo("results.html");
         });
 };
 // ==========================================================================

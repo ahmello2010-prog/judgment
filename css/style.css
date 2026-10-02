@@ -1798,130 +1798,506 @@ body.body3 #btn-verdict-trigger:active:not(:disabled) {
 }
 
 /* ==========================================================================
-   🎵 Global Soundtrack Controller — زر الموسيقى التصويرية الموحد الصغير
+   📻 Courtroom Radio Player & Sidebar Radio Button
+   مشغل راديو محكمة الأدوار وزر القائمة الجانبية
    ========================================================================== */
-.global-soundtrack-corner {
-    position: fixed;
-    top: 14px;
-    left: 14px;
-    z-index: 99999;
-    pointer-events: auto;
+.btn-sidebar-radio {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    width: 100% !important;
+    padding: 12px 6px !important;
+    background: transparent !important;
+    border: none !important;
+    border-bottom: 1px solid rgba(213, 167, 92, 0.2) !important;
+    cursor: pointer !important;
+    color: var(--text-white, #ffffff) !important;
+    font-family: 'Harmattan', system-ui, sans-serif !important;
+    font-size: 1.3rem !important;
+    font-weight: 600 !important;
+    transition: all 0.2s ease !important;
+    text-align: right !important;
+    outline: none !important;
 }
 
-.global-music-btn {
-    position: relative;
+.btn-sidebar-radio:hover,
+.btn-sidebar-radio:active {
+    color: var(--gold-glow, #d5a75c) !important;
+    background: rgba(213, 167, 92, 0.08) !important;
+}
+
+.sidebar-radio-title {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.sidebar-radio-title .sidebar-radio-icon {
     display: flex;
     align-items: center;
     justify-content: center;
-    width: 36px;
-    height: 36px;
-    min-width: 36px;
-    min-height: 36px;
-    padding: 0;
-    border-radius: 50%;
-    background: rgba(13, 25, 43, 0.85);
-    backdrop-filter: blur(10px);
-    -webkit-backdrop-filter: blur(10px);
-    border: 1.5px solid rgba(213, 167, 92, 0.5);
     color: var(--gold-glow, #d5a75c);
+}
+
+.radio-status-tag {
+    font-family: 'Alexandria', system-ui, sans-serif;
+    font-size: 0.68rem;
+    font-weight: 700;
+    padding: 3px 8px;
+    border-radius: 20px;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    transition: all 0.25s ease;
+}
+
+.radio-status-tag.is-playing {
+    color: #52ff7d;
+    background: rgba(82, 255, 125, 0.15);
+    border-color: #52ff7d;
+    box-shadow: 0 0 8px rgba(82, 255, 125, 0.3);
+}
+
+.radio-status-tag.is-stopped {
+    color: #a89f90;
+    background: rgba(255, 255, 255, 0.05);
+    border-color: rgba(255, 255, 255, 0.15);
+}
+
+/* واجهة المشغل الشاملة (Radio Modal Overlay) */
+.court-radio-overlay {
+    position: fixed;
+    inset: 0;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(4, 8, 14, 0.82);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+    z-index: 2147483600;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 16px;
+    box-sizing: border-box;
+    direction: rtl;
+    animation: radioFadeIn 0.3s ease-out forwards;
+}
+
+@keyframes radioFadeIn {
+    0% {
+        opacity: 0;
+        transform: scale(0.96);
+    }
+    100% {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+.court-radio-chassis {
+    width: 100%;
+    max-width: 310px;
+    background: linear-gradient(145deg, #101a28 0%, #060b13 100%);
+    border: 1.5px solid var(--gold-glow, #d5a75c);
+    border-radius: 14px;
+    padding: 12px 14px;
+    box-shadow: 0 14px 40px rgba(0, 0, 0, 0.8), 0 0 20px rgba(213, 167, 92, 0.2);
+    color: #fff;
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+    gap: 9px;
+    position: relative;
+    overflow: hidden;
+}
+
+.court-radio-chassis::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background: linear-gradient(90deg, transparent, var(--gold-glow, #d5a75c), transparent);
+}
+
+.radio-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid rgba(213, 167, 92, 0.2);
+    padding-bottom: 6px;
+}
+
+.radio-header-brand {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+}
+
+.radio-brand-icon {
+    font-size: 1.1rem;
+}
+
+.radio-brand-title {
+    margin: 0;
+    font-family: 'Alexandria', system-ui, sans-serif;
+    font-size: 0.88rem;
+    font-weight: 700;
+    color: var(--gold-glow, #d5a75c);
+}
+
+.radio-close-btn {
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    color: #fff;
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
     cursor: pointer;
-    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.45);
-    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.75rem;
+    transition: all 0.2s ease;
+    padding: 0;
+}
+
+.radio-close-btn:hover {
+    background: rgba(255, 82, 82, 0.25);
+    border-color: #ff5252;
+    color: #ff5252;
+}
+
+/* شاشة LCD الرقمية المضيئة المدمجة */
+.radio-lcd-screen {
+    background: radial-gradient(circle at 50% 50%, #152233 0%, #080f1a 100%);
+    border: 1px solid rgba(213, 167, 92, 0.4);
+    border-radius: 10px;
+    padding: 7px 10px;
+    box-shadow: inset 0 0 14px rgba(0, 0, 0, 0.7);
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    text-align: center;
+}
+
+.radio-lcd-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.radio-freq-badge {
+    font-family: 'Alexandria', monospace, sans-serif;
+    font-size: 0.68rem;
+    font-weight: 700;
+    color: var(--gold-glow, #d5a75c);
+    background: rgba(213, 167, 92, 0.15);
+    padding: 1px 6px;
+    border-radius: 4px;
+    border: 1px solid rgba(213, 167, 92, 0.25);
+}
+
+.radio-onair-badge {
+    font-family: 'Alexandria', system-ui, sans-serif;
+    font-size: 0.62rem;
+    font-weight: 700;
+    padding: 2px 6px;
+    border-radius: 10px;
+    transition: all 0.3s ease;
+}
+
+.radio-onair-badge.is-on {
+    color: #52ff7d;
+    background: rgba(82, 255, 125, 0.15);
+    border: 1px solid #52ff7d;
+    animation: onAirPulse 1.6s infinite ease-in-out;
+}
+
+.radio-onair-badge.is-off {
+    color: #8d99a8;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+@keyframes onAirPulse {
+    0%, 100% { opacity: 0.85; }
+    50% { opacity: 1; box-shadow: 0 0 8px rgba(82, 255, 125, 0.4); }
+}
+
+.radio-station-title {
+    font-family: 'Alexandria', system-ui, sans-serif;
+    font-size: 0.84rem;
+    font-weight: 700;
+    color: #ffffff;
+    margin: 2px 0 0;
+}
+
+/* أمواج الراديو الصوتية (Visualizer) */
+.radio-wave-bars {
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+    gap: 3px;
+    height: 14px;
+    margin-top: 2px;
+}
+
+.radio-wave-bars .r-bar {
+    width: 2.5px;
+    height: 3px;
+    background: var(--gold-glow, #d5a75c);
+    border-radius: 2px;
+    opacity: 0.3;
+    transition: height 0.2s ease, opacity 0.2s ease;
+}
+
+.radio-wave-bars.is-active .r-bar {
+    opacity: 0.95;
+    animation: waveBounce 0.8s infinite ease-in-out alternate;
+}
+
+.radio-wave-bars.is-active .r-bar-1 { animation-delay: 0.1s; }
+.radio-wave-bars.is-active .r-bar-2 { animation-delay: 0.3s; }
+.radio-wave-bars.is-active .r-bar-3 { animation-delay: 0.5s; }
+.radio-wave-bars.is-active .r-bar-4 { animation-delay: 0.2s; }
+.radio-wave-bars.is-active .r-bar-5 { animation-delay: 0.4s; }
+.radio-wave-bars.is-active .r-bar-6 { animation-delay: 0.6s; }
+.radio-wave-bars.is-active .r-bar-7 { animation-delay: 0.15s; }
+.radio-wave-bars.is-active .r-bar-8 { animation-delay: 0.35s; }
+
+@keyframes waveBounce {
+    0% { height: 3px; }
+    100% { height: 13px; }
+}
+
+/* قائمة المحطات المدمجة */
+.radio-section-label {
+    font-family: 'Alexandria', system-ui, sans-serif;
+    font-size: 0.68rem;
+    font-weight: 700;
+    color: var(--gold-glow, #d5a75c);
+    margin-bottom: 4px;
+}
+
+.radio-stations-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    max-height: 105px;
+    overflow-y: auto;
+    padding-left: 2px;
+}
+
+.radio-station-card {
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 7px;
+    padding: 5px 8px;
+    cursor: pointer;
+    text-align: right;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    transition: all 0.2s ease;
     outline: none;
     user-select: none;
 }
 
-.global-music-btn:hover {
+.radio-station-card:hover {
+    background: rgba(213, 167, 92, 0.12);
+    border-color: rgba(213, 167, 92, 0.4);
+}
+
+.radio-station-card.is-active {
+    background: rgba(213, 167, 92, 0.2);
     border-color: var(--gold-glow, #d5a75c);
-    background: rgba(13, 25, 43, 0.96);
-    box-shadow: 0 0 16px rgba(213, 167, 92, 0.4);
-    transform: scale(1.08);
+    box-shadow: 0 0 10px rgba(213, 167, 92, 0.25);
 }
 
-.global-music-btn:active {
-    transform: scale(0.94);
-}
-
-.global-music-btn svg {
-    display: block;
-    width: 17px;
-    height: 17px;
-    transition: transform 0.2s ease;
-}
-
-/* حالة التشغيل (Is Playing) */
-.global-music-btn.is-playing {
-    border-color: rgba(213, 167, 92, 0.85);
-    box-shadow: 0 0 12px rgba(213, 167, 92, 0.35);
+.station-card-freq {
+    font-family: 'Alexandria', monospace, sans-serif;
+    font-size: 0.65rem;
+    font-weight: 700;
     color: var(--gold-glow, #d5a75c);
 }
 
-.global-music-btn.is-playing .g-icon-play {
-    display: block;
-}
-
-.global-music-btn.is-playing .g-icon-pause {
-    display: none;
-}
-
-/* هالة النبض الذهبي الهادئ أثناء العزف */
-.global-music-btn.is-playing .g-sound-pulse {
-    position: absolute;
-    inset: -3px;
+.station-card-active-dot {
+    width: 6px;
+    height: 6px;
     border-radius: 50%;
-    border: 1.5px solid rgba(213, 167, 92, 0.45);
-    animation: gSoundPulseAnim 2.2s infinite ease-out;
-    pointer-events: none;
+    background: transparent;
 }
 
-@keyframes gSoundPulseAnim {
+.radio-station-card.is-active .station-card-active-dot {
+    background: #52ff7d;
+    box-shadow: 0 0 5px #52ff7d;
+}
+
+.station-card-name {
+    font-family: 'Alexandria', system-ui, sans-serif;
+    font-size: 0.76rem;
+    font-weight: 600;
+    color: #ffffff;
+    flex: 1;
+    margin: 0 8px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* شريط التحكم السفلي المدمج */
+.radio-controls-strip {
+    display: flex;
+    flex-direction: column;
+    gap: 7px;
+    padding-top: 5px;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.radio-playback-controls {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+}
+
+.radio-ctrl-btn {
+    background: rgba(255, 255, 255, 0.06);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    color: #fff;
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    cursor: pointer;
+    font-size: 0.8rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+    padding: 0;
+}
+
+.radio-ctrl-btn:hover {
+    background: rgba(213, 167, 92, 0.2);
+    border-color: var(--gold-glow, #d5a75c);
+    transform: scale(1.06);
+}
+
+.radio-power-btn {
+    width: 38px;
+    height: 38px;
+    border-radius: 50%;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.25s ease;
+    border: 1.5px solid var(--gold-glow, #d5a75c);
+    outline: none;
+    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.5);
+    padding: 0;
+}
+
+.radio-power-btn.is-off {
+    background: #141c26;
+    color: rgba(213, 167, 92, 0.6);
+}
+
+.radio-power-btn.is-off:hover {
+    background: #1d2938;
+    color: var(--gold-glow, #d5a75c);
+    transform: scale(1.06);
+}
+
+.radio-power-btn.is-on {
+    background: var(--gold-glow, #d5a75c);
+    color: #050a12;
+    box-shadow: 0 0 14px rgba(213, 167, 92, 0.5);
+    animation: radioPowerPulse 2s infinite ease-in-out;
+}
+
+.radio-volume-control {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    background: rgba(0, 0, 0, 0.3);
+    padding: 3px 10px;
+    border-radius: 14px;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.radio-vol-icon {
+    font-size: 0.8rem;
+    color: var(--gold-glow, #d5a75c);
+}
+
+.radio-vol-slider {
+    flex: 1;
+    -webkit-appearance: none;
+    appearance: none;
+    height: 4px;
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 4px;
+    outline: none;
+    cursor: pointer;
+}
+
+.radio-vol-slider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 11px;
+    height: 11px;
+    border-radius: 50%;
+    background: var(--gold-glow, #d5a75c);
+    cursor: pointer;
+    box-shadow: 0 0 6px rgba(213, 167, 92, 0.6);
+}
+
+.radio-vol-percent {
+    font-family: 'Alexandria', monospace, sans-serif;
+    font-size: 0.65rem;
+    font-weight: 700;
+    color: #cbd5e1;
+    min-width: 26px;
+    text-align: left;
+}
+
+
+/* ==========================================================================
+   🎬 Cinematic Page Transition (Fade-In / Fade-Out)
+   تأثير تلاشي متناغم وسينمائي عند التنقل بين صفحات اللعبة
+   ========================================================================== */
+.cinematic-transition-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background-color: #050a12;
+    z-index: 2147483640;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.32s cubic-bezier(0.25, 1, 0.5, 1);
+}
+
+.cinematic-transition-overlay.is-exiting {
+    opacity: 1 !important;
+    pointer-events: auto !important;
+}
+
+/* حركة التلاشي الناعمة لدخول الصفحة السينمائية */
+@keyframes cinematicPageEntrance {
     0% {
-        transform: scale(0.95);
-        opacity: 0.8;
-    }
-    50% {
-        transform: scale(1.18);
         opacity: 0;
+        filter: brightness(0.85);
     }
     100% {
-        transform: scale(1.18);
-        opacity: 0;
+        opacity: 1;
+        filter: brightness(1);
     }
 }
 
-/* حالة الإيقاف المؤقت (Is Paused) */
-.global-music-btn.is-paused {
-    border-color: rgba(213, 167, 92, 0.25);
-    color: rgba(213, 167, 92, 0.55);
-    opacity: 0.72;
-}
-
-.global-music-btn.is-paused .g-icon-play {
-    display: none;
-}
-
-.global-music-btn.is-paused .g-icon-pause {
-    display: block;
-}
-
-.global-music-btn.is-paused .g-sound-pulse {
-    display: none;
-}
-
-/* للشاشات الصغيرة والموبايل */
-@media (max-width: 600px) {
-    .global-soundtrack-corner {
-        top: 10px;
-        left: 10px;
-    }
-    .global-music-btn {
-        width: 32px;
-        height: 32px;
-        min-width: 32px;
-        min-height: 32px;
-    }
-    .global-music-btn svg {
-        width: 15px;
-        height: 15px;
-    }
+body.cinematic-fade-ready {
+    animation: cinematicPageEntrance 0.38s cubic-bezier(0.25, 1, 0.5, 1) forwards;
 }

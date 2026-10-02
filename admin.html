@@ -290,7 +290,7 @@
     <body>
         <div class="admin-panel-card">
             <h1 style="font-family: &quot;Harmattan&quot;; font-weight: 800; font-size: 1.6rem">إدارة الغرف</h1>
-            <p>سجلات الغرف النشطة والقديمة المسجلة باسمك في السيرفر</p>
+            <p>كل سجلات الغرف المسجلة في السيرفر (غرفك مميّزة بشارة)</p>
 
             <ul id="admin-rooms-ul" class="rooms-master-list">
                 <li
@@ -368,7 +368,8 @@
                 getDatabase,
                 ref,
                 onValue,
-                remove
+                remove,
+                update
             } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
 
             // إعدادات خادم الفايربيس الخاص بمشروعك
@@ -440,45 +441,106 @@
                 resetDeleteAllDialog();
             };
 
-            if (mySecretUID && adminRoomsUl) {
-                // 1. الاستماع الحي والديناميكي لفرع الغرف بالكامل وعرض التابع لك
-                onValue(ref(db, "rooms"), (snapshot) => {
-                    // تحديث عدادات الحذف الشامل وحالة الزر مع كل تغيير حي في السيرفر
-                    totalRoomsInDb = snapshot.exists() ? snapshot.numChildren() : 0;
-                    myRoomsCount = 0;
-                    snapshot.forEach((child) => {
-                        if (child.val() && child.val().hostUID === mySecretUID) myRoomsCount++;
+            // ---------- التطهير: إشارة طرد للأجهزة المتصلة ثم حذف ثم مسح كاش هذا الجهاز ----------
+            const CACHE_PREFIXES = [
+                "remaining_questions_case_",
+                "remaining_prosecutor_questions_case_",
+                "locked_target_",
+                "locked_accuse_target_",
+                "locked_radar_target_"
+            ];
+            const clearLocalRoomCache = () => {
+                ["activeRoomCode", "myPlayerKeyInRoom", "lobby_initial_card_opened", "objection_cards_count"].forEach(
+                    (k) => sessionStorage.removeItem(k)
+                );
+                [sessionStorage, localStorage].forEach((store) => {
+                    Object.keys(store).forEach((key) => {
+                        if (CACHE_PREFIXES.some((p) => key.startsWith(p))) store.removeItem(key);
                     });
-                    refreshDeleteAllButton();
+                }); // court_user_uid يبقى لأنه هوية الجهاز
+            };
+            // يرسل host_left (التطبيق يمسح عنده sessionStorage ويعيد اللاعب لـ rooms.html) ثم ينتظر لحظة
+            const broadcastKick = async (codes) => {
+                await Promise.all(
+                    codes.map((c) =>
+                        update(ref(db, "rooms/" + c), { "game_state/status": "host_left" }).catch(() => {})
+                    )
+                );
+                await new Promise((r) => setTimeout(r, 1200));
+            };
+            let allRoomCodes = [];
 
-                    if (snapshot.exists()) {
-                        let listHTML = "";
-                        let hasRooms = false;
+            if (adminRoomsUl) {
+                // 1. الاستماع الحي والديناميكي لفرع الغرف بالكامل وعرض التابع لك
+                onValue(
+                    ref(db, "rooms"),
+                    (snapshot) => {
+                        // تحديث عدادات الحذف الشامل وحالة الزر مع كل تغيير حي في السيرفر
+                        totalRoomsInDb = snapshot.exists() ? snapshot.numChildren() : 0;
+                        allRoomCodes = [];
+                        snapshot.forEach((c) => {
+                            allRoomCodes.push(c.key);
+                        });
+                        myRoomsCount = 0;
+                        snapshot.forEach((child) => {
+                            if (child.val() && child.val().hostUID === mySecretUID) myRoomsCount++;
+                        });
+                        refreshDeleteAllButton();
 
-                        snapshot.forEach((childSnapshot) => {
-                            const roomData = childSnapshot.val();
-                            const roomCode = childSnapshot.key;
+                        if (snapshot.exists()) {
+                            let listHTML = "";
+                            let hasRooms = false;
 
-                            if (roomData.hostUID === mySecretUID) {
-                                hasRooms = true;
-                                listHTML += `
+                            snapshot.forEach((childSnapshot) => {
+                                const roomData = childSnapshot.val() || {};
+                                const roomCode = childSnapshot.key;
+
+                                {
+                                    hasRooms = true;
+                                    const mine = !!mySecretUID && roomData.hostUID === mySecretUID;
+                                    const playersN = roomData.players ? Object.keys(roomData.players).length : 0;
+                                    const st = (roomData.game_state && roomData.game_state.status) || "lobby";
+                                    const created = roomData.createdAt
+                                        ? new Date(roomData.createdAt).toLocaleString("ar-EG", {
+                                              dateStyle: "short",
+                                              timeStyle: "short"
+                                          })
+                                        : "غير مسجّل";
+                                    listHTML += `
                             <li class="room-row-item">
-                                <span class="room-code-tag">رقم الغرفة: ${roomCode}</span>
+                                <span class="room-code-tag">
+                                    رقم الغرفة: ${roomCode}${mine ? " ⭐" : ""}
+                                    <small style="display:block;font-weight:500;font-size:0.72rem;opacity:0.7">
+                                        لاعبون: ${playersN} · الحالة: ${st} · ${created}
+                                    </small>
+                                </span>
                                 <button class="btn-delete-trigger" data-code="${roomCode}">حذف نهائي</button>
                             </li>
                         `;
-                            }
-                        });
+                                }
+                            });
 
-                        if (hasRooms) {
-                            adminRoomsUl.innerHTML = listHTML;
+                            if (hasRooms) {
+                                adminRoomsUl.innerHTML = listHTML;
+                            } else {
+                                adminRoomsUl.innerHTML = `<li style="text-align: center; color: rgba(255,255,255,0.5); font-family: 'Harmattan'; font-size: 1.3rem; padding-top: 15px;">لا توجد غرف في السيرفر حالياً.</li>`;
+                            }
                         } else {
-                            adminRoomsUl.innerHTML = `<li style="text-align: center; color: rgba(255,255,255,0.5); font-family: 'Harmattan'; font-size: 1.3rem; padding-top: 15px;">لا يوجد أي غرف معلقة باسمك حالياً في السيرفر.</li>`;
+                            adminRoomsUl.innerHTML = `<li style="text-align: center; color: rgba(255,255,255,0.5); font-family: 'Harmattan'; font-size: 1.3rem; padding-top: 15px;">السيرفر فارغ تماماً من الغرف.</li>`;
                         }
-                    } else {
-                        adminRoomsUl.innerHTML = `<li style="text-align: center; color: rgba(255,255,255,0.5); font-family: 'Harmattan'; font-size: 1.3rem; padding-top: 15px;">السيرفر فارغ تماماً من الغرف.</li>`;
+                        showStatus(`عدد الغرف الآن في السيرفر: ${totalRoomsInDb}`);
+                    },
+                    (err) => {
+                        console.error("فشل قراءة rooms:", err);
+                        const denied =
+                            err && (err.code === "PERMISSION_DENIED" || /permission_denied/i.test(err.message || ""));
+                        adminRoomsUl.innerHTML = `<li style="text-align:center;color:#ff8a8a;font-family:'Harmattan';font-size:1.3rem;padding-top:15px;">${
+                            denied
+                                ? "رفض Firebase قراءة العقدة rooms بالكامل: عدّل قواعد الأمان (Rules) لتسمح بالقراءة على rooms."
+                                : "تعذّر الاتصال بـ Firebase: " + ((err && err.message) || "خطأ غير معروف")
+                        }</li>`;
                     }
-                });
+                );
 
                 // 2. مستمع النقر لفتح المودال المخصص وتحديد الغرفة رقمياً
                 adminRoomsUl.addEventListener("click", function (event) {
@@ -551,8 +613,11 @@
                         btnDeleteAllConfirm.textContent = "جاري الحذف...";
                         deleteAllError.textContent = "";
 
-                        remove(ref(db, "rooms"))
+                        btnDeleteAllConfirm.textContent = "جاري طرد اللاعبين...";
+                        broadcastKick(allRoomCodes)
+                            .then(() => remove(ref(db, "rooms")))
                             .then(() => {
+                                clearLocalRoomCache();
                                 console.log("[تطهير شامل ناجح]: تم مسح عقدة rooms بالكامل");
                                 isDeletingAll = false;
                                 deleteAllModal.classList.remove("active");
@@ -582,8 +647,11 @@
                 if (btnModalConfirm) {
                     btnModalConfirm.addEventListener("click", function () {
                         if (roomCodeToDelete) {
-                            remove(ref(db, "rooms/" + roomCodeToDelete))
+                            const code = roomCodeToDelete;
+                            broadcastKick([code])
+                                .then(() => remove(ref(db, "rooms/" + code)))
                                 .then(() => {
+                                    clearLocalRoomCache();
                                     console.log(`[تطهير سيادي ناجح]: تم نسف الغرفة ${roomCodeToDelete}`);
                                     if (deleteModal) deleteModal.classList.remove("active");
                                     roomCodeToDelete = null;
@@ -596,5 +664,7 @@
                 }
             }
         </script>
+        <!-- 🎵 محرك الموسيقى التصويرية والانتقال السينمائي المتناغم -->
+        <script type="module" src="js/soundtrack.js"></script>
     </body>
 </html>

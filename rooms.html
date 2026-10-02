@@ -318,8 +318,31 @@
         <!-- القائمة الجانبية المنزلقة (نفس المسميات الأصلية) -->
         <div id="sidebar-drawer" class="sidebar-drawer-hidden">
             <div class="sidebar-content">
-                <h3 id="sidebar-title">القائمة الجانبية</h3>
+                <h3 id="sidebar-title">قائمة الإعدادات</h3>
                 <button id="btn-lang-toggle" class="btn-lang">EN</button>
+                <button id="btn-sidebar-radio" class="sidebar-link btn-sidebar-radio" type="button">
+                    <span class="sidebar-radio-title">
+                        <span class="sidebar-radio-icon">
+                            <svg
+                                viewBox="0 0 24 24"
+                                width="18"
+                                height="18"
+                                fill="none"
+                                stroke="currentColor"
+                                stroke-width="2"
+                                stroke-linecap="round"
+                                stroke-linejoin="round">
+                                <rect x="2" y="7" width="20" height="14" rx="2" ry="2"></rect>
+                                <path d="M16 3l-4.5 4"></path>
+                                <circle cx="17" cy="14" r="2"></circle>
+                                <line x1="6" y1="12" x2="10" y2="12"></line>
+                                <line x1="6" y1="16" x2="10" y2="16"></line>
+                            </svg>
+                        </span>
+                        <span>مشغل الراديو</span>
+                    </span>
+                    <span id="sidebar-radio-tag" class="radio-status-tag is-stopped">إيقاف</span>
+                </button>
                 <a href="guide.html" id="link-user-guide" class="sidebar-link">دليل المستخدم</a>
                 <a href="admin.html" class="sidebar-link" style="color: white; font-weight: bold">سجل الغرف</a>
             </div>

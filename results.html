@@ -437,7 +437,11 @@
             const mySecretUID = localStorage.getItem("court_user_uid");
 
             if (!currentRoomCode) {
-                window.location.href = "game.html";
+                if (window.cinematicNavigate) {
+                    window.cinematicNavigate("game.html");
+                } else {
+                    window.location.href = "game.html";
+                }
             }
 
             const roomRef = ref(db, "rooms/" + currentRoomCode);
@@ -538,7 +542,11 @@
 
             get(roomRef).then(async (snapshot) => {
                 if (!snapshot.exists()) {
-                    window.location.href = "game.html";
+                    if (window.cinematicNavigate) {
+                        window.cinematicNavigate("game.html");
+                    } else {
+                        window.location.href = "game.html";
+                    }
                     return;
                 }
 
@@ -641,7 +649,11 @@
                     // 🌟 [تطهير قبل المغادرة]: كل جهاز (أدمن أو لاعب) ينظّف ذاكرته المحلية
                     // بمجرد استقبال أمر الرجوع، قبل أن ينتقل لموسوعة القضايا لجولة جديدة
                     purgeStaleRoundMemory();
-                    window.location.href = "game.html";
+                    if (window.cinematicNavigate) {
+                        window.cinematicNavigate("game.html");
+                    } else {
+                        window.location.href = "game.html";
+                    }
                 }
             });
         </script>
