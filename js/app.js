@@ -609,7 +609,7 @@ function activateCasesClickEngine() {
             const gameState = snapshot.val();
             if (gameState && (gameState.status === "case_selected" || gameState.status === "go-to-game")) {
                 // ✅ تم التعديل هنا لـ go-to-game
-                update(gameStateRef, { status: "lobby", caseId: "none" });
+                update(gameStateRef, { status: "lobby", caseId: "none", ...staleCourtEventsReset() });
             }
         })
         .catch((err) => console.log("انتظار استقرار الاتصال..."));
@@ -876,6 +876,7 @@ function activateCasesClickEngine() {
 
                             update(gameStateRef, {
                                 status: "case_selected",
+                                ...staleCourtEventsReset(),
                                 caseId: caseId,
                                 assignments: assignments,
                                 interrogationsCount: 0,
@@ -995,6 +996,7 @@ function listenToFinalLobby() {
                 // 3️⃣ [التفكيك البصري الصارم]: مسح وتدمير منصة محامي المحكمة كلياً من الـ HTML لمنع تكرار وحقن المستمعات
                 const oldPanel = document.getElementById("court-lawyer-verdict-panel");
                 if (oldPanel) oldPanel.remove();
+                clearCourtTransientUI();
 
                 // 4️⃣ تصفير جدار الحماية الاستكشافي للسماح بحقن اللوحة من جديد في الجولة القضائية التالية
                 window.hasUnifiedCourtyardInjected = false;
@@ -1043,6 +1045,24 @@ function listenToFinalLobby() {
                 } else if (myRoleCard.role_name.includes("ادعاء") || myRoleCard.role_name.includes("المحكمة")) {
                     myLawyerType = "court_evidence";
                 }
+            }
+
+            // 🧹 [أساس الحالة عند الدخول]: أي حدث قديم محفوظ سحابياً (من جولة سابقة أو قبل دخولي) يُسجَّل كـ"تمت معالجته"
+            // دون عرضه، فلا يعود الكيل فيد ولا نافذة الرد/التبرير القديمة عند الخروج والدخول مرة أخرى
+            if (!window.courtEventsBaselineTaken) {
+                window.courtEventsBaselineTaken = true;
+                window.lastProcessedQuestionPromptTimestamp =
+                    gameState.active_question_prompt && gameState.active_question_prompt.timestamp;
+                window.lastProcessedEvidenceConfrontationTimestamp =
+                    gameState.active_evidence_confrontation && gameState.active_evidence_confrontation.timestamp;
+                window.lastProcessedEvidenceResponseTimestamp =
+                    gameState.evidence_response && gameState.evidence_response.timestamp;
+                window.lastProcessedPrivateNetworkMessageTimestamp =
+                    gameState.private_network_message && gameState.private_network_message.timestamp;
+                window.lastProcessedNetworkRevealTimestamp =
+                    gameState.network_reveal && gameState.network_reveal.timestamp;
+                window.lastProcessedTimestamp = gameState.requestTimestamp;
+                clearCourtTransientUI();
             }
 
             // ==========================================================================
@@ -1202,6 +1222,8 @@ function listenToFinalLobby() {
                         alertModal.classList.remove("modal-overlay-active");
                     }
 
+                    clearCourtTransientUI();
+
                     // تصفير وتطهير ذاكرة الأسئلة التراكمية للجولة الجديدة قسرياً عند الأدمن
                     Object.keys(sessionStorage).forEach((key) => {
                         if (
@@ -1216,6 +1238,7 @@ function listenToFinalLobby() {
                     // 🌟 [شاشة النتائج الكبرى]: عدم تصفير الـ assignments أو الـ caseId هنا إطلاقاً - يجب أن تبقى حية لتُعرض في شاشة النتائج القادمة
                     update(ref(db, "rooms/" + currentRoomCode + "/game_state"), {
                         status: "game_over",
+                        ...staleCourtEventsReset(),
                         last_verdict_outcome: { ended_reason: "forced_no_verdict" },
                         court_lawyer_action: null,
                         activeSpeakerUID: "none", // 🌟 تصفير المتحدث عند الإنهاء القسري
@@ -1283,6 +1306,8 @@ function listenToFinalLobby() {
                     document.getElementById("btn-player-confirm-exit").addEventListener("click", function () {
                         modal.style.setProperty("display", "none", "important");
                         modal.classList.remove("modal-overlay-active");
+
+                        clearCourtTransientUI();
 
                         const playerKey = sessionStorage.getItem("myPlayerKeyInRoom");
                         if (playerKey) {
@@ -2404,6 +2429,7 @@ document.addEventListener("DOMContentLoaded", function () {
     };
 
     const clearSessionAndDestroyLocalMemory = () => {
+        clearCourtTransientUI();
         // 3️⃣ تدمير وتصفير الذاكرة المحلية والـ Session للجهاز الحالي لنسف أثر الجولة السابقة
         sessionStorage.removeItem("activeRoomCode");
         sessionStorage.removeItem("myPlayerKeyInRoom");
@@ -2526,6 +2552,7 @@ document.addEventListener("DOMContentLoaded", function () {
     };
 
     const clearSessionAndRedirect = () => {
+        clearCourtTransientUI();
         sessionStorage.removeItem("activeRoomCode");
         sessionStorage.removeItem("myPlayerKeyInRoom");
         if (hostExitModal) {
@@ -4247,6 +4274,42 @@ async function injectAutomatedResponseButtons(promptData) {
     });
 }
 
+// ==========================================================================
+// 🧹 تنظيف ذاكرة نوافذ المحكمة المؤقتة (الكيل فيد + نوافذ الرد/التبرير + الهمس السري)
+// وتصفير أحداث اللعب المؤقتة المخزّنة سحابياً حتى لا تُعاد عند دخول القضية مرة أخرى
+// ==========================================================================
+function clearCourtTransientUI() {
+    [
+        "kill-feed-box",
+        "automated-response-box",
+        "evidence-response-box",
+        "private-whisper-box",
+        "local-floating-toast"
+    ].forEach((id) => {
+        const el = document.getElementById(id);
+        if (el) el.remove();
+    });
+    document.querySelectorAll(".kill-feed-alert").forEach((n) => n.remove());
+    try {
+        stopSpeech();
+    } catch (e) {
+        /* تجاهل */
+    }
+}
+
+function staleCourtEventsReset() {
+    // القيمة null في update تحذف المفتاح من Firebase
+    return {
+        active_question_prompt: null,
+        active_evidence_confrontation: null,
+        evidence_response: null,
+        private_network_message: null,
+        network_reveal: null,
+        lastSpeakRequestName: null,
+        requestTimestamp: null
+    };
+}
+
 function triggerKillFeedAlert(alertText, isJudgeReveal = false, options = {}) {
     // 🌟 [تعديل الجزء السادس]: جدار الحماية لعزل إشعارات أسئلة المحامي وحجبها عن بقية اللاعبين
     const isPrivateLawyerAlert =
@@ -5001,6 +5064,8 @@ const endCurrentCourtSession = (verdictOutcomeData) => {
 
     console.log("💥 إطلاق شرارة التطهير وبث التوجيه السحابي القطعي لجميع الأجهزة...");
 
+    clearCourtTransientUI();
+
     // 1️⃣ تنظيف الذاكرة المحلية والـ Session للجهاز الحالي للاستعداد للجولة القادمة
     sessionStorage.removeItem("lobby_initial_card_opened");
     Object.keys(sessionStorage).forEach((key) => {
@@ -5030,6 +5095,7 @@ const endCurrentCourtSession = (verdictOutcomeData) => {
     // يتم قذف جهاز القاضي فوراً إلى صفحة results.html، وبقية المشاهدين سيلتقطون الـ game_over من المراقب العام وينتقلون خلفه
     update(localGameStateUpdateRef, {
         status: "game_over",
+        ...staleCourtEventsReset(),
         last_verdict_outcome: verdictOutcomeData || { ended_reason: "forced_no_verdict" },
         court_lawyer_action: null,
         activeSpeakerUID: "none",

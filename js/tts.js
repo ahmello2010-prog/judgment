@@ -665,7 +665,7 @@ function injectReaderStyles() {
             box-shadow: 0 6px 18px rgba(0, 0, 0, 0.45);
             font-weight: 700;
             font-size: 0.82rem;
-            transition: all 0.25s ease;
+            transition: box-shadow 0.25s ease, border-color 0.25s ease, color 0.25s ease;
             outline: none;
             /* 🔧 [إصلاح جوهري - سحب الموبايل]: يجب أن يحمل مقبض السحب نفسه touch-action:none
                صراحةً (لا يكفي وجودها على الحاوية الأب فقط)، حتى يقرر متصفح الموبايل من أول
@@ -684,10 +684,12 @@ function injectReaderStyles() {
             width: 21px;
             height: 21px;
         }
-        .tts-fab-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 10px 28px rgba(213, 167, 92, 0.25);
-            background: #1e293b;
+        @media (hover: hover) {
+            .tts-fab-btn:hover {
+                transform: translateY(-2px);
+                box-shadow: 0 10px 28px rgba(213, 167, 92, 0.25);
+                background: #1e293b;
+            }
         }
         .tts-fab-btn.is-active {
             border-color: #4ade80;
@@ -701,9 +703,7 @@ function injectReaderStyles() {
             left: 0;
             width: 310px;
             max-width: 90vw;
-            background: rgba(13, 23, 38, 0.96);
-            backdrop-filter: blur(12px);
-            -webkit-backdrop-filter: blur(12px);
+            background: rgba(13, 23, 38, 0.98);
             border: 1.5px solid rgba(213, 167, 92, 0.5);
             border-radius: 16px;
             padding: 14px;
@@ -1067,6 +1067,24 @@ export function initGlobalTextReader() {
     let currentX = 0;
     let currentY = 0;
 
+    // 🔧 [إصلاح النسخة الشبحية على الهواتف]: الزر يتحرك الآن بتغيير left/bottom الحقيقيين بدل
+    // transform:translate3d. الـ translate3d كان يرفع الحاوية لطبقة GPU مستقلة، وبعض متصفحات
+    // الأندرويد تترك "صورة قديمة" من تلك الطبقة في مكانها الأصلي عند السحب فتظهر كزر ثانٍ.
+    // القيمتان المحفوظتان (tts-trans-x / tts-trans-y) بنفس معناهما القديم فلا يضيع موقع أحد.
+    const BASE_OFFSET_PX = 16;
+    function applyReaderPosition() {
+        root.style.transform = "none";
+        root.style.left = `${BASE_OFFSET_PX + currentX}px`;
+        root.style.bottom = `${BASE_OFFSET_PX - currentY}px`;
+    }
+
+    // يجبر المتصفح على إعادة رسم المنطقة بالكامل ويمسح أي بقايا رسم قديمة
+    function forceReaderRepaint() {
+        root.style.display = "none";
+        void root.offsetHeight;
+        root.style.display = "";
+    }
+
     // ==========================================================================
     // [التموضع الذكي للوحة]: نقيس أبعاد اللوحة الحقيقية (تبقى display:flex دائماً،
     // فقط visibility/opacity تتغيران) ونحسب المساحة المتاحة في الاتجاهات الأربعة حول
@@ -1112,7 +1130,7 @@ export function initGlobalTextReader() {
     if (savedTransformX !== null && savedTransformY !== null) {
         currentX = parseInt(savedTransformX, 10) || 0;
         currentY = parseInt(savedTransformY, 10) || 0;
-        root.style.transform = `translate3d(${currentX}px, ${currentY}px, 0)`;
+        applyReaderPosition();
     }
 
     // إعادة تثبيت الزر داخل حدود الشاشة (يُستدعى عند التحميل، وعند تدوير الشاشة، وعند
@@ -1128,7 +1146,7 @@ export function initGlobalTextReader() {
         if (dx !== 0 || dy !== 0) {
             currentX += dx;
             currentY += dy;
-            root.style.transform = `translate3d(${currentX}px, ${currentY}px, 0)`;
+            applyReaderPosition();
         }
     }
     clampToViewport();
@@ -1229,7 +1247,7 @@ export function initGlobalTextReader() {
                 // الموقع المقترح الجديد اعتماداً على الإزاحة الكلية منذ بداية اللمسة (لا تراكم أخطاء تقريب)
                 currentX = startOffsetX + deltaX;
                 currentY = startOffsetY + deltaY;
-                containerEl.style.transform = `translate3d(${currentX}px, ${currentY}px, 0)`;
+                applyReaderPosition();
 
                 // تثبيت داخل حدود الشاشة أثناء السحب نفسه لمنع خروج الزر عنها في أي لحظة
                 const liveRect = containerEl.getBoundingClientRect();
@@ -1242,7 +1260,7 @@ export function initGlobalTextReader() {
                 if (clampDx !== 0 || clampDy !== 0) {
                     currentX += clampDx;
                     currentY += clampDy;
-                    containerEl.style.transform = `translate3d(${currentX}px, ${currentY}px, 0)`;
+                    applyReaderPosition();
                 }
 
                 adjustPanelDirection();
@@ -1265,6 +1283,7 @@ export function initGlobalTextReader() {
                 localStorage.setItem("tts-trans-y", String(currentY));
                 adjustPanelDirection();
                 suppressNextClick = true;
+                forceReaderRepaint();
             } else if (!wasCancelled) {
                 // لم تتحرك اللمسة عملياً: هذه "نقرة" حقيقية، نتعامل معها هنا مباشرة بدل
                 // انتظار حدث click منفصل، فتتوحد نقطة القرار ويستحيل تعارض توقيت اللمس/النقر
