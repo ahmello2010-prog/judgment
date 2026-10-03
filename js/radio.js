@@ -47,21 +47,6 @@ let currentStationIndex = 0;
 let isRadioPowerOn = false;
 let currentVolume = 0.5;
 
-function safeGetStorage(key, fallback = null) {
-    try {
-        const val = localStorage.getItem(key);
-        return val !== null ? val : fallback;
-    } catch (e) {
-        return fallback;
-    }
-}
-
-function safeSetStorage(key, value) {
-    try {
-        localStorage.setItem(key, String(value));
-    } catch (e) {}
-}
-
 // البحث عن الحاضنة الدائمة للصوت (Single Persistent Audio Host)
 export function getPersistentAudioHost() {
     try {
@@ -91,14 +76,14 @@ export function initCourtRadio() {
     }
 
     // 2. النافذة الحاضنة الدائمة: تمتلك كائن الصوت الوحيد الفعلي
-    const savedPower = safeGetStorage(STORAGE_POWER_KEY);
+    const savedPower = localStorage.getItem(STORAGE_POWER_KEY);
     isRadioPowerOn = savedPower === "on";
 
-    const savedStation = parseInt(safeGetStorage(STORAGE_STATION_KEY, "0"), 10);
+    const savedStation = parseInt(localStorage.getItem(STORAGE_STATION_KEY) || "0", 10);
     currentStationIndex =
         isNaN(savedStation) || savedStation < 0 || savedStation >= RADIO_STATIONS.length ? 0 : savedStation;
 
-    const savedVol = parseFloat(safeGetStorage(STORAGE_VOLUME_KEY, "0.5"));
+    const savedVol = parseFloat(localStorage.getItem(STORAGE_VOLUME_KEY) || "0.5");
     currentVolume = isNaN(savedVol) ? 0.5 : Math.max(0, Math.min(1, savedVol));
 
     // إنشاء كائن الصوت الموحد الدائم (مرة واحدة فقط للجلسة)
@@ -108,9 +93,7 @@ export function initCourtRadio() {
         radioAudio.id = "courtroom-radio-audio";
         radioAudio.preload = "auto";
         radioAudio.setAttribute("playsinline", "");
-        radioAudio.setAttribute("webkit-playsinline", "");
-        radioAudio.style.cssText =
-            "position:fixed;width:1px;height:1px;opacity:0.01;pointer-events:none;z-index:-1;bottom:0;left:0;";
+        radioAudio.style.display = "none";
         document.body.appendChild(radioAudio);
     }
 
@@ -125,9 +108,6 @@ export function initCourtRadio() {
     }
 
     radioAudio.src = RADIO_STATIONS[currentStationIndex].src;
-    try {
-        radioAudio.load();
-    } catch (e) {}
     radioAudio.volume = currentVolume;
 
     // تسجيل الحاضنة رسمياً
@@ -166,9 +146,9 @@ function syncStateFromHost() {
         currentStationIndex = state.stationIndex;
         currentVolume = state.volume;
     } else {
-        isRadioPowerOn = safeGetStorage(STORAGE_POWER_KEY) === "on";
-        currentStationIndex = parseInt(safeGetStorage(STORAGE_STATION_KEY, "0"), 10) || 0;
-        currentVolume = parseFloat(safeGetStorage(STORAGE_VOLUME_KEY, "0.5")) || 0.5;
+        isRadioPowerOn = localStorage.getItem(STORAGE_POWER_KEY) === "on";
+        currentStationIndex = parseInt(localStorage.getItem(STORAGE_STATION_KEY) || "0", 10) || 0;
+        currentVolume = parseFloat(localStorage.getItem(STORAGE_VOLUME_KEY) || "0.5") || 0.5;
     }
     updateRadioUI();
 }
@@ -185,7 +165,7 @@ function buildRadioModal() {
             <div class="radio-header">
                 <div class="radio-header-brand">
                     <span class="radio-brand-icon">
-                        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                             <rect x="2" y="7" width="20" height="14" rx="2" ry="2"></rect>
                             <path d="M16 3l-4.5 4"></path>
                             <circle cx="17" cy="14" r="2"></circle>
@@ -196,7 +176,7 @@ function buildRadioModal() {
                     <h3 id="radio-chassis-title" class="radio-brand-title">راديو محكمة الأدوار</h3>
                 </div>
                 <button type="button" id="btn-radio-close" class="radio-close-btn" aria-label="إغلاق مشغل الراديو">
-                    <svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                    <svg viewBox="0 0 24 24" width="12" height="12" stroke="currentColor" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round">
                         <line x1="18" y1="6" x2="6" y2="18"></line>
                         <line x1="6" y1="6" x2="18" y2="18"></line>
                     </svg>
@@ -235,19 +215,19 @@ function buildRadioModal() {
             <div class="radio-controls-strip">
                 <div class="radio-playback-controls">
                     <button type="button" id="btn-radio-prev" class="radio-ctrl-btn" title="المحطة السابقة" aria-label="المحطة السابقة">
-                        <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor">
+                        <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor">
                             <polygon points="19 20 9 12 19 4 19 20"></polygon>
                             <line x1="5" y1="19" x2="5" y2="5" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"></line>
                         </svg>
                     </button>
                     <button type="button" id="btn-radio-power" class="radio-power-btn ${isRadioPowerOn ? "is-on" : "is-off"}" title="تشغيل / إيقاف الراديو" aria-label="تشغيل / إيقاف الراديو">
-                        <svg class="r-power-icon" viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                        <svg class="r-power-icon" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
                             <path d="M18.36 6.64a9 9 0 1 1-12.73 0"></path>
                             <line x1="12" y1="2" x2="12" y2="12"></line>
                         </svg>
                     </button>
                     <button type="button" id="btn-radio-next" class="radio-ctrl-btn" title="المحطة التالية" aria-label="المحطة التالية">
-                        <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor">
+                        <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor">
                             <polygon points="5 4 15 12 5 20 5 4"></polygon>
                             <line x1="19" y1="5" x2="19" y2="19" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"></line>
                         </svg>
@@ -256,7 +236,7 @@ function buildRadioModal() {
 
                 <div class="radio-volume-control">
                     <span id="radio-vol-icon" class="radio-vol-icon">
-                        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                             <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5" fill="currentColor"></polygon>
                             <path d="M15.54 8.46a5 5 0 0 1 0 7.07"></path>
                         </svg>
@@ -353,13 +333,10 @@ export function switchStation(index) {
     }
 
     currentStationIndex = index;
-    safeSetStorage(STORAGE_STATION_KEY, currentStationIndex);
+    localStorage.setItem(STORAGE_STATION_KEY, String(currentStationIndex));
 
     if (radioAudio) {
         radioAudio.src = RADIO_STATIONS[currentStationIndex].src;
-        try {
-            radioAudio.load();
-        } catch (e) {}
         if (isRadioPowerOn) {
             playRadio();
         }
@@ -376,21 +353,13 @@ export async function playRadio() {
 
     if (!radioAudio) return;
     isRadioPowerOn = true;
-    safeSetStorage(STORAGE_POWER_KEY, "on");
+    localStorage.setItem(STORAGE_POWER_KEY, "on");
 
     try {
-        if (!radioAudio.src) {
-            radioAudio.src = RADIO_STATIONS[currentStationIndex].src;
-            try {
-                radioAudio.load();
-            } catch (e) {}
-        }
         await radioAudio.play();
     } catch (err) {
         const onFirstTouch = () => {
-            if (isRadioPowerOn && radioAudio) {
-                radioAudio.play().catch(() => {});
-            }
+            if (isRadioPowerOn && radioAudio) radioAudio.play().catch(() => {});
             window.removeEventListener("click", onFirstTouch);
             window.removeEventListener("touchstart", onFirstTouch);
         };
@@ -408,7 +377,7 @@ export function stopRadio() {
     }
 
     isRadioPowerOn = false;
-    safeSetStorage(STORAGE_POWER_KEY, "off");
+    localStorage.setItem(STORAGE_POWER_KEY, "off");
     if (radioAudio) {
         radioAudio.pause();
     }
@@ -432,7 +401,7 @@ export function setRadioVolume(val) {
 
     currentVolume = Math.max(0, Math.min(1, val));
     if (radioAudio) radioAudio.volume = currentVolume;
-    safeSetStorage(STORAGE_VOLUME_KEY, currentVolume);
+    localStorage.setItem(STORAGE_VOLUME_KEY, String(currentVolume));
     broadcastUpdate();
 }
 
@@ -483,11 +452,11 @@ function updateRadioUI() {
         if (volPercent) volPercent.textContent = `${Math.round(currentVolume * 100)}%`;
         if (volIcon) {
             if (currentVolume === 0) {
-                volIcon.innerHTML = `<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5" fill="currentColor"></polygon><line x1="23" y1="9" x2="17" y2="15"></line><line x1="17" y1="9" x2="23" y2="15"></line></svg>`;
+                volIcon.innerHTML = `<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5" fill="currentColor"></polygon><line x1="23" y1="9" x2="17" y2="15"></line><line x1="17" y1="9" x2="23" y2="15"></line></svg>`;
             } else if (currentVolume < 0.5) {
-                volIcon.innerHTML = `<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5" fill="currentColor"></polygon><path d="M15.54 8.46a5 5 0 0 1 0 7.07"></path></svg>`;
+                volIcon.innerHTML = `<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5" fill="currentColor"></polygon><path d="M15.54 8.46a5 5 0 0 1 0 7.07"></path></svg>`;
             } else {
-                volIcon.innerHTML = `<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5" fill="currentColor"></polygon><path d="M15.54 8.46a5 5 0 0 1 0 7.07"></path><path d="M19.07 4.93a10 10 0 0 1 0 14.14"></path></svg>`;
+                volIcon.innerHTML = `<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5" fill="currentColor"></polygon><path d="M15.54 8.46a5 5 0 0 1 0 7.07"></path><path d="M19.07 4.93a10 10 0 0 1 0 14.14"></path></svg>`;
             }
         }
 
