@@ -5,6 +5,7 @@
         <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
         <meta name="theme-color" content="#6b5236" />
         <title>محكمة الأدوار - إدارة الغرف</title>
+
         <link rel="stylesheet" href="css/style.css" />
         <link rel="icon" type="image/png" href="/favicon-96x96.png" sizes="96x96" />
         <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
@@ -373,6 +374,7 @@
     <body class="rm-body">
         <canvas id="courtCanvas" width="500" height="500" style="display: none"></canvas>
 
+        <!-- القائمة الجانبية -->
         <div id="sidebar-drawer" class="sidebar-drawer-hidden">
             <div class="sidebar-content">
                 <h3 id="sidebar-title">قائمة الإعدادات</h3>
@@ -411,6 +413,7 @@
         </div>
 
         <div class="rm-app">
+            <!-- Header -->
             <header class="rm-header">
                 <button
                     id="btn-hamburger"
@@ -437,6 +440,7 @@
                 <a href="guide.html" class="rm-help" aria-label="دليل المستخدم"> ? </a>
             </header>
 
+            <!-- Main -->
             <main class="rm-main">
                 <p class="rm-subtitle">اختر إنشاء جولة جديدة أو انضم لغرفة أصدقائك لبدء المحاكمة</p>
 
@@ -458,11 +462,17 @@
                             stroke-linecap="round"
                             stroke-linejoin="round">
                             <line x1="1" y1="1" x2="23" y2="23"></line>
+
                             <path d="M16.72 11.06A10.94 10.94 0 0 1 19 12.55"></path>
+
                             <path d="M5 12.55a10.94 10.94 0 0 1 5.17-2.39"></path>
+
                             <path d="M10.71 5.05A16 16 0 0 1 22.56 9"></path>
+
                             <path d="M1.42 9a15.91 15.91 0 0 1 4.7-2.88"></path>
+
                             <path d="M8.53 16.11a6 6 0 0 1 6.95 0"></path>
+
                             <line x1="12" y1="20" x2="12.01" y2="20"></line>
                         </svg>
                     </span>
@@ -471,38 +481,43 @@
                 </div>
 
                 <div class="rm-list">
+                    <!-- إنشاء غرفة -->
                     <div class="rm-card rm-card--primary" id="card-create-room" role="button" tabindex="0">
                         <div class="rm-thumb">
                             <img src="img/create.jpg" alt="إنشاء غرفة" />
                         </div>
 
                         <div class="rm-card-body">
-                            <span class="rm-card-title">إنشاء غرفة</span>
+                            <span class="rm-card-title"> إنشاء غرفة </span>
+
                             <span class="rm-card-desc"> ابدأ محاكمة جديدة وشارك كود الغرفة مع أصدقائك. </span>
                         </div>
 
-                        <span class="rm-chevron" aria-hidden="true">‹</span>
+                        <span class="rm-chevron" aria-hidden="true"> ‹ </span>
                     </div>
 
                     <div class="rm-row">
+                        <!-- انضمام لغرفة -->
                         <div class="rm-card rm-card--tile" id="card-join-room" role="button" tabindex="0">
                             <div class="rm-thumb">
                                 <img src="img/join.jpg" alt="انضمام لغرفة" />
                             </div>
 
                             <div class="rm-card-body">
-                                <span class="rm-card-title">انضمام لغرفة</span>
+                                <span class="rm-card-title"> انضمام لغرفة </span>
+
                                 <span class="rm-card-desc"> أدخل كود صديقك وادخل الجلسة. </span>
                             </div>
                         </div>
 
+                        <!-- لعب أوف لاين -->
                         <div class="rm-card rm-card--tile" id="card-offline-play" role="button" tabindex="0">
                             <div class="rm-thumb rm-thumb--contain">
                                 <img src="img/off.png" alt="لعب أوف لاين" />
                             </div>
 
                             <div class="rm-card-body">
-                                <span class="rm-card-title">لعب أوف لاين</span>
+                                <span class="rm-card-title"> لعب أوف لاين </span>
 
                                 <span
                                     class="rm-badge"
@@ -516,19 +531,22 @@
             </main>
         </div>
 
-        <!-- نافذة الإنذارات والمودال الموحد -->
+        <!-- نافذة الإنذارات -->
         <div id="custom-alert-modal" class="modal-overlay-hidden">
             <div class="modal-alert-box">
                 <h3 id="modal-alert-title">تنبيه قضائي</h3>
+
                 <p id="modal-alert-message">برجاء مراجعة شروط الغرفة والعدد قبل البدء.</p>
+
                 <button id="btn-modal-close">حسناً</button>
             </div>
         </div>
 
+        <!-- الشريط المتحرك -->
         <div class="cinematic-ticker-container">
             <div class="ticker-text-wrapper">
                 <div class="ticker-marquee">
-                    <span>اجتمع مع أصدقائك أو أحبابك لتحظى بتجربة لعب مميزة</span>
+                    <span> اجتمع مع أصدقائك أو أحبابك لتحظى بتجربة لعب مميزة </span>
 
                     <span>
                         نظراً لعدم توفر المايك في الوقت الحالي يمكنك إجراء مكالمة جماعية ويلعب كل لاعب من بيته في الوضع
@@ -546,7 +564,7 @@
                 </div>
 
                 <div class="ticker-marquee">
-                    <span>اجتمع مع أصدقائك أو أحبابك لتحظى بتجربة لعب مميزة</span>
+                    <span> اجتمع مع أصدقائك أو أحبابك لتحظى بتجربة لعب مميزة </span>
 
                     <span>
                         نظراً لعدم توفر المايك في الوقت الحالي يمكنك إجراء مكالمة جماعية ويلعب كل لاعب من بيته في الوضع
@@ -565,6 +583,7 @@
             </div>
         </div>
 
+        <!-- تفعيل البطاقات بلوحة المفاتيح -->
         <script>
             document.querySelectorAll(".rm-card").forEach(function (card) {
                 card.addEventListener("keydown", function (e) {
@@ -576,6 +595,7 @@
             });
         </script>
 
+        <!-- القائمة الجانبية -->
         <script>
             (function () {
                 var btn = document.getElementById("btn-hamburger");
@@ -587,11 +607,13 @@
 
                 function setSidebar(open) {
                     drawer.classList.toggle("sidebar-drawer-active", open);
+
                     btn.setAttribute("aria-expanded", String(open));
                 }
 
                 btn.addEventListener("click", function (e) {
                     e.stopPropagation();
+
                     setSidebar(!drawer.classList.contains("sidebar-drawer-active"));
                 });
 
@@ -634,7 +656,10 @@
             })();
         </script>
 
+        <!-- مدير الأوفلاين -->
         <script type="module" src="js/offline-manager.js"></script>
+
+        <!-- التطبيق الرئيسي -->
         <script type="module" src="js/app.js"></script>
     </body>
 </html>

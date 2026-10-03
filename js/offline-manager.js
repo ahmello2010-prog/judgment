@@ -259,12 +259,60 @@ export function showFirstTimeOfflineModal() {
     }
 }
 
+let roomsNoticeActiveSeq = 0;
+let isCheckingRoomsNotice = false;
+
 // تحديث وإظهار/إخفاء تنبيه الأوفلاين في صفحة rooms.html
-export function updateRoomsOfflineNotice() {
+export async function updateRoomsOfflineNotice(force = false) {
     const notice = document.getElementById("rooms-offline-notice");
     if (!notice) return;
-    const isOnline = typeof navigator !== "undefined" ? navigator.onLine : true;
-    notice.style.display = isOnline ? "none" : "flex";
+
+    // 1. إذا كان المتصفح يصرح صراحةً بأنه Offline: إظهار فوري بدون انتظار
+    if (typeof navigator !== "undefined" && navigator.onLine === false) {
+        roomsNoticeActiveSeq++;
+        notice.style.display = "flex";
+        isCheckingRoomsNotice = false;
+        return;
+    }
+
+    // 2. إذا كان هناك فحص جارٍ بالفعل ولم يتم طلب الفحص القسري: نترك الفحص النشط يكتمل
+    if (isCheckingRoomsNotice && !force) {
+        return;
+    }
+
+    const currentSeq = ++roomsNoticeActiveSeq;
+    isCheckingRoomsNotice = true;
+
+    try {
+        // فحص الاتصال الخارجي الحقيقي
+        let hasInternet = await checkRealInternet(2500);
+
+        // حماية ضد الـ stale checks: إذا بدأ فحص أحدث خلال هذا الوقت، نتجاهل النتيجة
+        if (currentSeq !== roomsNoticeActiveSeq) return;
+
+        // إذا فشل الفحص الأول، نقوم بإعادة محاولة تأكيدية (Retry) لمنع الإنذارات الكاذبة الناتجة عن تعثر شبكي عابر
+        if (!hasInternet) {
+            await new Promise((r) => setTimeout(r, 600));
+            if (currentSeq !== roomsNoticeActiveSeq) return;
+            hasInternet = await checkRealInternet(2500);
+            if (currentSeq !== roomsNoticeActiveSeq) return;
+        }
+
+        // تطبيق النتيجة النهائية على واجهة المستخدم
+        if (hasInternet) {
+            notice.style.display = "none";
+        } else {
+            notice.style.display = "flex";
+        }
+    } catch (e) {
+        if (currentSeq === roomsNoticeActiveSeq) {
+            notice.style.display = "flex";
+        }
+    } finally {
+        if (currentSeq === roomsNoticeActiveSeq) {
+            isCheckingRoomsNotice = false;
+        }
+    }
 }
 
 // دالة البدء الرئيسية لفحص الحالة وتسجيل الخدمة
@@ -272,14 +320,26 @@ export async function initOfflineManager() {
     // 1. تسجيل مستمعي تغير الشبكة لتحديث التنبيه تلقائياً
     if (typeof window !== "undefined") {
         window.addEventListener("online", () => {
-            updateRoomsOfflineNotice();
+            updateRoomsOfflineNotice(true);
             // تحديث الكاش إن لزم عند عودة الشبكة
             prepareOfflineAssets().catch(() => {});
         });
         window.addEventListener("offline", () => {
-            updateRoomsOfflineNotice();
+            updateRoomsOfflineNotice(true);
         });
         updateRoomsOfflineNotice();
+
+        // ⏱️ آلية Polling دورية (كل 10 ثوانٍ) مخصصة لبيئة Android WebView
+        // تضمن رصد انقطاع/عودة الإنترنت حتى لو لم يطلق النظام أحداث offline/online
+        // الآلية محمية بـ isCheckingRoomsNotice و sequence token لمنع تداخل وفوضى الـ checks
+        if (!window.__roomsOfflinePollingBound) {
+            window.__roomsOfflinePollingBound = true;
+            setInterval(() => {
+                if (document.getElementById("rooms-offline-notice") && !isCheckingRoomsNotice) {
+                    updateRoomsOfflineNotice();
+                }
+            }, 10000);
+        }
     }
 
     // 2. تسجيل الـ Service Worker إن كان مدعوماً
@@ -314,6 +374,7 @@ export async function initOfflineManager() {
     }
 }
 
+// إتاحة الدوال على كائن window للتكامل السلس دون استيراد معقد
 if (typeof window !== "undefined") {
     window.isOfflineReady = isOfflineReady;
     window.checkRealInternet = checkRealInternet;
