@@ -1967,12 +1967,12 @@ body.body3 #btn-verdict-trigger:active:not(:disabled) {
 }
 
 .court-radio-chassis {
-    width: 100%;
-    max-width: 310px;
+    width: calc(100vw - 28px);
+    max-width: 360px;
     background: linear-gradient(145deg, #101a28 0%, #060b13 100%);
     border: 1.5px solid var(--gold-glow, #d5a75c);
-    border-radius: 14px;
-    padding: 15px 14px;
+    border-radius: 16px;
+    padding: 14px 14px;
     box-shadow:
         0 14px 40px rgba(0, 0, 0, 0.8),
         0 0 20px rgba(213, 167, 92, 0.2);
@@ -1980,9 +1980,10 @@ body.body3 #btn-verdict-trigger:active:not(:disabled) {
     box-sizing: border-box;
     display: flex;
     flex-direction: column;
-    gap: 9px;
+    gap: 10px;
     position: relative;
     overflow: hidden;
+    max-height: 90vh;
 }
 
 .court-radio-chassis::before {
@@ -1999,25 +2000,28 @@ body.body3 #btn-verdict-trigger:active:not(:disabled) {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    border-bottom: 1px solid rgba(213, 167, 92, 0.2);
-    padding-bottom: 6px;
+    border-bottom: 1px solid rgba(213, 167, 92, 0.25);
+    padding-bottom: 8px;
 }
 
 .radio-header-brand {
     display: flex;
     align-items: center;
-    gap: 7px;
+    gap: 9px;
 }
 
 .radio-brand-icon {
-    font-size: 1.1rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--gold-glow, #d5a75c);
 }
 
 .radio-brand-title {
     margin: 0;
     font-family: "Alexandria", system-ui, sans-serif;
-    font-size: 0.88rem;
-    font-weight: 700;
+    font-size: 1.05rem;
+    font-weight: 800;
     color: var(--gold-glow, #d5a75c);
 }
 
@@ -2025,14 +2029,14 @@ body.body3 #btn-verdict-trigger:active:not(:disabled) {
     background: rgba(255, 255, 255, 0.08);
     border: 1px solid rgba(255, 255, 255, 0.15);
     color: #fff;
-    width: 24px;
-    height: 24px;
+    width: 30px;
+    height: 30px;
     border-radius: 50%;
     cursor: pointer;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 0.75rem;
+    font-size: 0.85rem;
     transition: all 0.2s ease;
     padding: 0;
 }
@@ -2046,13 +2050,13 @@ body.body3 #btn-verdict-trigger:active:not(:disabled) {
 /* شاشة LCD الرقمية المضيئة المدمجة */
 .radio-lcd-screen {
     background: radial-gradient(circle at 50% 50%, #152233 0%, #080f1a 100%);
-    border: 1px solid rgba(213, 167, 92, 0.4);
-    border-radius: 10px;
-    padding: 7px 10px;
-    box-shadow: inset 0 0 14px rgba(0, 0, 0, 0.7);
+    border: 1px solid rgba(213, 167, 92, 0.45);
+    border-radius: 12px;
+    padding: 12px 14px;
+    box-shadow: inset 0 0 16px rgba(0, 0, 0, 0.7);
     display: flex;
     flex-direction: column;
-    gap: 3px;
+    gap: 6px;
     text-align: center;
 }
 
@@ -2064,27 +2068,27 @@ body.body3 #btn-verdict-trigger:active:not(:disabled) {
 
 .radio-freq-badge {
     font-family: "Alexandria", monospace, sans-serif;
-    font-size: 0.68rem;
+    font-size: 0.78rem;
     font-weight: 700;
     color: var(--gold-glow, #d5a75c);
-    background: rgba(213, 167, 92, 0.15);
-    padding: 1px 6px;
-    border-radius: 4px;
-    border: 1px solid rgba(213, 167, 92, 0.25);
+    background: rgba(213, 167, 92, 0.18);
+    padding: 3px 8px;
+    border-radius: 6px;
+    border: 1px solid rgba(213, 167, 92, 0.3);
 }
 
 .radio-onair-badge {
     font-family: "Alexandria", system-ui, sans-serif;
-    font-size: 0.62rem;
+    font-size: 0.72rem;
     font-weight: 700;
-    padding: 2px 6px;
-    border-radius: 10px;
+    padding: 3px 9px;
+    border-radius: 12px;
     transition: all 0.3s ease;
 }
 
 .radio-onair-badge.is-on {
     color: #52ff7d;
-    background: rgba(82, 255, 125, 0.15);
+    background: rgba(82, 255, 125, 0.18);
     border: 1px solid #52ff7d;
     animation: onAirPulse 1.6s infinite ease-in-out;
 }
@@ -2108,10 +2112,10 @@ body.body3 #btn-verdict-trigger:active:not(:disabled) {
 
 .radio-station-title {
     font-family: "Alexandria", system-ui, sans-serif;
-    font-size: 0.84rem;
-    font-weight: 700;
+    font-size: 1.05rem;
+    font-weight: 800;
     color: #ffffff;
-    margin: 2px 0 0;
+    margin: 4px 0 2px;
 }
 
 /* أمواج الراديو الصوتية (Visualizer) */
@@ -2119,14 +2123,14 @@ body.body3 #btn-verdict-trigger:active:not(:disabled) {
     display: flex;
     align-items: flex-end;
     justify-content: center;
-    gap: 3px;
-    height: 14px;
-    margin-top: 2px;
+    gap: 4px;
+    height: 18px;
+    margin-top: 4px;
 }
 
 .radio-wave-bars .r-bar {
-    width: 2.5px;
-    height: 3px;
+    width: 3px;
+    height: 4px;
     background: var(--gold-glow, #d5a75c);
     border-radius: 2px;
     opacity: 0.3;
@@ -2167,36 +2171,45 @@ body.body3 #btn-verdict-trigger:active:not(:disabled) {
 
 @keyframes waveBounce {
     0% {
-        height: 3px;
+        height: 4px;
     }
     100% {
-        height: 13px;
+        height: 17px;
     }
 }
 
 /* قائمة المحطات المدمجة */
+.radio-stations-list {
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+}
+
 .radio-section-label {
     font-family: "Alexandria", system-ui, sans-serif;
-    font-size: 0.68rem;
+    font-size: 0.76rem;
     font-weight: 700;
     color: var(--gold-glow, #d5a75c);
     margin-bottom: 4px;
+    flex-shrink: 0;
 }
 
 .radio-stations-grid {
     display: flex;
     flex-direction: column;
-    gap: 4px;
-    max-height: 105px;
+    gap: 6px;
+    max-height: 145px;
     overflow-y: auto;
     padding-left: 2px;
+    padding-right: 2px;
+    scrollbar-width: thin;
 }
 
 .radio-station-card {
-    background: rgba(255, 255, 255, 0.04);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    border-radius: 7px;
-    padding: 5px 8px;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 8px;
+    padding: 7px 10px;
     cursor: pointer;
     text-align: right;
     display: flex;
@@ -2206,41 +2219,46 @@ body.body3 #btn-verdict-trigger:active:not(:disabled) {
     transition: all 0.2s ease;
     outline: none;
     user-select: none;
+    box-sizing: border-box;
+    flex-shrink: 0;
+    min-height: 38px;
 }
 
 .radio-station-card:hover {
-    background: rgba(213, 167, 92, 0.12);
-    border-color: rgba(213, 167, 92, 0.4);
+    background: rgba(213, 167, 92, 0.15);
+    border-color: rgba(213, 167, 92, 0.5);
 }
 
 .radio-station-card.is-active {
-    background: rgba(213, 167, 92, 0.2);
+    background: rgba(213, 167, 92, 0.22);
     border-color: var(--gold-glow, #d5a75c);
-    box-shadow: 0 0 10px rgba(213, 167, 92, 0.25);
+    box-shadow: 0 0 12px rgba(213, 167, 92, 0.3);
 }
 
 .station-card-freq {
     font-family: "Alexandria", monospace, sans-serif;
-    font-size: 0.65rem;
+    font-size: 0.72rem;
     font-weight: 700;
     color: var(--gold-glow, #d5a75c);
+    flex-shrink: 0;
 }
 
 .station-card-active-dot {
-    width: 6px;
-    height: 6px;
+    width: 7px;
+    height: 7px;
     border-radius: 50%;
     background: transparent;
+    flex-shrink: 0;
 }
 
 .radio-station-card.is-active .station-card-active-dot {
     background: #52ff7d;
-    box-shadow: 0 0 5px #52ff7d;
+    box-shadow: 0 0 6px #52ff7d;
 }
 
 .station-card-name {
     font-family: "Alexandria", system-ui, sans-serif;
-    font-size: 0.76rem;
+    font-size: 0.82rem;
     font-weight: 600;
     color: #ffffff;
     flex: 1;
@@ -2250,31 +2268,32 @@ body.body3 #btn-verdict-trigger:active:not(:disabled) {
     text-overflow: ellipsis;
 }
 
-/* شريط التحكم السفلي المدمج */
+/* شريط التحكم السفلي */
 .radio-controls-strip {
     display: flex;
     flex-direction: column;
-    gap: 7px;
-    padding-top: 5px;
-    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    gap: 9px;
+    padding-top: 8px;
+    border-top: 1px solid rgba(255, 255, 255, 0.12);
+    flex-shrink: 0;
 }
 
 .radio-playback-controls {
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: 12px;
+    gap: 16px;
 }
 
 .radio-ctrl-btn {
-    background: rgba(255, 255, 255, 0.06);
-    border: 1px solid rgba(255, 255, 255, 0.15);
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.18);
     color: #fff;
-    width: 28px;
-    height: 28px;
+    width: 36px;
+    height: 36px;
     border-radius: 50%;
     cursor: pointer;
-    font-size: 0.8rem;
+    font-size: 0.9rem;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -2283,23 +2302,23 @@ body.body3 #btn-verdict-trigger:active:not(:disabled) {
 }
 
 .radio-ctrl-btn:hover {
-    background: rgba(213, 167, 92, 0.2);
+    background: rgba(213, 167, 92, 0.25);
     border-color: var(--gold-glow, #d5a75c);
-    transform: scale(1.06);
+    transform: scale(1.08);
 }
 
 .radio-power-btn {
-    width: 38px;
-    height: 38px;
+    width: 48px;
+    height: 48px;
     border-radius: 50%;
     cursor: pointer;
     display: flex;
     align-items: center;
     justify-content: center;
     transition: all 0.25s ease;
-    border: 1.5px solid var(--gold-glow, #d5a75c);
+    border: 2px solid var(--gold-glow, #d5a75c);
     outline: none;
-    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.5);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
     padding: 0;
 }
 
@@ -2311,28 +2330,30 @@ body.body3 #btn-verdict-trigger:active:not(:disabled) {
 .radio-power-btn.is-off:hover {
     background: #1d2938;
     color: var(--gold-glow, #d5a75c);
-    transform: scale(1.06);
+    transform: scale(1.08);
 }
 
 .radio-power-btn.is-on {
     background: var(--gold-glow, #d5a75c);
     color: #050a12;
-    box-shadow: 0 0 14px rgba(213, 167, 92, 0.5);
+    box-shadow: 0 0 16px rgba(213, 167, 92, 0.55);
     animation: radioPowerPulse 2s infinite ease-in-out;
 }
 
 .radio-volume-control {
     display: flex;
     align-items: center;
-    gap: 7px;
-    background: rgba(0, 0, 0, 0.3);
-    padding: 3px 10px;
-    border-radius: 14px;
-    border: 1px solid rgba(255, 255, 255, 0.08);
+    gap: 9px;
+    background: rgba(0, 0, 0, 0.35);
+    padding: 6px 14px;
+    border-radius: 16px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 .radio-vol-icon {
-    font-size: 0.8rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
     color: var(--gold-glow, #d5a75c);
 }
 
@@ -2340,7 +2361,7 @@ body.body3 #btn-verdict-trigger:active:not(:disabled) {
     flex: 1;
     -webkit-appearance: none;
     appearance: none;
-    height: 4px;
+    height: 5px;
     background: rgba(255, 255, 255, 0.2);
     border-radius: 4px;
     outline: none;
@@ -2350,20 +2371,20 @@ body.body3 #btn-verdict-trigger:active:not(:disabled) {
 .radio-vol-slider::-webkit-slider-thumb {
     -webkit-appearance: none;
     appearance: none;
-    width: 11px;
-    height: 11px;
+    width: 14px;
+    height: 14px;
     border-radius: 50%;
     background: var(--gold-glow, #d5a75c);
     cursor: pointer;
-    box-shadow: 0 0 6px rgba(213, 167, 92, 0.6);
+    box-shadow: 0 0 6px rgba(213, 167, 92, 0.7);
 }
 
 .radio-vol-percent {
     font-family: "Alexandria", monospace, sans-serif;
-    font-size: 0.65rem;
+    font-size: 0.76rem;
     font-weight: 700;
     color: #cbd5e1;
-    min-width: 26px;
+    min-width: 32px;
     text-align: left;
 }
 
@@ -2800,20 +2821,21 @@ body.cinematic-fade-ready {
 
     /* 6. مشغل الراديو والقارئ الصوتي */
     .court-radio-chassis {
+        width: calc(100vw - 28px) !important;
         max-width: 360px !important;
-        padding: 10px 12px !important;
-        gap: 7px !important;
-        border-radius: 12px !important;
+        padding: 13px 13px !important;
+        gap: 9px !important;
+        border-radius: 14px !important;
     }
     .radio-station-title {
-        font-size: 0.9rem !important;
+        font-size: 0.95rem !important;
     }
-    .radio-stations-list {
-        max-height: 110px !important;
+    .radio-stations-grid {
+        max-height: 135px !important;
     }
     .radio-station-card {
-        padding: 6px 8px !important;
-        font-size: 0.72rem !important;
+        padding: 6px 9px !important;
+        font-size: 0.8rem !important;
     }
     .tts-dock-panel {
         width: 275px !important;
@@ -2858,6 +2880,9 @@ body.cinematic-fade-ready {
         max-width: 300px !important;
     }
     .court-radio-chassis {
-        width: calc(100vw - 28px) !important;
+        width: 95vw !important;
+        max-width: 360px !important;
+        padding: 13px 13px !important;
+        gap: 9px !important;
     }
 }
