@@ -47,10 +47,10 @@
             </div>
         </div>
 
-        <!-- نافذة التحذير للمستخدم عند الدخول لأول مرة بدون اتصال بالإنترنت -->
+        <!-- نافذة التحذير للمستخدم عند الدخول لأول مرة بدون اتصال بالإنترنت (مخفية افتراضياً) -->
         <div
             id="first-time-offline-modal"
-            class="modal-overlay-active"
+            class="modal-overlay-hidden"
             style="
                 position: fixed;
                 top: 0;
@@ -61,7 +61,7 @@
                 backdrop-filter: blur(8px);
                 -webkit-backdrop-filter: blur(8px);
                 z-index: 2147483647;
-                display: none;
+                display: none !important;
                 justify-content: center;
                 align-items: center;
                 padding: 20px;
@@ -151,10 +151,16 @@
                 const firstTimeModal = document.getElementById("first-time-offline-modal");
                 const dismissBtn = document.getElementById("btn-offline-dismiss");
 
-                if (dismissBtn && firstTimeModal && !dismissBtn.dataset.boundDismiss) {
-                    dismissBtn.dataset.boundDismiss = "true";
-                    dismissBtn.addEventListener("click", function () {
-                        firstTimeModal.style.display = "none";
+                if (dismissBtn && firstTimeModal) {
+                    dismissBtn.addEventListener("click", function (e) {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        try {
+                            localStorage.setItem("judgment_first_time_warning_shown", "true");
+                        } catch (_) {}
+                        firstTimeModal.classList.remove("modal-overlay-active");
+                        firstTimeModal.classList.add("modal-overlay-hidden");
+                        firstTimeModal.style.setProperty("display", "none", "important");
                     });
                 }
 
