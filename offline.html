@@ -981,6 +981,9 @@
             </div>
         </div>
 
+        <!-- مدير الجاهزية كسكريبت مستقل: يعمل ويعرض المودال حتى لو فشل استيراد ملف آخر (مثل offline-engine.js) -->
+        <script type="module" src="js/offline-manager.js"></script>
+
         <script type="module">
             import {
                 loadCases,
@@ -1020,7 +1023,17 @@
                     allCases = await loadCases();
                     renderCasesList();
                 } catch (e) {
-                    if (typeof window.showFirstTimeOfflineModal === "function" && !navigator.onLine) {
+                    // المودال فقط إذا كان الجهاز Offline والكاش غير جاهز؛ غير ذلك نعرض رسالة الخطأ العادية
+                    let cacheReady = false;
+                    try {
+                        cacheReady =
+                            typeof window.isOfflineReady === "function" ? await window.isOfflineReady() : false;
+                    } catch (err) {}
+                    if (
+                        typeof window.showFirstTimeOfflineModal === "function" &&
+                        navigator.onLine === false &&
+                        !cacheReady
+                    ) {
                         window.showFirstTimeOfflineModal();
                     } else {
                         document.getElementById("cases-list-container").innerHTML =

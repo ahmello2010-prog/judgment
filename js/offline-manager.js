@@ -2,7 +2,7 @@
 // 🌐 js/offline-manager.js — مدير الجاهزية والاتصال لوضع الأوفلاين
 // ==========================================================================
 
-const CACHE_NAME = "judgment-cache-v2"; // لازم يتطابق مع CACHE_NAME في sw.js
+const CACHE_NAME = "judgment-cache-v3"; // لازم يتطابق مع CACHE_NAME في sw.js
 const OFFLINE_READY_FLAG = "judgment_offline_ready";
 
 // التحقق الفعلي من اكتمال تخزين الملفات الجوهرية داخل Cache Storage
@@ -301,8 +301,9 @@ export async function initOfflineManager() {
         if (hasInternet) {
             // إنترنت متوفر في الزيارة الأولى: نقوم بتجهيز الكاش بالكامل في الخلفية
             prepareOfflineAssets();
-        } else {
-            // أول زيارة بدون إنترنت واللعبة غير مجهزة في الكاش: عرض المودال المطلوب
+        } else if (navigator.onLine === false) {
+            // المودال فقط عندما يكون الجهاز Offline فعلاً واللعبة غير مجهزة في الكاش
+            // (إذا كان الجهاز Online فلا يظهر حتى لو تعذّر الوصول لمواقع الفحص الخارجية)
             showFirstTimeOfflineModal();
         }
     } else {

@@ -4,7 +4,7 @@
 
 // ⚠️ لازم يتطابق مع CACHE_NAME في js/offline-manager.js
 // غيّر الرقم (v2 → v3 ...) كل ما تعدّل ملفات اللعبة عشان يتحدّث الكاش عند المستخدمين
-const CACHE_NAME = "judgment-cache-v2";
+const CACHE_NAME = "judgment-cache-v3";
 
 // قائمة الملفات الأساسية والضرورية لتشغيل اللعبة أوفلاين بالكامل
 const ESSENTIAL_ASSETS = [
