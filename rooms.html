@@ -315,6 +315,37 @@
             body.rm-body #btn-modal-close:active {
                 transform: scale(0.97);
             }
+            /* تنبيه وضع الأوفلاين داخل rooms.html */
+            .rooms-offline-notice {
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                gap: 8px;
+                padding: 7px 12px;
+                margin: 0 4px 12px;
+                background: rgba(38, 28, 16, 0.92);
+                border: 1px solid rgba(213, 167, 92, 0.45);
+                border-radius: 10px;
+                color: #f6e2b3;
+                font-family: "Alexandria", sans-serif;
+                font-size: 0.8rem;
+                font-weight: 600;
+                line-height: 1.4;
+                text-align: center;
+                box-shadow: 0 4px 12px rgba(0, 0, 0, 0.35);
+                animation: offlineNoticeFadeIn 0.25s ease-out;
+            }
+            .rooms-offline-notice .offline-notice-icon {
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+                color: var(--gold-glow, #d5a75c);
+                flex: none;
+            }
+            @keyframes offlineNoticeFadeIn {
+                from { opacity: 0; transform: translateY(-4px); }
+                to { opacity: 1; transform: translateY(0); }
+            }
         </style>
     </head>
     <body class="rm-body">
@@ -381,6 +412,21 @@
 
             <main class="rm-main">
                 <p class="rm-subtitle">اختر إنشاء جولة جديدة أو انضم لغرفة أصدقائك لبدء المحاكمة</p>
+                <!-- تنبيه وضع الأوفلاين الخفيف -->
+                <div id="rooms-offline-notice" class="rooms-offline-notice" style="display: none;" role="status" aria-live="polite">
+                    <span class="offline-notice-icon">
+                        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                            <line x1="1" y1="1" x2="23" y2="23"></line>
+                            <path d="M16.72 11.06A10.94 10.94 0 0 1 19 12.55"></path>
+                            <path d="M5 12.55a10.94 10.94 0 0 1 5.17-2.39"></path>
+                            <path d="M10.71 5.05A16 16 0 0 1 22.56 9"></path>
+                            <path d="M1.42 9a15.91 15.91 0 0 1 4.7-2.88"></path>
+                            <path d="M8.53 16.11a6 6 0 0 1 6.95 0"></path>
+                            <line x1="12" y1="20" x2="12.01" y2="20"></line>
+                        </svg>
+                    </span>
+                    <span class="offline-notice-text">أنت الآن في وضع بلا إنترنت، فليست جميع المميزات متاحة.</span>
+                </div>
 
                 <div class="rm-list">
                     <!-- إنشاء غرفة -->
@@ -498,6 +544,24 @@
                 document.addEventListener("keydown", function (e) {
                     if (e.key === "Escape") setSidebar(false);
                 });
+            })();
+        </script>
+
+        <!-- تحديث تنبيه الأوفلاين فورياً وبدون تأخير -->
+        <script>
+            (function () {
+                function syncOfflineNotice() {
+                    var el = document.getElementById("rooms-offline-notice");
+                    if (!el) return;
+                    el.style.display = navigator.onLine ? "none" : "flex";
+                }
+                window.addEventListener("online", syncOfflineNotice);
+                window.addEventListener("offline", syncOfflineNotice);
+                if (document.readyState === "loading") {
+                    document.addEventListener("DOMContentLoaded", syncOfflineNotice);
+                } else {
+                    syncOfflineNotice();
+                }
             })();
         </script>
 

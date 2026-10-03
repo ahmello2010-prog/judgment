@@ -5,7 +5,7 @@
 const CACHE_NAME = "judgment-cache-v1";
 const OFFLINE_READY_FLAG = "judgment_offline_ready";
 
-// التحقق من التخزين الفعلي للأصول الحيوية داخل Cache Storage
+// التحقق الفعلي من اكتمال تخزين الملفات الجوهرية داخل Cache Storage
 export async function isOfflineReady() {
     if (!("caches" in window)) return false;
     try {
@@ -26,49 +26,35 @@ export async function isOfflineReady() {
     }
 }
 
-// فحص حقيقي ودقيق لوجود اتصال إنترنت فعلي (بدون الاعتماد على navigator.onLine وحده ولا نفس السيرفر وحده)
-export async function checkRealInternet(timeoutMs = 4000) {
+// فحص حقيقي لوجود اتصال إنترنت خارجي فعلي
+// ⚠️ لا يعتمد على navigator.onLine وحده ولا يعتبر طلب السيرفر المحلي دليلاً على الإنترنت
+export async function checkRealInternet(timeoutMs = 3000) {
     if (typeof navigator !== "undefined" && navigator.onLine === false) {
         return false;
     }
 
-    // محاولة فحص نقاط اتصال خارجية موثوقة وعالية التوافر
-    const testEndpoints = [
-        "https://dns.google/resolve?name=google.com&type=A",
-        "https://cloudflare-dns.com/dns-query?name=cloudflare.com&type=A"
-    ];
+    // فحص نقاط شبكية خارجية حقيقية بنمط no-cors
+    const externalProbes = ["https://www.google.com/generate_204", "https://cloudflare.com/cdn-cgi/trace"];
 
-    for (const url of testEndpoints) {
+    for (const url of externalProbes) {
         try {
             const controller = new AbortController();
             const timer = setTimeout(() => controller.abort(), timeoutMs);
-            const response = await fetch(url, {
-                method: "GET",
-                mode: "cors",
+            await fetch(url, {
+                method: "HEAD",
+                mode: "no-cors",
                 cache: "no-store",
                 signal: controller.signal
             });
             clearTimeout(timer);
-            if (response.ok) return true;
+            return true;
         } catch (e) {
-            // ننتقل للنقطة التالية
+            // فشل الطلب الخارجي، ننتقل للنقطة التالية
         }
     }
 
-    // فحص احتياطي عبر استدعاء خفيف غير مخزن من أصلنا لو تعذرت الخدمات العالمية
-    try {
-        const controller = new AbortController();
-        const timer = setTimeout(() => controller.abort(), timeoutMs);
-        const res = await fetch("/site.webmanifest?_t=" + Date.now(), {
-            method: "HEAD",
-            cache: "no-store",
-            signal: controller.signal
-        });
-        clearTimeout(timer);
-        return res.ok;
-    } catch (e) {
-        return false;
-    }
+    // إذا فشلت كافة المحاولات الخارجية، يعتبر الجهاز في وضع أوفلاين قطعي
+    return false;
 }
 
 // تجهيز وتخزين كافة الأصول في الكاش عند توفر الإنترنت
@@ -162,7 +148,7 @@ export function showFirstTimeOfflineModal() {
                 background: linear-gradient(180deg, #162032 0%, #0d1523 100%);
                 border: 2px solid var(--gold-glow, #d5a75c);
                 border-radius: 20px;
-                padding: 32px 24px;
+                padding: 30px 22px;
                 max-width: 440px;
                 width: 100%;
                 text-align: center;
@@ -170,57 +156,79 @@ export function showFirstTimeOfflineModal() {
                 color: #ffffff;
             ">
                 <div style="
-                    width: 70px; height: 70px;
-                    margin: 0 auto 20px;
+                    width: 64px; height: 64px;
+                    margin: 0 auto 16px;
                     border-radius: 50%;
                     background: rgba(213, 167, 92, 0.15);
                     border: 2px solid var(--gold-glow, #d5a75c);
                     display: flex; align-items: center; justify-content: center;
-                    font-size: 2rem;
+                    font-size: 1.8rem;
                 ">
                     ⚖️
                 </div>
                 <h2 style="
                     color: var(--gold-glow, #d5a75c);
-                    font-size: 1.35rem;
+                    font-size: 1.25rem;
                     font-weight: 800;
                     margin: 0 0 14px 0;
-                ">تجهيز اللعبة للعب بدون إنترنت</h2>
+                ">تجهيز اللعبة للعمل بدون إنترنت</h2>
                 <p style="
                     font-family: 'Harmattan', sans-serif;
-                    font-size: 1.35rem;
+                    font-size: 1.3rem;
                     line-height: 1.6;
-                    color: rgba(255, 255, 255, 0.85);
-                    margin: 0 0 24px 0;
+                    color: rgba(255, 255, 255, 0.9);
+                    margin: 0 0 22px 0;
                 ">
-                    هذه أول مرة يتم فيها تشغيل Judgment على هذا الجهاز بدون اتصال بالإنترنت. لتجهيز اللعبة للعب Offline، يجب تشغيل الإنترنت مرة واحدة على الأقل.
+                    هذه أول مرة يتم فيها تشغيل Judgment على هذا الجهاز بدون اتصال بالإنترنت.
+                    <br/><br/>
+                    لتجهيز اللعبة للعمل بدون إنترنت، يجب تشغيل الإنترنت مرة واحدة على الأقل.
                 </p>
-                <button id="btn-offline-retry" style="
-                    width: 100%;
-                    padding: 13px 20px;
-                    background: linear-gradient(135deg, #d5a75c 0%, #b8860b 100%);
-                    color: #050a12;
-                    border: none;
-                    border-radius: 12px;
-                    font-family: 'Alexandria', sans-serif;
-                    font-size: 1rem;
-                    font-weight: 800;
-                    cursor: pointer;
-                    box-shadow: 0 6px 18px rgba(213, 167, 92, 0.35);
-                    transition: transform 0.2s, opacity 0.2s;
-                ">إعادة المحاولة</button>
+                <div style="display: flex; gap: 10px;">
+                    <button id="btn-offline-dismiss" type="button" style="
+                        flex: 1;
+                        padding: 12px 14px;
+                        background: rgba(255, 255, 255, 0.08);
+                        border: 1px solid rgba(255, 255, 255, 0.2);
+                        color: #ffffff;
+                        border-radius: 12px;
+                        font-family: 'Alexandria', sans-serif;
+                        font-size: 0.95rem;
+                        font-weight: 700;
+                        cursor: pointer;
+                        transition: background 0.2s;
+                    ">حسناً، فهمت</button>
+                    <button id="btn-offline-retry" type="button" style="
+                        flex: 1;
+                        padding: 12px 14px;
+                        background: linear-gradient(135deg, #d5a75c 0%, #b8860b 100%);
+                        color: #050a12;
+                        border: none;
+                        border-radius: 12px;
+                        font-family: 'Alexandria', sans-serif;
+                        font-size: 0.95rem;
+                        font-weight: 800;
+                        cursor: pointer;
+                        box-shadow: 0 4px 16px rgba(213, 167, 92, 0.35);
+                        transition: transform 0.2s, opacity 0.2s;
+                    ">إعادة المحاولة</button>
+                </div>
                 <div id="offline-retry-status" style="
-                    margin-top: 14px;
-                    font-size: 0.85rem;
+                    margin-top: 12px;
+                    font-size: 0.82rem;
                     color: #cbd5e1;
-                    min-height: 20px;
+                    min-height: 18px;
                 "></div>
             </div>
         `;
         document.body.appendChild(modal);
 
+        const dismissBtn = modal.querySelector("#btn-offline-dismiss");
         const retryBtn = modal.querySelector("#btn-offline-retry");
         const statusEl = modal.querySelector("#offline-retry-status");
+
+        dismissBtn.addEventListener("click", () => {
+            modal.style.display = "none";
+        });
 
         retryBtn.addEventListener("click", async () => {
             retryBtn.disabled = true;
@@ -251,9 +259,30 @@ export function showFirstTimeOfflineModal() {
     }
 }
 
+// تحديث وإظهار/إخفاء تنبيه الأوفلاين في صفحة rooms.html
+export function updateRoomsOfflineNotice() {
+    const notice = document.getElementById("rooms-offline-notice");
+    if (!notice) return;
+    const isOnline = typeof navigator !== "undefined" ? navigator.onLine : true;
+    notice.style.display = isOnline ? "none" : "flex";
+}
+
 // دالة البدء الرئيسية لفحص الحالة وتسجيل الخدمة
 export async function initOfflineManager() {
-    // 1. تسجيل الـ Service Worker إن كان مدعوماً
+    // 1. تسجيل مستمعي تغير الشبكة لتحديث التنبيه تلقائياً
+    if (typeof window !== "undefined") {
+        window.addEventListener("online", () => {
+            updateRoomsOfflineNotice();
+            // تحديث الكاش إن لزم عند عودة الشبكة
+            prepareOfflineAssets().catch(() => {});
+        });
+        window.addEventListener("offline", () => {
+            updateRoomsOfflineNotice();
+        });
+        updateRoomsOfflineNotice();
+    }
+
+    // 2. تسجيل الـ Service Worker إن كان مدعوماً
     if ("serviceWorker" in navigator) {
         try {
             await navigator.serviceWorker.register("/sw.js");
@@ -263,7 +292,7 @@ export async function initOfflineManager() {
         }
     }
 
-    // 2. التحقق من جاهزية الأوفلاين
+    // 3. التحقق الحقيقي من جاهزية الأوفلاين عبر Cache Storage
     const ready = await isOfflineReady();
 
     if (!ready) {
@@ -273,17 +302,24 @@ export async function initOfflineManager() {
             // إنترنت متوفر في الزيارة الأولى: نقوم بتجهيز الكاش بالكامل في الخلفية
             prepareOfflineAssets();
         } else {
-            // أول زيارة بدون إنترنت واللعبة غير مجهزة: عرض المودال المطلوب
+            // أول زيارة بدون إنترنت واللعبة غير مجهزة في الكاش: عرض المودال المطلوب
             showFirstTimeOfflineModal();
         }
     } else {
-        // اللعبة مجهزة مسبقاً: نضمن وجود العلامة
+        // اللعبة مجهزة مسبقاً في Cache Storage
         localStorage.setItem(OFFLINE_READY_FLAG, "true");
-        // تحديث خفيف في الخلفية إن توفر الإنترنت
         if (navigator.onLine) {
             prepareOfflineAssets().catch(() => {});
         }
     }
+}
+
+// إتاحة الدوال على كائن window للتكامل السلس دون استيراد معقد
+if (typeof window !== "undefined") {
+    window.isOfflineReady = isOfflineReady;
+    window.checkRealInternet = checkRealInternet;
+    window.showFirstTimeOfflineModal = showFirstTimeOfflineModal;
+    window.updateRoomsOfflineNotice = updateRoomsOfflineNotice;
 }
 
 if (typeof document !== "undefined") {

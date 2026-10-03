@@ -2238,6 +2238,23 @@ document.addEventListener("click", function (event) {
 
     const cardOffline = event.target.closest("#card-offline-play");
     if (cardOffline) {
+        if (typeof window.isOfflineReady === "function") {
+            window
+                .isOfflineReady()
+                .then((ready) => {
+                    if (!ready && !navigator.onLine) {
+                        if (typeof window.showFirstTimeOfflineModal === "function") {
+                            window.showFirstTimeOfflineModal();
+                        }
+                        return;
+                    }
+                    navigateTo("offline.html");
+                })
+                .catch(() => {
+                    navigateTo("offline.html");
+                });
+            return;
+        }
         navigateTo("offline.html");
         return;
     }

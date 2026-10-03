@@ -648,12 +648,27 @@
 
             // 1. تحميل القضايا عند الإقلاع
             async function init() {
+                if (typeof window.isOfflineReady === "function") {
+                    try {
+                        const ready = await window.isOfflineReady();
+                        if (!ready && !navigator.onLine) {
+                            if (typeof window.showFirstTimeOfflineModal === "function") {
+                                window.showFirstTimeOfflineModal();
+                            }
+                            return;
+                        }
+                    } catch (err) {}
+                }
                 try {
                     allCases = await loadCases();
                     renderCasesList();
                 } catch (e) {
-                    document.getElementById("cases-list-container").innerHTML =
-                        "<p style='color:#ff5252; text-align:center;'>تعذر تحميل ملف القضايا محلياً.</p>";
+                    if (typeof window.showFirstTimeOfflineModal === "function" && !navigator.onLine) {
+                        window.showFirstTimeOfflineModal();
+                    } else {
+                        document.getElementById("cases-list-container").innerHTML =
+                            "<p style='color:#ff5252; text-align:center;'>تعذر تحميل ملف القضايا محلياً.</p>";
+                    }
                 }
             }
 
