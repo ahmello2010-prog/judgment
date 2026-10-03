@@ -2,7 +2,7 @@
 // 🌐 js/offline-manager.js — مدير الجاهزية والاتصال لوضع الأوفلاين
 // ==========================================================================
 
-const CACHE_NAME = "judgment-cache-v1";
+const CACHE_NAME = "judgment-cache-v2"; // لازم يتطابق مع CACHE_NAME في sw.js
 const OFFLINE_READY_FLAG = "judgment_offline_ready";
 
 // التحقق الفعلي من اكتمال تخزين الملفات الجوهرية داخل Cache Storage
