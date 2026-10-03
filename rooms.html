@@ -5,7 +5,7 @@
         <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
         <meta name="theme-color" content="#6b5236" />
         <title>محكمة الأدوار - إدارة الغرف</title>
-
+        <!-- الخطوط والقائمة الجانبية والمودال والشريط المتحرك تأتي من style.css ويُعاد تنسيقها هنا بشكل مسطّح -->
         <link rel="stylesheet" href="css/style.css" />
         <link rel="icon" type="image/png" href="/favicon-96x96.png" sizes="96x96" />
         <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
@@ -13,8 +13,10 @@
         <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
         <meta name="apple-mobile-web-app-title" content="المحكمة" />
         <link rel="manifest" href="/site.webmanifest" />
-
         <style>
+            /* ==========================================================================
+               شاشة الغرف — أسلوب مسطّح هادئ (بدون توهّج): ظلال خفيفة وحدود رفيعة فقط
+               ========================================================================== */
             :root {
                 --rm-gold: #c9a25a;
                 --rm-gold-soft: rgba(201, 162, 90, 0.35);
@@ -24,12 +26,10 @@
                 --rm-surface-2: #3f3423;
                 --rm-line: #5b5245;
             }
-
             html,
             body.rm-body {
                 height: 100%;
             }
-
             body.rm-body {
                 margin: 0;
                 display: block;
@@ -38,7 +38,6 @@
                 background: #624c2c;
                 color: var(--rm-cream);
             }
-
             .rm-app {
                 position: relative;
                 display: flex;
@@ -49,9 +48,10 @@
                 height: 100dvh;
                 margin: 0 auto;
                 background: linear-gradient(180deg, #111a2e 0%, #3e301d 50%, #05070c 100%);
+
                 box-shadow: 0 0 40px rgba(0, 0, 0, 0.4);
             }
-
+            /* تنسيق الزر والأيقونة */
             .settings-icon-btn {
                 background: transparent;
                 border: none;
@@ -64,20 +64,22 @@
             }
 
             .game-gear-icon {
-                width: 28px;
+                width: 28px; /* يمكنك التحكم في حجم الترس من هنا */
                 height: 28px;
-                color: #e5c158;
-                transition: transform 0.4s ease;
+                color: #e5c158; /* لون ذهبي نحاسي متناسق مع اللوجو الخاص بك */
+                transition: transform 0.4s ease; /* سرعة الدوران */
             }
 
+            /* تأثير الدوران الفخم عند تمرير الماوس (Hover) */
             .settings-icon-btn:hover .game-gear-icon {
                 transform: rotate(45deg);
-                color: #fff;
+                color: #fff; /* يتحول للأبيض عند التمرير لمظهر تفاعلي */
             }
 
+            /* ---------- الشريط العلوي ---------- */
             .rm-header {
                 flex: none;
-                direction: ltr;
+                direction: ltr; /* القائمة يسار وعلامة الاستفهام يمين */
                 display: flex;
                 align-items: center;
                 justify-content: space-between;
@@ -85,7 +87,6 @@
                 background: linear-gradient(180deg, #7d5f3c 0%, #6b5236 100%);
                 border-bottom: 1px solid #4a3a26;
             }
-
             .rm-title {
                 margin: 0;
                 font-family: "Alexandria", sans-serif;
@@ -93,7 +94,7 @@
                 font-size: 1.2rem;
                 color: var(--rm-cream);
             }
-
+            /* زر الهمبرجر الأصلي (نفس الـ id) داخل الشريط بدل موضعه الثابت */
             .rm-header .hamburger-menu {
                 position: static;
                 width: 40px;
@@ -104,13 +105,11 @@
                 border-radius: 8px;
                 box-shadow: none;
             }
-
             .rm-header .hamburger-menu .bar {
                 width: 22px;
                 height: 2.5px;
                 background-color: var(--rm-cream);
             }
-
             .rm-help {
                 display: inline-flex;
                 align-items: center;
@@ -126,27 +125,28 @@
                 font-size: 1.1rem;
             }
 
+            /* القائمة الجانبية بنفس الأسلوب المسطّح */
             body.rm-body #sidebar-drawer {
                 background-color: #262320;
                 border-right: 1px solid var(--rm-line);
             }
-
             body.rm-body #sidebar-drawer.sidebar-drawer-active {
                 box-shadow: 4px 0 14px rgba(0, 0, 0, 0.4);
             }
-
             body.rm-body .sidebar-link {
                 border-bottom: 1px solid rgba(201, 162, 90, 0.15);
             }
 
+            /* ---------- المحتوى ---------- */
             .rm-main {
                 flex: 1;
                 display: flex;
                 flex-direction: column;
                 overflow-y: auto;
+                /* السفلي = العلوي + ارتفاع الشريط المتحرك (36px) ليتساوى الفراغ المرئي أعلى المحتوى وأسفله على أي طول هاتف */
                 padding: calc(22px + min(5vw, 20px)) 16px calc(58px + min(5vw, 20px));
             }
-
+            /* توسيط آمن: الهوامش التلقائية على أول وآخر عنصر؛ تنكمش لصفر عند الفيض فيبقى التمرير سليماً دون قصّ */
             .rm-subtitle {
                 margin: auto 4px 18px;
                 font-family: "Harmattan", sans-serif;
@@ -156,20 +156,19 @@
                 text-align: center;
                 color: var(--rm-muted);
             }
-
             .rm-list {
                 display: flex;
                 flex-direction: column;
                 gap: 14px;
                 margin-bottom: auto;
             }
-
             .rm-row {
                 display: grid;
                 grid-template-columns: 1fr 1fr;
                 gap: 14px;
             }
 
+            /* البطاقات */
             .rm-card {
                 position: relative;
                 display: flex;
@@ -187,43 +186,39 @@
                     background 0.18s ease,
                     border-color 0.18s ease;
             }
-
             .rm-card:hover {
                 background: var(--rm-surface-2);
                 border-color: var(--rm-gold-soft);
             }
-
             .rm-card:active {
                 background: #2e2b27;
             }
-
             .rm-card:focus-visible {
                 outline: 2px solid var(--rm-gold);
                 outline-offset: 2px;
             }
 
+            /* البطاقة الرئيسية: شريط ذهبي جانبي بدل التوهج */
             .rm-card--primary {
                 padding-inline-start: 16px;
                 border-inline-start: 4px solid var(--rm-gold);
             }
-
             .rm-card--primary .rm-thumb {
                 width: 92px;
                 height: 92px;
             }
 
+            /* بطاقتان متجاورتان بشكل عمودي */
             .rm-card--tile {
                 flex-direction: column;
                 align-items: stretch;
                 gap: 10px;
                 padding: 10px 10px 14px;
             }
-
             .rm-card--tile .rm-thumb {
                 width: 100%;
                 aspect-ratio: 16 / 11;
             }
-
             .rm-card--tile .rm-card-body {
                 text-align: center;
                 align-items: center;
@@ -236,14 +231,12 @@
                 border: 1px solid var(--rm-line);
                 background: #26231f;
             }
-
             .rm-thumb img {
                 display: block;
                 width: 100%;
                 height: 100%;
                 object-fit: cover;
             }
-
             .rm-thumb--contain img {
                 object-fit: contain;
                 padding: 8px;
@@ -256,14 +249,12 @@
                 flex-direction: column;
                 gap: 4px;
             }
-
             .rm-card-title {
                 font-family: "Alexandria", sans-serif;
                 font-weight: 700;
                 font-size: 1.05rem;
                 color: var(--rm-cream);
             }
-
             .rm-card-desc {
                 font-family: "Harmattan", sans-serif;
                 font-weight: 600;
@@ -271,7 +262,6 @@
                 line-height: 1.35;
                 color: var(--rm-muted);
             }
-
             .rm-chevron {
                 flex: none;
                 font-family: "Alexandria", sans-serif;
@@ -279,7 +269,6 @@
                 line-height: 1;
                 color: var(--rm-gold);
             }
-
             .rm-badge {
                 align-self: center;
                 padding: 1px 8px;
@@ -291,6 +280,7 @@
                 color: var(--rm-gold);
             }
 
+            /* ---------- الشريط الإخباري المتحرك: مسطّح ---------- */
             body.rm-body .cinematic-ticker-container {
                 bottom: 0;
                 height: 36px;
@@ -299,19 +289,18 @@
                 border-bottom: 0;
                 box-shadow: none;
             }
-
             body.rm-body .ticker-marquee span {
                 color: var(--rm-cream);
                 text-shadow: none;
             }
 
+            /* ---------- المودال الموحد ---------- */
             body.rm-body #custom-alert-modal .modal-alert-box {
                 background: var(--rm-surface);
                 border: 1.5px solid var(--rm-gold);
                 border-radius: 14px;
                 box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
             }
-
             body.rm-body #btn-modal-close {
                 background: var(--rm-gold);
                 color: #2a1f0e;
@@ -323,12 +312,10 @@
                 border-radius: 10px;
                 cursor: pointer;
             }
-
             body.rm-body #btn-modal-close:active {
                 transform: scale(0.97);
             }
-
-            /* تنبيه وضع الأوفلاين */
+            /* تنبيه وضع الأوفلاين داخل rooms.html */
             .rooms-offline-notice {
                 display: flex;
                 align-items: center;
@@ -348,7 +335,6 @@
                 box-shadow: 0 4px 12px rgba(0, 0, 0, 0.35);
                 animation: offlineNoticeFadeIn 0.25s ease-out;
             }
-
             .rooms-offline-notice .offline-notice-icon {
                 display: inline-flex;
                 align-items: center;
@@ -356,13 +342,11 @@
                 color: var(--gold-glow, #d5a75c);
                 flex: none;
             }
-
             @keyframes offlineNoticeFadeIn {
                 from {
                     opacity: 0;
                     transform: translateY(-4px);
                 }
-
                 to {
                     opacity: 1;
                     transform: translateY(0);
@@ -370,17 +354,15 @@
             }
         </style>
     </head>
-
     <body class="rm-body">
+        <!-- الحاوية المخفية الأصلية (تبقى كما هي) -->
         <canvas id="courtCanvas" width="500" height="500" style="display: none"></canvas>
 
-        <!-- القائمة الجانبية -->
+        <!-- القائمة الجانبية المنزلقة (نفس المسميات الأصلية) -->
         <div id="sidebar-drawer" class="sidebar-drawer-hidden">
             <div class="sidebar-content">
                 <h3 id="sidebar-title">قائمة الإعدادات</h3>
-
                 <button id="btn-lang-toggle" class="btn-lang">EN</button>
-
                 <button id="btn-sidebar-radio" class="sidebar-link btn-sidebar-radio" type="button">
                     <span class="sidebar-radio-title">
                         <span class="sidebar-radio-icon">
@@ -402,18 +384,14 @@
                         </span>
                         <span>مشغل الراديو</span>
                     </span>
-
-                    <span id="sidebar-radio-tag" class="radio-status-tag is-stopped"> إيقاف </span>
+                    <span id="sidebar-radio-tag" class="radio-status-tag is-stopped">إيقاف</span>
                 </button>
-
-                <a href="guide.html" id="link-user-guide" class="sidebar-link"> دليل المستخدم </a>
-
-                <a href="admin.html" class="sidebar-link" style="color: white; font-weight: bold"> سجل الغرف </a>
+                <a href="guide.html" id="link-user-guide" class="sidebar-link">دليل المستخدم</a>
+                <a href="admin.html" class="sidebar-link" style="color: white; font-weight: bold">سجل الغرف</a>
             </div>
         </div>
 
         <div class="rm-app">
-            <!-- Header -->
             <header class="rm-header">
                 <button
                     id="btn-hamburger"
@@ -430,21 +408,17 @@
                         class="game-gear-icon">
                         <path
                             d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.1a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"></path>
-
                         <circle cx="12" cy="12" r="3"></circle>
                     </svg>
                 </button>
 
                 <h1 class="rm-title">محكمة الأدوار</h1>
-
-                <a href="guide.html" class="rm-help" aria-label="دليل المستخدم"> ? </a>
+                <a href="guide.html" class="rm-help" aria-label="دليل المستخدم">?</a>
             </header>
 
-            <!-- Main -->
             <main class="rm-main">
                 <p class="rm-subtitle">اختر إنشاء جولة جديدة أو انضم لغرفة أصدقائك لبدء المحاكمة</p>
-
-                <!-- تنبيه وضع الأوفلاين -->
+                <!-- تنبيه وضع الأوفلاين الخفيف -->
                 <div
                     id="rooms-offline-notice"
                     class="rooms-offline-notice"
@@ -462,68 +436,48 @@
                             stroke-linecap="round"
                             stroke-linejoin="round">
                             <line x1="1" y1="1" x2="23" y2="23"></line>
-
                             <path d="M16.72 11.06A10.94 10.94 0 0 1 19 12.55"></path>
-
                             <path d="M5 12.55a10.94 10.94 0 0 1 5.17-2.39"></path>
-
                             <path d="M10.71 5.05A16 16 0 0 1 22.56 9"></path>
-
                             <path d="M1.42 9a15.91 15.91 0 0 1 4.7-2.88"></path>
-
                             <path d="M8.53 16.11a6 6 0 0 1 6.95 0"></path>
-
                             <line x1="12" y1="20" x2="12.01" y2="20"></line>
                         </svg>
                     </span>
-
-                    <span class="offline-notice-text"> أنت الآن في وضع بلا إنترنت، فليست جميع المميزات متاحة. </span>
+                    <span class="offline-notice-text">أنت الآن في وضع بلا إنترنت، فليست جميع المميزات متاحة.</span>
                 </div>
 
                 <div class="rm-list">
                     <!-- إنشاء غرفة -->
                     <div class="rm-card rm-card--primary" id="card-create-room" role="button" tabindex="0">
-                        <div class="rm-thumb">
-                            <img src="img/create.jpg" alt="إنشاء غرفة" />
-                        </div>
-
+                        <div class="rm-thumb"><img src="img/create.jpg" alt="إنشاء غرفة" /></div>
                         <div class="rm-card-body">
-                            <span class="rm-card-title"> إنشاء غرفة </span>
-
-                            <span class="rm-card-desc"> ابدأ محاكمة جديدة وشارك كود الغرفة مع أصدقائك. </span>
+                            <span class="rm-card-title">إنشاء غرفة</span>
+                            <span class="rm-card-desc">ابدأ محاكمة جديدة وشارك كود الغرفة مع أصدقائك.</span>
                         </div>
-
-                        <span class="rm-chevron" aria-hidden="true"> ‹ </span>
+                        <span class="rm-chevron" aria-hidden="true">‹</span>
                     </div>
 
                     <div class="rm-row">
                         <!-- انضمام لغرفة -->
                         <div class="rm-card rm-card--tile" id="card-join-room" role="button" tabindex="0">
-                            <div class="rm-thumb">
-                                <img src="img/join.jpg" alt="انضمام لغرفة" />
-                            </div>
-
+                            <div class="rm-thumb"><img src="img/join.jpg" alt="انضمام لغرفة" /></div>
                             <div class="rm-card-body">
-                                <span class="rm-card-title"> انضمام لغرفة </span>
-
-                                <span class="rm-card-desc"> أدخل كود صديقك وادخل الجلسة. </span>
+                                <span class="rm-card-title">انضمام لغرفة</span>
+                                <span class="rm-card-desc">أدخل كود صديقك وادخل الجلسة.</span>
                             </div>
                         </div>
 
                         <!-- لعب أوف لاين -->
                         <div class="rm-card rm-card--tile" id="card-offline-play" role="button" tabindex="0">
-                            <div class="rm-thumb rm-thumb--contain">
-                                <img src="img/off.png" alt="لعب أوف لاين" />
-                            </div>
-
+                            <div class="rm-thumb rm-thumb--contain"><img src="img/off.png" alt="لعب أوف لاين" /></div>
                             <div class="rm-card-body">
-                                <span class="rm-card-title"> لعب أوف لاين </span>
-
+                                <span class="rm-card-title">لعب أوف لاين</span>
                                 <span
                                     class="rm-badge"
-                                    style="background: rgba(74, 222, 128, 0.15); color: #4ade80; border-color: #4ade80">
-                                    متاح الآن
-                                </span>
+                                    style="background: rgba(74, 222, 128, 0.15); color: #4ade80; border-color: #4ade80"
+                                    >متاح الآن</span
+                                >
                             </div>
                         </div>
                     </div>
@@ -531,60 +485,50 @@
             </main>
         </div>
 
-        <!-- نافذة الإنذارات -->
+        <!-- نافذة الإنذارات والمودال الموحد (نفس الـ ID المعتمد في السكريبت) -->
         <div id="custom-alert-modal" class="modal-overlay-hidden">
             <div class="modal-alert-box">
                 <h3 id="modal-alert-title">تنبيه قضائي</h3>
-
                 <p id="modal-alert-message">برجاء مراجعة شروط الغرفة والعدد قبل البدء.</p>
-
                 <button id="btn-modal-close">حسناً</button>
             </div>
         </div>
 
-        <!-- الشريط المتحرك -->
+        <!-- شريط الأخبار المتحرك المثبت أسفل الواجهة -->
         <div class="cinematic-ticker-container">
             <div class="ticker-text-wrapper">
                 <div class="ticker-marquee">
-                    <span> اجتمع مع أصدقائك أو أحبابك لتحظى بتجربة لعب مميزة </span>
-
-                    <span>
-                        نظراً لعدم توفر المايك في الوقت الحالي يمكنك إجراء مكالمة جماعية ويلعب كل لاعب من بيته في الوضع
-                        الأونلاين
-                    </span>
-
-                    <span> ماذا تنتظر؟ أنشئ غرفة وادعو أصدقائك أو العب مود الأوفلاين </span>
-
-                    <span> لتعرف المزيد عن اللعبة وكيفية الإستمتاع بها يرجى زيارة صفحة دليل المستخدم </span>
-
-                    <span>
-                        للتحكم في مساحة التطبيق يرجى زيارة صفحة سجل الغرف ومسح كل الغرف القديمة حتى تحظى بتجربة لعب
-                        مريحة
-                    </span>
+                    <span>اجتمع مع أصدقائك أو أحبابك لتحظى بتجربة لعب مميزة</span>
+                    <span
+                        >نظراً لعدم توفر المايك في الوقت الحالي يمكنك إجراء مكالمة جماعية ويلعب كل لاعب من بيته في الوضع
+                        الأونلاين</span
+                    >
+                    <span>ماذا تنتظر؟ أنشئ غرفة وادعو أصدقائك أو العب مود الأوفلاين</span>
+                    <span>لتعرف المزيد عن اللعبة وكيفية الإستمتاع بها يرجى زيارة صفحة دليل المستخدم</span>
+                    <span
+                        >للتحكم في مساحة التطبيق يرجى زيارة صفحة سجل الغرف ومسح كل الغرف القديمة حتى تحظى بتجربة لعب
+                        مريحة</span
+                    >
                 </div>
-
+                <!-- تكرار نفس الكتلة لملء الفراغ ومنع اختفاء الشريط -->
                 <div class="ticker-marquee">
-                    <span> اجتمع مع أصدقائك أو أحبابك لتحظى بتجربة لعب مميزة </span>
-
-                    <span>
-                        نظراً لعدم توفر المايك في الوقت الحالي يمكنك إجراء مكالمة جماعية ويلعب كل لاعب من بيته في الوضع
-                        الأونلاين
-                    </span>
-
-                    <span> ماذا تنتظر؟ أنشئ غرفة وادعو أصدقائك أو العب مود الأوفلاين </span>
-
-                    <span> لتعرف المزيد عن اللعبة وكيفية الإستمتاع بها يرجى زيارة صفحة دليل المستخدم </span>
-
-                    <span>
-                        للتحكم في مساحة التطبيق يرجى زيارة صفحة سجل الغرف ومسح كل الغرف القديمة حتى تحظى بتجربة لعب
-                        مريحة
-                    </span>
+                    <span>اجتمع مع أصدقائك أو أحبابك لتحظى بتجربة لعب مميزة</span>
+                    <span
+                        >نظراً لعدم توفر المايك في الوقت الحالي يمكنك إجراء مكالمة جماعية ويلعب كل لاعب من بيته في الوضع
+                        الأونلاين</span
+                    >
+                    <span>ماذا تنتظر؟ أنشئ غرفة وادعو أصدقائك أو العب مود الأوفلاين</span>
+                    <span>لتعرف المزيد عن اللعبة وكيفية الإستمتاع بها يرجى زيارة صفحة دليل المستخدم</span>
+                    <span
+                        >للتحكم في مساحة التطبيق يرجى زيارة صفحة سجل الغرف ومسح كل الغرف القديمة حتى تحظى بتجربة لعب
+                        مريحة</span
+                    >
                 </div>
             </div>
         </div>
 
-        <!-- تفعيل البطاقات بلوحة المفاتيح -->
         <script>
+            // تفعيل البطاقات بلوحة المفاتيح (Enter / Space) — النقر نفسه يعالجه app.js
             document.querySelectorAll(".rm-card").forEach(function (card) {
                 card.addEventListener("keydown", function (e) {
                     if (e.key === "Enter" || e.key === " ") {
@@ -595,59 +539,44 @@
             });
         </script>
 
-        <!-- القائمة الجانبية -->
+        <!-- ربط القائمة الجانبية مستقلاً عن app.js: يعمل حتى لو تأخر تحميل Firebase أو فشل استيراد ملف -->
         <script>
             (function () {
                 var btn = document.getElementById("btn-hamburger");
                 var drawer = document.getElementById("sidebar-drawer");
-
                 if (!btn || !drawer || window.__sidebarBound) return;
-
                 window.__sidebarBound = true;
-
                 function setSidebar(open) {
                     drawer.classList.toggle("sidebar-drawer-active", open);
-
                     btn.setAttribute("aria-expanded", String(open));
                 }
-
                 btn.addEventListener("click", function (e) {
                     e.stopPropagation();
-
                     setSidebar(!drawer.classList.contains("sidebar-drawer-active"));
                 });
-
                 document.addEventListener("click", function (e) {
-                    if (!drawer.contains(e.target) && !btn.contains(e.target)) {
-                        setSidebar(false);
-                    }
+                    if (!drawer.contains(e.target) && !btn.contains(e.target)) setSidebar(false);
                 });
-
                 drawer.addEventListener("click", function (e) {
-                    if (e.target.closest("a")) {
-                        setSidebar(false);
-                    }
+                    if (e.target.closest("a")) setSidebar(false);
                 });
-
                 document.addEventListener("keydown", function (e) {
-                    if (e.key === "Escape") {
-                        setSidebar(false);
-                    }
+                    if (e.key === "Escape") setSidebar(false);
                 });
             })();
         </script>
 
-        <!-- إظهار فوري لتنبيه الأوفلاين -->
+        <!-- إظهار فوري لتنبيه الأوفلاين عند navigator.onLine === false فقط؛ الإخفاء وإعادة الفحص يتولاهما js/offline-manager.js -->
         <script>
             (function () {
                 function showIfOffline() {
                     var el = document.getElementById("rooms-offline-notice");
-
-                    if (el && navigator.onLine === false) {
-                        el.style.display = "flex";
-                    }
+                    var hasRedirectAlert = false;
+                    try {
+                        hasRedirectAlert = sessionStorage.getItem("judgment_offline_redirect_alert") === "1";
+                    } catch (_) {}
+                    if (el && (navigator.onLine === false || hasRedirectAlert)) el.style.display = "flex";
                 }
-
                 if (document.readyState === "loading") {
                     document.addEventListener("DOMContentLoaded", showIfOffline);
                 } else {
@@ -656,10 +585,10 @@
             })();
         </script>
 
-        <!-- مدير الأوفلاين -->
+        <!-- مدير الجاهزية ووضع الأوفلاين -->
         <script type="module" src="js/offline-manager.js"></script>
 
-        <!-- التطبيق الرئيسي -->
+        <!-- استدعاء ملف الجافا سكريبت الموحد -->
         <script type="module" src="js/app.js"></script>
     </body>
 </html>

@@ -13,6 +13,17 @@
         <link rel="manifest" href="/site.webmanifest" />
         <!-- الخطوط (Alexandria / Harmattan) والمودال الموحد مضمّنة داخل style.css -->
         <link rel="stylesheet" href="css/style.css" />
+        <!-- حماية فورية: منع الدخول في وضع الأوفلاين والعودة لصفحة الغرف -->
+        <script>
+            (function () {
+                if (typeof navigator !== "undefined" && navigator.onLine === false) {
+                    try {
+                        sessionStorage.setItem("judgment_offline_redirect_alert", "1");
+                    } catch (_) {}
+                    window.location.replace("rooms.html");
+                }
+            })();
+        </script>
         <style>
             /* ==========================================================================
                غرفة الانتظار — نفس هوية شاشة "انضمام إلى غرفة"
@@ -650,6 +661,9 @@
                 });
             })();
         </script>
+
+        <!-- مدير الجاهزية والاتصال لوضع الأوفلاين -->
+        <script type="module" src="js/offline-manager.js"></script>
 
         <script type="module" src="js/app.js"></script>
     </body>

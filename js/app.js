@@ -1437,7 +1437,8 @@ function renderCircularSeats(playersList, assignments, gameState) {
                                 activeCase,
                                 latestPlayersData,
                                 latestAssignments,
-                                fixedTargetUID
+                                fixedTargetUID,
+                                pickerGameState
                             ) => {
                                 const modal = document.getElementById("custom-alert-modal");
                                 if (!modal) return;
@@ -1509,10 +1510,13 @@ function renderCircularSeats(playersList, assignments, gameState) {
                                     }
 
                                     const targetCard = latestAssignments[targetUID] || {};
-                                    const targetedPool = fullPool.filter(
-                                        (q) => !q.target_role || resolveEvidenceItemMatchGlobal(q, targetCard)
-                                    );
-                                    const finalPool = targetedPool.length > 0 ? targetedPool : fullPool;
+                                    // 🌟 [Judgment]: لا fallback لكل أسئلة القضية؛ كل شخصية لها أسئلتها، ومحامي الدفاع له أسئلته الخاصة (about_role = موكله)
+                                    const pickerClientUID = (pickerGameState || {}).defense_client_uid;
+                                    const pickerClientRole =
+                                        pickerClientUID && latestAssignments[pickerClientUID]
+                                            ? latestAssignments[pickerClientUID].role_name
+                                            : "";
+                                    const finalPool = buildTargetedQuestionPool(fullPool, targetCard, pickerClientRole);
 
                                     const storageKey = getStorageKey(targetUID, activeCase.id);
                                     if (!sessionStorage.getItem(storageKey)) {
@@ -1742,7 +1746,8 @@ function renderCircularSeats(playersList, assignments, gameState) {
                                                 activeCase,
                                                 latestPlayersData,
                                                 latestAssignments,
-                                                activeTargetUID
+                                                activeTargetUID,
+                                                latestGameState
                                             );
                                         })
                                         .catch((err) => console.error("خطأ في تحميل مسبح الأسئلة:", err));
@@ -2223,16 +2228,74 @@ document.addEventListener("click", function (event) {
         return;
     }
 
-    // 4️⃣ محرك شبكة الغرف لصفحة rooms.html المعتمد على الـ closest المانع للتعطيل
+    // دالة حماية التنقل للغرف الأونلاين والتأكد من الاتصال الحقيقي
+    async function handleOnlineRoomNavigation(targetUrl, cardElement) {
+        if (cardElement) {
+            if (cardElement.dataset.checkingNet === "true") return;
+            cardElement.dataset.checkingNet = "true";
+            cardElement.style.pointerEvents = "none";
+        }
+
+        try {
+            let isOnline = true;
+            if (typeof window.canAccessOnlineFeature === "function") {
+                isOnline = await window.canAccessOnlineFeature();
+            } else if (typeof window.checkRealInternet === "function") {
+                if (typeof navigator !== "undefined" && navigator.onLine === false) {
+                    isOnline = false;
+                } else {
+                    isOnline = await window.checkRealInternet(2200);
+                }
+            } else if (typeof navigator !== "undefined" && !navigator.onLine) {
+                isOnline = false;
+            }
+
+            if (!isOnline) {
+                const notice = document.getElementById("rooms-offline-notice");
+                if (notice) notice.style.display = "flex";
+
+                if (typeof window.showOnlineRequiredAlert === "function") {
+                    window.showOnlineRequiredAlert();
+                } else {
+                    const modal = document.getElementById("custom-alert-modal");
+                    const msg = document.getElementById("modal-alert-message");
+                    const title = document.getElementById("modal-alert-title");
+                    if (title) title.textContent = "تنبيه قضائي";
+                    if (msg) {
+                        msg.textContent =
+                            "لا يمكن استخدام إنشاء أو الانضمام إلى غرفة بدون اتصال بالإنترنت.\nفعّل الإنترنت ثم حاول مرة أخرى.";
+                    }
+                    if (modal) {
+                        modal.classList.remove("modal-overlay-hidden");
+                        modal.classList.add("modal-overlay-active");
+                        modal.style.removeProperty("display");
+                    }
+                }
+                return;
+            }
+
+            navigateTo(targetUrl);
+        } catch (err) {
+            console.warn("[Rooms] تعثر فحص الإنترنت، استكمال التوجيه:", err);
+            navigateTo(targetUrl);
+        } finally {
+            if (cardElement) {
+                delete cardElement.dataset.checkingNet;
+                cardElement.style.pointerEvents = "";
+            }
+        }
+    }
+
+    // 4️⃣ محرك شبكة الغرف لصفحة rooms.html المعتمد على الـ closest المانع للتعطيل مع حماية الأوفلاين
     const cardCreate = event.target.closest("#card-create-room");
     if (cardCreate) {
-        navigateTo("create.html");
+        handleOnlineRoomNavigation("create.html", cardCreate);
         return;
     }
 
     const cardJoin = event.target.closest("#card-join-room");
     if (cardJoin) {
-        navigateTo("join.html");
+        handleOnlineRoomNavigation("join.html", cardJoin);
         return;
     }
 
@@ -3590,7 +3653,7 @@ function injectLawyerActionControls(
         btnQuestions.textContent = "🗨️ الأسئلة";
 
         // 🌟 [مودال اختيار اللاعب المستهدف]: نفس فكرة مودال حقيبة الأدلة تماماً لضمان اتساق تجربة الاستخدام
-        const renderTargetedQuestionsPicker = (activeCase, latestPlayersData, latestAssignments) => {
+        const renderTargetedQuestionsPicker = (activeCase, latestPlayersData, latestAssignments, pickerGameState) => {
             const modal = document.getElementById("custom-alert-modal");
             if (!modal) return;
             const fullPool = activeCase.radar_questions_pool || [];
@@ -3646,14 +3709,17 @@ function injectLawyerActionControls(
 
                 const targetCard = latestAssignments[targetUID] || {};
                 // 🌟 [استهداف بالمعرّف]: تصفية الأسئلة لتشمل فقط الأسئلة العامة أو المطابقة تحديداً لهوية هذا اللاعب المستهدف
-                const targetedPool = fullPool.filter(
-                    (q) => !q.target_role || resolveEvidenceItemMatchGlobal(q, targetCard)
-                );
-                const finalPool = targetedPool.length > 0 ? targetedPool : fullPool;
+                // 🌟 [Judgment]: لا fallback لكل أسئلة القضية؛ كل شخصية لها أسئلتها، ومحامي الدفاع له أسئلته الخاصة (about_role = موكله)
+                const pickerClientUID = (pickerGameState || {}).defense_client_uid;
+                const pickerClientRole =
+                    pickerClientUID && latestAssignments[pickerClientUID]
+                        ? latestAssignments[pickerClientUID].role_name
+                        : "";
+                const finalPool = buildTargetedQuestionPool(fullPool, targetCard, pickerClientRole);
 
                 const storageKey = getStorageKey(targetUID, activeCase.id);
                 if (!sessionStorage.getItem(storageKey)) {
-                    // 🌟 [البند 2]: تخزين كائن السؤال كاملاً (النص + الإجابات الثلاث) بدل النص المجرد فقط
+                    // 🌟 [البند 2]: تخزين كائن السؤال كاملاً (النص + معرّف السؤال) بدل النص المجرد فقط
                     const questionObjects = finalPool.filter((q) => q.text);
                     sessionStorage.setItem(storageKey, JSON.stringify(questionObjects));
                 }
@@ -3831,7 +3897,12 @@ function injectLawyerActionControls(
                     .then((allCases) => {
                         const activeCase = allCases.find((c) => c.id == latestGameState.caseId);
                         if (!activeCase) return;
-                        renderTargetedQuestionsPicker(activeCase, latestPlayersData, latestAssignments);
+                        renderTargetedQuestionsPicker(
+                            activeCase,
+                            latestPlayersData,
+                            latestAssignments,
+                            latestGameState
+                        );
                     })
                     .catch((err) => console.error("خطأ في تحميل مسبح الأسئلة:", err));
             });
@@ -4176,6 +4247,67 @@ function submitEvidenceResponse(promptData, outcome) {
 }
 
 // ==========================================================================
+// ==========================================================================
+// 🧑‍⚖️ [Judgment] محامي الدفاع: أسئلته الخاصة (سؤال + 4 شبه جمل) منفصلة عن أسئلة الشخصيات (8 مفاتيح)
+// ==========================================================================
+function isDefenseLawyerCard(card) {
+    return !!card && card.role_type === "lawyer" && String(card.role_name || "").includes("دفاع");
+}
+
+function buildTargetedQuestionPool(fullPool, targetCard, clientRoleName) {
+    if (isDefenseLawyerCard(targetCard)) {
+        const client = String(clientRoleName || "");
+        return fullPool.filter(
+            (q) =>
+                q.text &&
+                Array.isArray(q.fragments) &&
+                (!q.about_role || !client || client.includes(q.about_role) || String(q.about_role).includes(client))
+        );
+    }
+    return fullPool.filter(
+        (q) => !Array.isArray(q.fragments) && (!q.target_role || resolveEvidenceItemMatchGlobal(q, targetCard))
+    );
+}
+
+function renderLawyerFragmentsBox(promptData, matchedQuestion) {
+    const box = document.createElement("div");
+    box.id = "automated-response-box";
+    box.style.cssText = `
+        position: fixed !important; bottom: 80px !important; left: 50% !important; transform: translateX(-50%) !important;
+        z-index: 9999999 !important; display: flex !important; flex-direction: column !important; gap: 8px !important;
+        background: rgba(5, 10, 18, 0.98) !important; border: 2px solid var(--gold-glow, #d5a75c) !important;
+        border-radius: 14px !important; padding: 14px !important; width: 94% !important; max-width: 440px !important;
+        box-shadow: 0 6px 25px rgba(213, 167, 92, 0.45) !important; direction: rtl !important; box-sizing: border-box !important;
+        max-height: 80vh !important; overflow-y: auto !important; animation: smoothPanelReveal 0.4s ease-out;
+    `;
+    const asker = escapeHtml(promptData.asker_name || "طرف المحكمة");
+    const questionText = escapeHtml(promptData.question_text || matchedQuestion.text || "");
+    const fragmentsHtml = matchedQuestion.fragments
+        .slice(0, 4)
+        .map(
+            (f, i) => `
+            <div style="background: rgba(213, 167, 92, 0.1); border: 1px solid rgba(213, 167, 92, 0.35); border-radius: 6px; padding: 8px 10px; font-size: 0.8rem; color: #ffe9b3; line-height: 1.6; font-weight: 600;">
+                <span style="color: var(--gold-glow, #d5a75c); font-size: 0.7rem; margin-left: 4px;">#${i + 1}</span> ${escapeHtml(f)}
+            </div>
+        `
+        )
+        .join("");
+    box.innerHTML = `
+        <div style="text-align: right; font-family: 'Alexandria', sans-serif; direction: rtl;">
+            <p style="color: #fff; font-size: 0.82rem; margin: 0 0 8px; font-weight: 700; line-height: 1.6; text-align: center;">
+                ❓ سؤال موجّه لك كمحامٍ للدفاع من (${asker}): <b style="color: var(--gold-glow);">${questionText}</b>
+            </p>
+            <p style="color: #6ee7a0; font-size: 0.74rem; font-weight: 700; margin: 10px 0 6px;">🧩 شبه جمل لبناء ردّك الدفاعي (أكملها بصياغتك):</p>
+            <div style="display: flex; flex-direction: column; gap: 6px; margin-bottom: 8px;">${fragmentsHtml}</div>
+        </div>
+        <button type="button" id="btn-finish-my-answer" style="width: 100%; margin-top: 10px; padding: 11px; background: linear-gradient(135deg, #10b981 0%, #059669 100%); border: none; color: #fff; font-family: 'Alexandria', sans-serif; font-weight: 700; border-radius: 8px; cursor: pointer;">
+            أنهيت إجابتي
+        </button>
+    `;
+    document.body.appendChild(box);
+    box.querySelector("#btn-finish-my-answer").addEventListener("click", () => box.remove());
+}
+
 // 🌟 [صندوق الردود الموقوتة]: نظام الارتجال المتكامل (Performance + Exactly 8 Keys)
 // لا يوجد Lie / Neutral / Truth ولا توجد إجابات جاهزة، بل توجيه أدائي و8 مفاتيح
 // ==========================================================================
@@ -4201,6 +4333,10 @@ async function injectAutomatedResponseButtons(promptData) {
     }
 
     const roleCard = window.myCurrentRoleCard || {};
+    if (isDefenseLawyerCard(roleCard) && Array.isArray(matchedQuestion.fragments)) {
+        renderLawyerFragmentsBox(promptData, matchedQuestion);
+        return;
+    }
     const help = resolvePerformanceHelp({
         type: "question",
         item: matchedQuestion,

@@ -2,8 +2,12 @@
 // 🌐 js/offline-manager.js — مدير الجاهزية والاتصال لوضع الأوفلاين
 // ==========================================================================
 
-const CACHE_NAME = "judgment-cache-v2"; // لازم يتطابق مع CACHE_NAME في sw.js
+const CACHE_NAME = "judgment-cache-v3"; // يتطابق مع CACHE_NAME في sw.js
 const OFFLINE_READY_FLAG = "judgment_offline_ready";
+
+// رسالة التنبيه المعتمدة عند محاولة استخدام ميزات الأونلاين أثناء انقطاع الإنترنت
+export const OFFLINE_ONLINE_REQUIRED_MSG =
+    "لا يمكن استخدام إنشاء أو الانضمام إلى غرفة بدون اتصال بالإنترنت.\nفعّل الإنترنت ثم حاول مرة أخرى.";
 
 // التحقق الفعلي من اكتمال تخزين الملفات الجوهرية داخل Cache Storage
 export async function isOfflineReady() {
@@ -315,8 +319,123 @@ export async function updateRoomsOfflineNotice(force = false) {
     }
 }
 
+// عرض المودال الموحد عند محاولة دخول ميزة تتطلب اتصالاً بالإنترنت
+export function showOnlineRequiredAlert(message) {
+    const text = message || OFFLINE_ONLINE_REQUIRED_MSG;
+    const modal = document.getElementById("custom-alert-modal");
+    const msgEl = document.getElementById("modal-alert-message");
+    const titleEl = document.getElementById("modal-alert-title");
+
+    if (modal && msgEl) {
+        if (titleEl) titleEl.textContent = "تنبيه قضائي";
+        msgEl.textContent = text;
+        modal.classList.remove("modal-overlay-hidden");
+        modal.classList.add("modal-overlay-active");
+        modal.style.removeProperty("display");
+        return;
+    }
+    try {
+        window.alert(text);
+    } catch (_) {}
+}
+
+// إغلاق المودال الموحد بأمان
+export function hideAlertModal() {
+    const modal = document.getElementById("custom-alert-modal");
+    if (modal) {
+        modal.classList.remove("modal-overlay-active");
+        modal.classList.add("modal-overlay-hidden");
+        modal.style.setProperty("display", "none", "important");
+    }
+}
+
+// فحص سريع وموثوق للاتصال بالإنترنت قبل السماح بالدخول لميزات الغرف الأونلاين
+export async function canAccessOnlineFeature() {
+    // 1. فحص فوري وسريع من المتصفح / الـ WebView
+    if (typeof navigator !== "undefined" && navigator.onLine === false) {
+        return false;
+    }
+
+    // 2. إذا كان شريط تنبيه الأوفلاين ظاهراً بالفعل في rooms.html
+    const notice = document.getElementById("rooms-offline-notice");
+    if (notice && notice.style.display === "flex") {
+        // فحص سريع جداً لتأكيد الحالة الحالية
+        const isOnline = await checkRealInternet(1200);
+        return isOnline;
+    }
+
+    // 3. فحص الاتصال الخارجي الحقيقي
+    return await checkRealInternet(2200);
+}
+
+// حماية صفحات الأونلاين (create.html و join.html) عند محاولة الدخول المباشر إليها أوفلاين
+export async function guardOnlinePage() {
+    if (typeof window === "undefined") return;
+    const pathname = (window.location.pathname || "").toLowerCase();
+    const isOnlinePage =
+        pathname.endsWith("create.html") ||
+        pathname.endsWith("join.html") ||
+        pathname.includes("/create") ||
+        pathname.includes("/join");
+
+    if (!isOnlinePage) return;
+
+    // 1. إرجاع فوري إذا كان المتصفح يصرح بعدم وجود اتصال
+    if (typeof navigator !== "undefined" && navigator.onLine === false) {
+        try {
+            sessionStorage.setItem("judgment_offline_redirect_alert", "1");
+        } catch (_) {}
+        window.location.replace("rooms.html");
+        return;
+    }
+
+    // 2. فحص الإنترنت الخارجي الحقيقي
+    const hasInternet = await checkRealInternet(2500);
+    if (!hasInternet) {
+        try {
+            sessionStorage.setItem("judgment_offline_redirect_alert", "1");
+        } catch (_) {}
+        window.location.replace("rooms.html");
+    }
+}
+
+// حارس النقر الاستباقي لبطاقات الغرف الأونلاين في rooms.html لمنع أي تسريب للتوجيه أوفلاين
+export function setupRoomsClickGuard() {
+    if (typeof document === "undefined" || window.__roomsClickGuardBound) return;
+    window.__roomsClickGuardBound = true;
+
+    document.addEventListener(
+        "click",
+        async (e) => {
+            const card =
+                e.target.closest && (e.target.closest("#card-create-room") || e.target.closest("#card-join-room"));
+            if (!card) return;
+
+            const notice = document.getElementById("rooms-offline-notice");
+            const isKnownOffline =
+                (typeof navigator !== "undefined" && navigator.onLine === false) ||
+                (notice && notice.style.display === "flex");
+
+            if (isKnownOffline) {
+                e.preventDefault();
+                e.stopPropagation();
+                e.stopImmediatePropagation();
+                if (notice) notice.style.display = "flex";
+                showOnlineRequiredAlert();
+            }
+        },
+        true // تفعيل مرحلة الـ Capture للسبق الفوري
+    );
+}
+
 // دالة البدء الرئيسية لفحص الحالة وتسجيل الخدمة
 export async function initOfflineManager() {
+    // حماية مباشرة: فحص ما إذا كنا داخل create.html أو join.html بدون إنترنت
+    guardOnlinePage();
+
+    // تفعيل حارس النقر الفوري لبطاقات الغرف
+    setupRoomsClickGuard();
+
     // 1. تسجيل مستمعي تغير الشبكة لتحديث التنبيه تلقائياً
     if (typeof window !== "undefined") {
         window.addEventListener("online", () => {
@@ -328,6 +447,26 @@ export async function initOfflineManager() {
             updateRoomsOfflineNotice(true);
         });
         updateRoomsOfflineNotice();
+
+        // فحص ما إذا كان المستخدم قد تم تحويله من صفحة أونلاين بسبب انقطاع الإنترنت
+        try {
+            if (sessionStorage.getItem("judgment_offline_redirect_alert") === "1") {
+                sessionStorage.removeItem("judgment_offline_redirect_alert");
+                const notice = document.getElementById("rooms-offline-notice");
+                if (notice) notice.style.display = "flex";
+                showOnlineRequiredAlert();
+            }
+        } catch (_) {}
+
+        // ربط زر إغلاق المودال لضمان عمله في كل الحالات
+        if (!window.__modalCloseBound) {
+            window.__modalCloseBound = true;
+            document.addEventListener("click", (e) => {
+                if (e.target && (e.target.id === "btn-modal-close" || e.target.closest("#btn-modal-close"))) {
+                    hideAlertModal();
+                }
+            });
+        }
 
         // ⏱️ آلية Polling دورية (كل 10 ثوانٍ) مخصصة لبيئة Android WebView
         // تضمن رصد انقطاع/عودة الإنترنت حتى لو لم يطلق النظام أحداث offline/online
@@ -380,6 +519,11 @@ if (typeof window !== "undefined") {
     window.checkRealInternet = checkRealInternet;
     window.showFirstTimeOfflineModal = showFirstTimeOfflineModal;
     window.updateRoomsOfflineNotice = updateRoomsOfflineNotice;
+    window.showOnlineRequiredAlert = showOnlineRequiredAlert;
+    window.hideAlertModal = hideAlertModal;
+    window.canAccessOnlineFeature = canAccessOnlineFeature;
+    window.guardOnlinePage = guardOnlinePage;
+    window.setupRoomsClickGuard = setupRoomsClickGuard;
 }
 
 if (typeof document !== "undefined") {
