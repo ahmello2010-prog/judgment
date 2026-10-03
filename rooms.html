@@ -352,6 +352,86 @@
                     transform: translateY(0);
                 }
             }
+            /* لوحة تشخيص مؤقتة لمشكلة الأوفلاين داخل WebView */
+            .offline-debug-tools {
+                margin: 0 4px 12px;
+                padding: 8px 10px;
+                border: 1px dashed rgba(213, 167, 92, 0.55);
+                border-radius: 10px;
+                background: rgba(14, 17, 22, 0.8);
+                color: #f1e6d0;
+                font-family: "Alexandria", sans-serif;
+                direction: rtl;
+            }
+            .offline-debug-tools button {
+                width: 100%;
+                min-height: 40px;
+                border: 1px solid rgba(213, 167, 92, 0.5);
+                border-radius: 8px;
+                background: rgba(213, 167, 92, 0.12);
+                color: #f6e2b3;
+                font:
+                    700 0.78rem "Alexandria",
+                    sans-serif;
+                cursor: pointer;
+            }
+            .offline-debug-panel {
+                display: none;
+                margin-top: 8px;
+                max-height: 52vh;
+                overflow-y: auto;
+                padding: 8px;
+                border-radius: 8px;
+                background: rgba(0, 0, 0, 0.28);
+                font-size: 0.72rem;
+                line-height: 1.55;
+                text-align: right;
+            }
+            .offline-debug-panel.is-open {
+                display: block;
+            }
+            .offline-debug-actions {
+                display: grid;
+                grid-template-columns: 1fr 1fr;
+                gap: 7px;
+                margin-top: 7px;
+            }
+            .offline-debug-actions button {
+                min-height: 36px;
+                font-size: 0.7rem;
+            }
+            .offline-debug-status {
+                margin: 0 0 7px;
+                color: #cbd5e1;
+                white-space: pre-wrap;
+                word-break: break-word;
+            }
+            .offline-debug-row {
+                display: grid;
+                grid-template-columns: minmax(118px, 0.9fr) minmax(0, 1.5fr);
+                gap: 7px;
+                padding: 5px 0;
+                border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+                align-items: start;
+            }
+            .offline-debug-row:last-child {
+                border-bottom: 0;
+            }
+            .offline-debug-key {
+                color: #d5a75c;
+                font-weight: 700;
+            }
+            .offline-debug-value {
+                color: #e5e7eb;
+                direction: ltr;
+                text-align: left;
+                word-break: break-word;
+            }
+            .offline-debug-note {
+                margin-top: 7px;
+                color: #a8a29e;
+                font-size: 0.65rem;
+            }
         </style>
     </head>
     <body class="rm-body">
@@ -445,6 +525,25 @@
                         </svg>
                     </span>
                     <span class="offline-notice-text">أنت الآن في وضع بلا إنترنت، فليست جميع المميزات متاحة.</span>
+                </div>
+
+                <!-- أدوات تشخيص مؤقتة: معرفة سبب عدم ظهور تنبيه الأوفلاين داخل Android WebView -->
+                <div class="offline-debug-tools" id="offline-debug-tools">
+                    <button id="btn-offline-debug" type="button" aria-expanded="false">🔎 تشخيص Offline</button>
+                    <div id="offline-debug-panel" class="offline-debug-panel" aria-live="polite">
+                        <div id="offline-debug-status" class="offline-debug-status">
+                            اضغط "ابدأ التشخيص" لجمع النتائج من داخل هذا الجهاز.
+                        </div>
+                        <div id="offline-debug-results"></div>
+                        <div class="offline-debug-actions">
+                            <button id="btn-offline-debug-run" type="button">ابدأ التشخيص</button>
+                            <button id="btn-offline-debug-close" type="button">إغلاق</button>
+                        </div>
+                        <div class="offline-debug-note">
+                            مؤقت للتشخيص فقط. لا تغيّر اللوحة منطق اللعبة. عند انقطاع الإنترنت قد يستغرق فحص الاتصال عدة
+                            ثوانٍ.
+                        </div>
+                    </div>
                 </div>
 
                 <div class="rm-list">
@@ -578,6 +677,201 @@
                 } else {
                     showIfOffline();
                 }
+            })();
+        </script>
+
+        <script>
+            (function () {
+                const btn = document.getElementById("btn-offline-debug");
+                const panel = document.getElementById("offline-debug-panel");
+                const runBtn = document.getElementById("btn-offline-debug-run");
+                const closeBtn = document.getElementById("btn-offline-debug-close");
+                const status = document.getElementById("offline-debug-status");
+                const results = document.getElementById("offline-debug-results");
+                if (!btn || !panel || !runBtn || !closeBtn || !status || !results || window.__offlineDebugBound) return;
+                window.__offlineDebugBound = true;
+
+                const esc = (v) =>
+                    String(v ?? "—").replace(
+                        /[&<>"]/g,
+                        (m) =>
+                            ({
+                                "&": "&amp;",
+                                "<": "&lt;",
+                                ">": "&gt;",
+                                '"': "&quot;"
+                            })[m]
+                    );
+                const val = (v) => (typeof v === "boolean" ? (v ? "نعم" : "لا") : String(v ?? "—"));
+                const add = (key, value) => {
+                    const row = document.createElement("div");
+                    row.className = "offline-debug-row";
+                    row.innerHTML = `<span class="offline-debug-key">${esc(key)}</span><span class="offline-debug-value">${esc(val(value))}</span>`;
+                    results.appendChild(row);
+                };
+
+                async function fetchFresh(url) {
+                    try {
+                        const res = await fetch(`${url}?__offline_debug=${Date.now()}`, { cache: "no-store" });
+                        return { status: res.status, ok: res.ok, text: await res.text() };
+                    } catch (e) {
+                        return { error: String(e && e.message ? e.message : e) };
+                    }
+                }
+
+                async function probe(url) {
+                    const t0 = performance.now();
+                    const controller = new AbortController();
+                    const timer = setTimeout(() => controller.abort(), 3000);
+                    try {
+                        const res = await fetch(url, {
+                            method: "HEAD",
+                            mode: "no-cors",
+                            cache: "no-store",
+                            signal: controller.signal
+                        });
+                        return { ok: true, type: res.type, ms: Math.round(performance.now() - t0) };
+                    } catch (e) {
+                        return {
+                            ok: false,
+                            error: e && e.name ? e.name : String(e),
+                            ms: Math.round(performance.now() - t0)
+                        };
+                    } finally {
+                        clearTimeout(timer);
+                    }
+                }
+
+                async function cachedText(cache, path) {
+                    try {
+                        const response = await cache.match(path);
+                        return response ? await response.text() : null;
+                    } catch (e) {
+                        return null;
+                    }
+                }
+
+                async function runDiagnostic() {
+                    runBtn.disabled = true;
+                    runBtn.style.opacity = "0.6";
+                    status.textContent = "جاري الفحص… عند انقطاع الإنترنت قد يستغرق عدة ثوانٍ.";
+                    results.innerHTML = "";
+
+                    const notice = document.getElementById("rooms-offline-notice");
+                    const updateFn = window.updateRoomsOfflineNotice;
+                    const managerLoaded = typeof window.checkRealInternet === "function";
+
+                    add("navigator.onLine", typeof navigator !== "undefined" ? navigator.onLine : "غير متاح");
+                    add("#rooms-offline-notice موجود", !!notice);
+                    add("checkRealInternet موجودة", managerLoaded);
+                    add("updateRoomsOfflineNotice موجودة", typeof updateFn === "function");
+                    add(
+                        "الدالة Async + roomsNoticeSeq",
+                        !!updateFn &&
+                            updateFn.constructor.name === "AsyncFunction" &&
+                            String(updateFn).includes("roomsNoticeSeq")
+                    );
+                    add("إصلاح activeSeq موجود", !!updateFn && String(updateFn).includes("roomsNoticeActiveSeq"));
+                    add("Service Worker controller", !!navigator.serviceWorker?.controller);
+
+                    if ("caches" in window) {
+                        try {
+                            const cacheNames = await caches.keys();
+                            add("Cache names", cacheNames.join(" | ") || "لا يوجد");
+                            const cacheName = cacheNames.find((name) => name.startsWith("judgment-cache"));
+                            if (cacheName) {
+                                const cache = await caches.open(cacheName);
+                                const cachedRooms = await cachedText(cache, "/rooms.html");
+                                const cachedManager = await cachedText(cache, "/js/offline-manager.js");
+                                add("Cache name المستخدم", cacheName);
+                                add(
+                                    "cached rooms.html فيه showIfOffline",
+                                    cachedRooms == null ? "MISSING" : cachedRooms.includes("showIfOffline")
+                                );
+                                add(
+                                    "cached manager فيه activeSeq",
+                                    cachedManager == null ? "MISSING" : cachedManager.includes("roomsNoticeActiveSeq")
+                                );
+                                add(
+                                    "cached manager فيه roomsNoticeSeq",
+                                    cachedManager == null ? "MISSING" : cachedManager.includes("roomsNoticeSeq")
+                                );
+                            }
+                        } catch (e) {
+                            add("Cache Storage", `خطأ: ${e}`);
+                        }
+                    } else {
+                        add("Cache Storage", "غير مدعوم");
+                    }
+
+                    const freshRooms = await fetchFresh("/rooms.html");
+                    const freshManager = await fetchFresh("/js/offline-manager.js");
+                    add("Network rooms.html status", freshRooms.status ?? `ERR ${freshRooms.error || ""}`);
+                    add(
+                        "Network rooms.html فيه showIfOffline",
+                        freshRooms.text ? freshRooms.text.includes("showIfOffline") : "غير متاح"
+                    );
+                    add("Network manager status", freshManager.status ?? `ERR ${freshManager.error || ""}`);
+                    add(
+                        "Network manager فيه activeSeq",
+                        freshManager.text ? freshManager.text.includes("roomsNoticeActiveSeq") : "غير متاح"
+                    );
+
+                    for (const [name, url] of [
+                        ["Google probe", "https://www.google.com/generate_204"],
+                        ["Cloudflare probe", "https://cloudflare.com/cdn-cgi/trace"]
+                    ]) {
+                        const p = await probe(url);
+                        add(`${name} ok`, p.ok);
+                        add(`${name} type`, p.type || p.error || "—");
+                        add(`${name} ms`, p.ms ?? "—");
+                    }
+
+                    if (managerLoaded) {
+                        const t0 = performance.now();
+                        let real = "ERR";
+                        try {
+                            real = await window.checkRealInternet();
+                        } catch (e) {
+                            real = `ERROR: ${e}`;
+                        }
+                        add("checkRealInternet()", real);
+                        add("checkRealInternet() ms", Math.round(performance.now() - t0));
+                    }
+
+                    if (notice && typeof updateFn === "function") {
+                        const before = notice.style.display;
+                        const t0 = performance.now();
+                        try {
+                            await updateFn();
+                            add("display قبل update", before);
+                            add("display بعد update", notice.style.display);
+                            add("updateRoomsOfflineNotice() ms", Math.round(performance.now() - t0));
+                            const cs = getComputedStyle(notice);
+                            const rect = notice.getBoundingClientRect();
+                            add("computed display", cs.display);
+                            add("visibility", cs.visibility);
+                            add("opacity", cs.opacity);
+                            add("width × height", `${Math.round(rect.width)} × ${Math.round(rect.height)}`);
+                        } catch (e) {
+                            add("updateRoomsOfflineNotice()", `ERROR: ${e}`);
+                        }
+                    }
+
+                    status.textContent = "اكتمل التشخيص. صوّر النتائج دي وابعتها لي.";
+                    runBtn.disabled = false;
+                    runBtn.style.opacity = "1";
+                }
+
+                btn.addEventListener("click", () => {
+                    const open = panel.classList.toggle("is-open");
+                    btn.setAttribute("aria-expanded", String(open));
+                });
+                runBtn.addEventListener("click", runDiagnostic);
+                closeBtn.addEventListener("click", () => {
+                    panel.classList.remove("is-open");
+                    btn.setAttribute("aria-expanded", "false");
+                });
             })();
         </script>
 

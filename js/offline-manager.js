@@ -2,7 +2,7 @@
 // 🌐 js/offline-manager.js — مدير الجاهزية والاتصال لوضع الأوفلاين
 // ==========================================================================
 
-const CACHE_NAME = "judgment-cache-v3"; // لازم يتطابق مع CACHE_NAME في sw.js
+const CACHE_NAME = "judgment-cache-v2"; // لازم يتطابق مع CACHE_NAME في sw.js
 const OFFLINE_READY_FLAG = "judgment_offline_ready";
 
 // التحقق الفعلي من اكتمال تخزين الملفات الجوهرية داخل Cache Storage
@@ -260,40 +260,11 @@ export function showFirstTimeOfflineModal() {
 }
 
 // تحديث وإظهار/إخفاء تنبيه الأوفلاين في صفحة rooms.html
-// ⚠️ هذه الدالة هي المتحكم الوحيد في #rooms-offline-notice (يكتفي rooms.html بالإظهار الفوري عند navigator.onLine === false).
-// السبب: في Android WebView قد تبقى navigator.onLine === true رغم انعدام الإنترنت الفعلي، لذلك نؤكد بفحص حقيقي.
-const ROOMS_NOTICE_RETRY_MS = 2000; // الفاصل بين الفحصين المتتاليين قبل إظهار الرسالة
-const ROOMS_NOTICE_POLL_MS = 10000; // إعادة الفحص الدورية طالما الرسالة موجودة في الصفحة
-let roomsNoticeSeq = 0; // رقم تسلسلي لمنع نتيجة فحص قديم من الكتابة فوق نتيجة أحدث
-let roomsNoticePollTimer = null;
-
-export async function updateRoomsOfflineNotice() {
+export function updateRoomsOfflineNotice() {
     const notice = document.getElementById("rooms-offline-notice");
     if (!notice) return;
-
-    const seq = ++roomsNoticeSeq;
-    const isStale = () => seq !== roomsNoticeSeq;
-
-    // المتصفح يبلّغ بوضوح عن انقطاع الشبكة: أظهر الرسالة فوراً
-    if (typeof navigator !== "undefined" && navigator.onLine === false) {
-        notice.style.display = "flex";
-        return;
-    }
-
-    // navigator.onLine === true قد لا يعني وجود إنترنت فعلي (WebView): فحص حقيقي
-    let hasInternet = await checkRealInternet();
-    if (isStale()) return;
-    if (hasInternet) {
-        notice.style.display = "none";
-        return;
-    }
-
-    // فشل أول: لا نُظهر الرسالة قبل فحص ثانٍ متتالٍ (تفادي الفشل المؤقت)
-    await new Promise((resolve) => setTimeout(resolve, ROOMS_NOTICE_RETRY_MS));
-    if (isStale()) return;
-    hasInternet = await checkRealInternet();
-    if (isStale()) return;
-    notice.style.display = hasInternet ? "none" : "flex";
+    const isOnline = typeof navigator !== "undefined" ? navigator.onLine : true;
+    notice.style.display = isOnline ? "none" : "flex";
 }
 
 // دالة البدء الرئيسية لفحص الحالة وتسجيل الخدمة
@@ -308,22 +279,7 @@ export async function initOfflineManager() {
         window.addEventListener("offline", () => {
             updateRoomsOfflineNotice();
         });
-        document.addEventListener("visibilitychange", () => {
-            if (document.visibilityState === "visible") updateRoomsOfflineNotice();
-        });
         updateRoomsOfflineNotice();
-
-        // إعادة فحص دورية (WebView قد لا يرسل أحداث online/offline) طالما عنصر التنبيه موجود
-        if (!roomsNoticePollTimer && document.getElementById("rooms-offline-notice")) {
-            roomsNoticePollTimer = setInterval(() => {
-                if (!document.getElementById("rooms-offline-notice")) {
-                    clearInterval(roomsNoticePollTimer);
-                    roomsNoticePollTimer = null;
-                    return;
-                }
-                updateRoomsOfflineNotice();
-            }, ROOMS_NOTICE_POLL_MS);
-        }
     }
 
     // 2. تسجيل الـ Service Worker إن كان مدعوماً
@@ -345,9 +301,8 @@ export async function initOfflineManager() {
         if (hasInternet) {
             // إنترنت متوفر في الزيارة الأولى: نقوم بتجهيز الكاش بالكامل في الخلفية
             prepareOfflineAssets();
-        } else if (navigator.onLine === false) {
-            // المودال فقط عندما يكون الجهاز Offline فعلاً واللعبة غير مجهزة في الكاش
-            // (إذا كان الجهاز Online فلا يظهر حتى لو تعذّر الوصول لمواقع الفحص الخارجية)
+        } else {
+            // أول زيارة بدون إنترنت واللعبة غير مجهزة في الكاش: عرض المودال المطلوب
             showFirstTimeOfflineModal();
         }
     } else {
