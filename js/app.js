@@ -7,7 +7,8 @@ import {
     get,
     push,
     update,
-    remove
+    remove,
+    runTransaction
 } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
 import {
     mountVoiceControls,
@@ -1358,6 +1359,10 @@ function listenToFinalLobby() {
 function renderCircularSeats(playersList, assignments, gameState) {
     const container = document.getElementById("seats-container");
     if (!container) return;
+
+    // مرجع game_state مطلوب لبث أسئلة القاضي (active_question_prompt) من مودالات الأسئلة داخل هذه الدالة؛
+    // كان معرَّفاً فقط داخل listenToFinalLobby فيسقط البث بـ ReferenceError ولا يصل السؤال لأحد ولا للـKill-Feed.
+    const gameStateRef = ref(db, "rooms/" + currentRoomCode + "/game_state");
     container.innerHTML = "";
 
     const totalSeats = playersList.length;
@@ -4640,7 +4645,7 @@ document.addEventListener("DOMContentLoaded", () => {
 // ==========================================================================
 // 🛒 [متجر المشتريات القضائي]: مشتريات مربوطة بالغرفة الحالية فقط (rooms/{code}/shop_purchases/{uid}/{item} = عدد)
 // وتُصفَّر تلقائياً بإنشاء غرفة جديدة. كل ميزة مربوطة بدورها (role) فلا تعمل إلا عند حمل هذا الدور.
-// السحب على المكشوف مسموح: يمكن الشراء برصيد أقل من السعر فينزل الرصيد بالسالب.
+// الشراء بالسالب ممنوع: لا يتم الخصم إلا إذا كان الرصيد >= السعر (يُفحص ذرياً داخل transaction).
 // ==========================================================================
 const SHOP_CATALOG = [
     {
@@ -4730,7 +4735,7 @@ function openShopModal() {
                 <strong style="color: #d5a75c; font-size: 1rem;">🛒 متجر المشتريات القضائي</strong>
                 <button id="shop-close" type="button" style="background: none; border: none; color: #cfd8e3; font-size: 1.2rem; cursor: pointer;">✕</button>
             </div>
-            <p style="margin: 0 0 10px; font-size: 0.72rem; color: #cfd8e3; line-height: 1.7;">رصيدك: <b id="shop-balance" style="color: #d5a75c;">0</b> — يُسمح بالشراء بالسالب. مشترياتك تخص هذه الغرفة فقط وتعمل حين تحمل الدور المناسب.</p>
+            <p style="margin: 0 0 10px; font-size: 0.72rem; color: #cfd8e3; line-height: 1.7;">رصيدك: <b id="shop-balance" style="color: #d5a75c;">0</b> — لا يمكن الشراء إذا كان رصيدك أقل من سعر العنصر. مشترياتك تخص هذه الغرفة فقط وتعمل حين تحمل الدور المناسب.</p>
             <div id="shop-items"></div>
             <p id="shop-status" style="margin: 8px 0 0; min-height: 16px; font-size: 0.72rem; color: #ffe9b3; text-align: center;"></p>
         </div>`;
@@ -4756,7 +4761,7 @@ function openShopModal() {
                 <p style="margin: 4px 0 8px; font-size: 0.72rem; color: #cfd8e3; line-height: 1.6;">${it.desc}</p>
                 <div style="display: flex; justify-content: space-between; align-items: center;">
                     <span style="font-size: 0.72rem; color: #d5a75c;">${it.price} نقطة${owned[it.id] ? ` — تملك: ${owned[it.id]}` : ""}</span>
-                    <button type="button" data-buy="${it.id}" ${it.active ? "" : "disabled"} style="padding: 6px 12px; background: ${it.active ? "#d5a75c" : "transparent"}; color: ${it.active ? "#101820" : "#8d99a8"}; border: 1px solid ${it.active ? "#d5a75c" : "#8d99a8"}; border-radius: 8px; font-family: 'Alexandria', sans-serif; font-weight: 700; font-size: 0.72rem; cursor: ${it.active ? "pointer" : "not-allowed"};">${it.active ? "شراء" : "قريباً"}</button>
+                    <button type="button" data-buy="${it.id}" ${it.active && score >= it.price ? "" : "disabled"} style="padding: 6px 12px; background: ${it.active && score >= it.price ? "#d5a75c" : "transparent"}; color: ${it.active && score >= it.price ? "#101820" : "#8d99a8"}; border: 1px solid ${it.active && score >= it.price ? "#d5a75c" : "#8d99a8"}; border-radius: 8px; font-family: 'Alexandria', sans-serif; font-weight: 700; font-size: 0.72rem; cursor: ${it.active && score >= it.price ? "pointer" : "not-allowed"};">${it.active ? (score >= it.price ? "شراء" : "رصيد غير كافٍ") : "قريباً"}</button>
                 </div>
             </div>`
         ).join("");
@@ -4774,22 +4779,36 @@ function openShopModal() {
         const item = SHOP_CATALOG.find((i) => i.id === btn.getAttribute("data-buy"));
         if (!item || !item.active) return;
         btn.disabled = true;
-        Promise.all([get(scoreRef), get(ref(db, `rooms/${currentRoomCode}/shop_purchases/${mySecretUID}/${item.id}`))])
-            .then(([sSnap, cSnap]) => {
-                const score = sSnap.exists() ? sSnap.val() : 0;
-                const count = cSnap.exists() ? cSnap.val() : 0;
-                // الخصم والتفعيل معاً: الميزة تُزرع فوراً في السحابة ويقرؤها منطق اللعب مباشرة
-                return Promise.all([
-                    set(scoreRef, score - item.price),
-                    set(ref(db, `rooms/${currentRoomCode}/shop_purchases/${mySecretUID}/${item.id}`), count + 1)
-                ]);
-            })
-            .then(() => {
-                status.textContent = `✅ تم شراء "${item.name}".`;
-                return refresh();
+        const itemRef = ref(db, `rooms/${currentRoomCode}/shop_purchases/${mySecretUID}/${item.id}`);
+        let deducted = false;
+        // الخصم مشروط داخل transaction: يُرفض إذا كان الرصيد أقل من السعر، فلا يصل الرصيد للسالب
+        // حتى مع نقرات سريعة متتالية أو عناصر مختلفة.
+        runTransaction(scoreRef, (current) => {
+            deducted = false;
+            const score = typeof current === "number" ? current : 0;
+            if (score < item.price) return current;
+            deducted = true;
+            return score - item.price;
+        })
+            .then((result) => {
+                if (!result.committed || !deducted) {
+                    status.textContent = `⛔ رصيدك لا يكفي لشراء "${item.name}" (السعر ${item.price} نقطة).`;
+                    return refresh();
+                }
+                return runTransaction(itemRef, (count) => (typeof count === "number" ? count : 0) + 1)
+                    .then(() => {
+                        status.textContent = `✅ تم شراء "${item.name}".`;
+                        return refresh();
+                    })
+                    .catch((err) => {
+                        // فشل تفعيل العنصر بعد الخصم: استرجاع النقاط حتى لا يخسرها اللاعب
+                        runTransaction(scoreRef, (cur) => (typeof cur === "number" ? cur : 0) + item.price).catch(() => {});
+                        throw err;
+                    });
             })
             .catch(() => {
                 status.textContent = "⚠️ تعذّر إتمام الشراء، حاول مرة أخرى.";
+                refresh();
             });
     });
 }

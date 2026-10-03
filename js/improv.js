@@ -31,6 +31,8 @@ export function extractSideCrime(secretText) {
 
 export function classifyRole(roleCard) {
     const card = roleCard || {};
+    // استثناء محامي الدفاع: ليس متهماً ولا شاهداً ولا يحمل سراً يخفيه، فله فئة خاصة بتوجيه دفاعي (بناء مرافعة)
+    if (card.role_type === "lawyer" && /دفاع/.test(String(card.role_name || ""))) return "defense_lawyer";
     if (card.role_type === "judge" || card.role_type === "lawyer") return "generic";
     if (card.is_guilty === true) return "guilty";
     if (card.role_type === "innocent_impostor") return "impostor";
@@ -83,6 +85,21 @@ const FALLBACK_QUESTION_GUIDES = {
             "التركيز على القضية الأصلية",
             "حماية السر من الانكشاف",
             "ثبات على الرواية الأولى"
+        ]
+    },
+    // محامي الدفاع: أدوات لبناء مرافعة/رد دفاعي — ليست اعترافات ولا أسراراً عن الموكل
+    defense_lawyer: {
+        performance:
+            "أنت محامي الدفاع، لا متهم ولا شاهد، فلا سر لديك تخفيه ولا اعتراف تدلي به. ابنِ ردك كمرافعة قصيرة: اختبر ما يثبته الدليل فعلاً مقابل ما يُفترض أنه يثبته، وأشر إلى الثغرة في رواية الاتهام، ثم اطرح تفسيراً بديلاً معقولاً يُبقي الشك قائماً. لا تختلق وقائع جديدة، ولا تكشف أي معلومة خاصة بموكلك، وأنهِ بطلب واضح من المحكمة.",
+        keys: [
+            "الفرق بين الوجود والفعل",
+            "ما الذي يثبته الدليل فعلاً",
+            "ثغرة في توقيت رواية الاتهام",
+            "قرينة لا ترقى لدليل مباشر",
+            "تفسير بديل معقول للواقعة",
+            "سلسلة الحيازة والفحص الفني",
+            "افتراض متسرع لا سند له",
+            "طلب واضح من المحكمة في الختام"
         ]
     },
     generic: {
@@ -192,7 +209,9 @@ export function resolvePerformanceHelp(context = {}) {
     const roleCard = context.roleCard || window.myCurrentRoleCard || {};
     const category = context.category || classifyRole(roleCard);
     // 🌟 [Judgment]: الـ fallback العام يُستخدم فقط لجسر وضع الارتجال القديم؛ المسار الأساسي يعتمد على بيانات العنصر نفسه
-    const allowFallback = context.allowFallback === true;
+    // محامي الدفاع في الأسئلة: الأسئلة القديمة تحمل fragments بدل performance/keys، فنكمل 8 بذور دفاعية تلقائياً
+    const isDefenseQuestion = category === "defense_lawyer" && type === "question";
+    const allowFallback = context.allowFallback === true || isDefenseQuestion;
     const crime = category === "side_crime" ? extractSideCrime(roleCard.secret_interest) : "";
 
     const fallbackSource = type === "evidence" ? FALLBACK_EVIDENCE_GUIDES : FALLBACK_QUESTION_GUIDES;
@@ -234,6 +253,9 @@ export function resolvePerformanceHelp(context = {}) {
         rawKeys = item.keys[category];
     } else if (item.by_category && item.by_category[category] && Array.isArray(item.by_category[category].keys)) {
         rawKeys = item.by_category[category].keys;
+    } else if (isDefenseQuestion && Array.isArray(item.fragments)) {
+        // جمل افتتاحية خاصة بسؤال المحامي تُستعمل كبذور مرافعة أولى
+        rawKeys = item.fragments;
     }
 
     const keys = allowFallback
