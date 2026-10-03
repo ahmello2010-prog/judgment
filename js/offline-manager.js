@@ -314,7 +314,6 @@ export async function initOfflineManager() {
     }
 }
 
-// إتاحة الدوال على كائن window للتكامل السلس دون استيراد معقد
 if (typeof window !== "undefined") {
     window.isOfflineReady = isOfflineReady;
     window.checkRealInternet = checkRealInternet;
