@@ -343,8 +343,14 @@
                 flex: none;
             }
             @keyframes offlineNoticeFadeIn {
-                from { opacity: 0; transform: translateY(-4px); }
-                to { opacity: 1; transform: translateY(0); }
+                from {
+                    opacity: 0;
+                    transform: translateY(-4px);
+                }
+                to {
+                    opacity: 1;
+                    transform: translateY(0);
+                }
             }
         </style>
     </head>
@@ -413,9 +419,22 @@
             <main class="rm-main">
                 <p class="rm-subtitle">اختر إنشاء جولة جديدة أو انضم لغرفة أصدقائك لبدء المحاكمة</p>
                 <!-- تنبيه وضع الأوفلاين الخفيف -->
-                <div id="rooms-offline-notice" class="rooms-offline-notice" style="display: none;" role="status" aria-live="polite">
+                <div
+                    id="rooms-offline-notice"
+                    class="rooms-offline-notice"
+                    style="display: none"
+                    role="status"
+                    aria-live="polite">
                     <span class="offline-notice-icon">
-                        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                        <svg
+                            viewBox="0 0 24 24"
+                            width="16"
+                            height="16"
+                            fill="none"
+                            stroke="currentColor"
+                            stroke-width="2.2"
+                            stroke-linecap="round"
+                            stroke-linejoin="round">
                             <line x1="1" y1="1" x2="23" y2="23"></line>
                             <path d="M16.72 11.06A10.94 10.94 0 0 1 19 12.55"></path>
                             <path d="M5 12.55a10.94 10.94 0 0 1 5.17-2.39"></path>
@@ -547,20 +566,17 @@
             })();
         </script>
 
-        <!-- تحديث تنبيه الأوفلاين فورياً وبدون تأخير -->
+        <!-- إظهار فوري لتنبيه الأوفلاين عند navigator.onLine === false فقط؛ الإخفاء وإعادة الفحص يتولاهما js/offline-manager.js -->
         <script>
             (function () {
-                function syncOfflineNotice() {
+                function showIfOffline() {
                     var el = document.getElementById("rooms-offline-notice");
-                    if (!el) return;
-                    el.style.display = navigator.onLine ? "none" : "flex";
+                    if (el && navigator.onLine === false) el.style.display = "flex";
                 }
-                window.addEventListener("online", syncOfflineNotice);
-                window.addEventListener("offline", syncOfflineNotice);
                 if (document.readyState === "loading") {
-                    document.addEventListener("DOMContentLoaded", syncOfflineNotice);
+                    document.addEventListener("DOMContentLoaded", showIfOffline);
                 } else {
-                    syncOfflineNotice();
+                    showIfOffline();
                 }
             })();
         </script>
