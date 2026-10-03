@@ -2238,22 +2238,7 @@ document.addEventListener("click", function (event) {
 
     const cardOffline = event.target.closest("#card-offline-play");
     if (cardOffline) {
-        const alertModal = document.getElementById("custom-alert-modal");
-        const modalMessage = document.getElementById("modal-alert-message");
-        if (alertModal && modalMessage) {
-            document.getElementById("modal-alert-title").textContent = "المحاكمة المحلية";
-            modalMessage.textContent =
-                "جاري تجهيز جولة محاكاة الأوفلاين المحلية قريباً بدون إنترنت! انتظروا التحديث القادم.";
-
-            const globalCloseBtn = document.getElementById("btn-modal-close");
-            if (globalCloseBtn) {
-                globalCloseBtn.textContent = "حسناً";
-                globalCloseBtn.style.setProperty("display", "block", "important");
-            }
-
-            alertModal.style.setProperty("display", "flex", "important");
-            alertModal.className = "modal-overlay-active";
-        }
+        navigateTo("offline.html");
         return;
     }
 });
@@ -4802,7 +4787,9 @@ function openShopModal() {
                     })
                     .catch((err) => {
                         // فشل تفعيل العنصر بعد الخصم: استرجاع النقاط حتى لا يخسرها اللاعب
-                        runTransaction(scoreRef, (cur) => (typeof cur === "number" ? cur : 0) + item.price).catch(() => {});
+                        runTransaction(scoreRef, (cur) => (typeof cur === "number" ? cur : 0) + item.price).catch(
+                            () => {}
+                        );
                         throw err;
                     });
             })

@@ -1,0 +1,1079 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+        <title>محكمة الأدوار - محاكمة محلية أوفلاين</title>
+        <meta name="description" content="محكمة الأدوار - وضع اللعب المحلي بدون إنترنت بنظام Pass & Play" />
+        <link rel="stylesheet" href="css/style.css" />
+        <link rel="icon" type="image/png" href="/favicon-96x96.png" sizes="96x96" />
+        <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+        <link rel="shortcut icon" href="/favicon.ico" />
+        <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
+        <link rel="manifest" href="/site.webmanifest" />
+
+        <style>
+            :root {
+                --gold-glow: #d5a75c;
+                --gold-dark: #b58b42;
+                --bg-deep: #080d16;
+                --card-bg: rgba(13, 25, 43, 0.85);
+                --border-gold: rgba(213, 167, 92, 0.35);
+            }
+            body.offline-body {
+                margin: 0;
+                padding: 0;
+                background: linear-gradient(180deg, #0d1523 0%, #171d28 50%, #050a12 100%);
+                color: #ffffff;
+                font-family: 'Alexandria', system-ui, sans-serif;
+                min-height: 100vh;
+                min-height: 100dvh;
+                direction: rtl;
+                /* style.css يجعل body عامّاً: display:flex + height:100vh + overflow:hidden + توسيط؛
+                   هذا يُحوّل الحاوية لعنصر flex بعرض محتواها (نصوص nowrap) فتتسع عن الشاشة وتُقصّ ولا يعمل التمرير. */
+                display: block;
+                height: auto;
+                overflow-x: hidden;
+                overflow-y: auto;
+            }
+            .offline-container {
+                width: 100%;
+                max-width: 600px;
+                margin: 0 auto;
+                padding: 16px 14px 40px;
+                box-sizing: border-box;
+                display: flex;
+                flex-direction: column;
+                gap: 16px;
+            }
+            .offline-header {
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                padding: 10px 4px;
+                border-bottom: 1px solid var(--border-gold);
+            }
+            .offline-title {
+                margin: 0;
+                font-size: 1.15rem;
+                font-weight: 800;
+                color: var(--gold-glow);
+                display: flex;
+                align-items: center;
+                gap: 8px;
+            }
+            .btn-back-rooms {
+                color: rgba(255, 255, 255, 0.8);
+                text-decoration: none;
+                font-size: 0.82rem;
+                font-weight: 700;
+                border: 1px solid rgba(255, 255, 255, 0.2);
+                padding: 6px 12px;
+                border-radius: 8px;
+                background: rgba(255, 255, 255, 0.05);
+                transition: all 0.2s;
+            }
+            .btn-back-rooms:hover {
+                border-color: var(--gold-glow);
+                color: var(--gold-glow);
+            }
+            .offline-badge {
+                font-size: 0.7rem;
+                background: rgba(74, 222, 128, 0.15);
+                color: #4ade80;
+                border: 1px solid rgba(74, 222, 128, 0.4);
+                padding: 2px 8px;
+                border-radius: 12px;
+                font-weight: 700;
+            }
+            .step-card {
+                background: var(--card-bg);
+                backdrop-filter: blur(14px);
+                -webkit-backdrop-filter: blur(14px);
+                border: 1.5px solid var(--border-gold);
+                border-radius: 16px;
+                padding: 18px 14px;
+                box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+                display: flex;
+                flex-direction: column;
+                gap: 12px;
+            }
+            .step-title {
+                margin: 0;
+                font-size: 1rem;
+                font-weight: 800;
+                color: var(--gold-glow);
+                display: flex;
+                align-items: center;
+                gap: 6px;
+            }
+            .step-desc {
+                margin: 0;
+                font-family: 'Harmattan', sans-serif;
+                font-size: 1.15rem;
+                color: rgba(255, 255, 255, 0.75);
+                line-height: 1.4;
+            }
+            .cases-scroll-grid {
+                display: flex;
+                flex-direction: column;
+                gap: 12px;
+                max-height: 55vh;
+                overflow-y: auto;
+                padding-left: 2px;
+            }
+            .case-item-card {
+                display: flex;
+                align-items: center;
+                gap: 12px;
+                padding: 10px;
+                background: rgba(255, 255, 255, 0.04);
+                border: 1.5px solid rgba(255, 255, 255, 0.12);
+                border-radius: 12px;
+                cursor: pointer;
+                transition: all 0.2s ease;
+            }
+            .case-item-card:hover, .case-item-card.is-selected {
+                background: rgba(213, 167, 92, 0.15);
+                border-color: var(--gold-glow);
+                transform: translateY(-1px);
+            }
+            .case-thumb {
+                width: 60px;
+                height: 60px;
+                border-radius: 8px;
+                object-fit: cover;
+                border: 1px solid var(--border-gold);
+                background: #000;
+                flex: none;
+            }
+            .case-info {
+                flex: 1;
+                min-width: 0;
+            }
+            .case-name {
+                margin: 0 0 4px 0;
+                font-size: 0.95rem;
+                font-weight: 800;
+                color: #fff;
+            }
+            .case-item-card.is-selected .case-name {
+                color: var(--gold-glow);
+            }
+            .case-meta {
+                font-family: 'Harmattan', sans-serif;
+                font-size: 1.05rem;
+                color: rgba(255, 255, 255, 0.65);
+                white-space: nowrap;
+                overflow: hidden;
+                text-overflow: ellipsis;
+            }
+            .btn-action-gold {
+                width: 100%;
+                padding: 12px;
+                background: linear-gradient(135deg, var(--gold-glow) 0%, var(--gold-dark) 100%);
+                color: #050a12;
+                border: none;
+                border-radius: 12px;
+                font-family: 'Alexandria', sans-serif;
+                font-size: 0.95rem;
+                font-weight: 800;
+                cursor: pointer;
+                box-shadow: 0 4px 16px rgba(213, 167, 92, 0.3);
+                transition: all 0.2s;
+            }
+            .btn-action-gold:disabled {
+                opacity: 0.5;
+                cursor: not-allowed;
+            }
+            .btn-action-gold:active {
+                transform: scale(0.98);
+            }
+            .player-row-setup {
+                display: flex;
+                align-items: center;
+                gap: 8px;
+                background: rgba(255, 255, 255, 0.04);
+                padding: 8px 10px;
+                border-radius: 10px;
+                border: 1px solid rgba(255, 255, 255, 0.08);
+            }
+            .player-num-tag {
+                font-size: 0.75rem;
+                font-weight: 800;
+                color: var(--gold-glow);
+                min-width: 24px;
+            }
+            .player-input-name {
+                flex: 1;
+                min-width: 0; /* يسمح للحقل بالانكماش داخل الصف بدل دفع حقل الـPIN خارج الشاشة */
+                background: rgba(0, 0, 0, 0.35);
+                border: 1px solid rgba(255, 255, 255, 0.15);
+                color: #fff;
+                padding: 8px 10px;
+                border-radius: 8px;
+                font-family: inherit;
+                font-size: 0.85rem;
+                outline: none;
+            }
+            .player-input-pin {
+                width: 75px;
+                flex: none;
+                background: rgba(0, 0, 0, 0.45);
+                border: 1.5px solid var(--border-gold);
+                color: var(--gold-glow);
+                padding: 8px;
+                border-radius: 8px;
+                font-family: inherit;
+                font-size: 0.85rem;
+                text-align: center;
+                font-weight: 800;
+                letter-spacing: 2px;
+                outline: none;
+            }
+            .player-seat-grid {
+                display: grid;
+                grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+                gap: 10px;
+            }
+            .player-seat-card {
+                background: rgba(255, 255, 255, 0.05);
+                border: 1.5px solid rgba(255, 255, 255, 0.15);
+                border-radius: 12px;
+                padding: 12px 8px;
+                text-align: center;
+                cursor: pointer;
+                transition: all 0.2s;
+                position: relative;
+            }
+            .player-seat-card:hover {
+                border-color: var(--gold-glow);
+                background: rgba(213, 167, 92, 0.12);
+            }
+            .player-seat-card.is-viewed {
+                border-color: #4ade80;
+                background: rgba(74, 222, 128, 0.08);
+            }
+            .seat-icon {
+                font-size: 1.6rem;
+                margin-bottom: 4px;
+            }
+            .seat-name {
+                font-size: 0.85rem;
+                font-weight: 700;
+                color: #fff;
+                margin-bottom: 4px;
+            }
+            .seat-status {
+                font-size: 0.68rem;
+                color: #cbd5e1;
+            }
+            .modal-overlay {
+                position: fixed;
+                top: 0; left: 0;
+                width: 100vw; height: 100vh;
+                background: rgba(5, 10, 18, 0.92);
+                backdrop-filter: blur(10px);
+                -webkit-backdrop-filter: blur(10px);
+                z-index: 99999;
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                padding: 16px;
+                box-sizing: border-box;
+            }
+            .modal-box {
+                background: linear-gradient(180deg, #131d2e 0%, #0c1421 100%);
+                border: 2px solid var(--gold-glow);
+                border-radius: 18px;
+                padding: 24px 20px;
+                max-width: 480px;
+                width: 100%;
+                max-height: 90vh;
+                overflow-y: auto;
+                box-shadow: 0 16px 40px rgba(0,0,0,0.8);
+                color: #fff;
+            }
+            .pin-display-dots {
+                display: flex;
+                justify-content: center;
+                gap: 10px;
+                margin: 16px 0;
+            }
+            .pin-dot {
+                width: 16px;
+                height: 16px;
+                border-radius: 50%;
+                border: 2px solid var(--gold-glow);
+                background: transparent;
+                transition: all 0.2s;
+            }
+            .pin-dot.filled {
+                background: var(--gold-glow);
+                box-shadow: 0 0 10px var(--gold-glow);
+            }
+            .numpad-grid {
+                display: grid;
+                grid-template-columns: repeat(3, 1fr);
+                gap: 8px;
+                max-width: 240px;
+                margin: 0 auto;
+            }
+            .numpad-btn {
+                background: rgba(255, 255, 255, 0.08);
+                border: 1px solid rgba(255, 255, 255, 0.2);
+                border-radius: 10px;
+                padding: 12px;
+                font-family: inherit;
+                font-size: 1.2rem;
+                font-weight: 700;
+                color: #fff;
+                cursor: pointer;
+            }
+            .numpad-btn:active {
+                background: var(--gold-glow);
+                color: #000;
+            }
+
+            @media screen and (max-width: 540px) {
+                .offline-container {
+                    padding: 10px 8px 30px;
+                    gap: 10px;
+                }
+                /* إخفاء عنصر الموازنة (70px) على الهاتف حتى لا يضغط العنوان ويكسره لسطرين */
+                .offline-header > div:last-child {
+                    display: none;
+                }
+                .offline-title {
+                    white-space: nowrap;
+                    font-size: 1.05rem;
+                }
+                .step-card {
+                    padding: 12px 10px;
+                    gap: 10px;
+                    border-radius: 12px;
+                }
+                .step-title {
+                    font-size: 0.92rem;
+                }
+                .step-desc {
+                    font-size: 1rem;
+                }
+                .cases-scroll-grid {
+                    max-height: 48vh;
+                    gap: 8px;
+                }
+                .case-item-card {
+                    padding: 8px;
+                    gap: 8px;
+                }
+                .case-thumb {
+                    width: 48px;
+                    height: 48px;
+                }
+                .case-name {
+                    font-size: 0.88rem;
+                }
+                .case-meta {
+                    font-size: 0.92rem;
+                }
+                .player-seat-grid {
+                    grid-template-columns: repeat(auto-fill, minmax(95px, 1fr));
+                    gap: 8px;
+                }
+                .player-seat-card {
+                    padding: 8px 4px;
+                }
+                .seat-icon {
+                    font-size: 1.3rem;
+                }
+                .seat-name {
+                    font-size: 0.78rem;
+                }
+                .seat-status {
+                    font-size: 0.62rem;
+                }
+                .modal-box {
+                    padding: 16px 12px;
+                    max-width: 94vw;
+                    border-radius: 14px;
+                }
+                .numpad-grid {
+                    max-width: 210px;
+                    gap: 6px;
+                }
+                .numpad-btn {
+                    padding: 9px;
+                    font-size: 1.1rem;
+                }
+            }
+        </style>
+    </head>
+    <body class="offline-body">
+        <div class="offline-container">
+            <!-- الشريط العلوي -->
+            <header class="offline-header">
+                <a href="rooms.html" class="btn-back-rooms">‹ قائمة الغرف</a>
+                <h1 class="offline-title">
+                    <span>محكمة الأدوار</span>
+                    <span class="offline-badge">أوفلاين</span>
+                </h1>
+                <div style="width: 70px;"></div>
+            </header>
+
+            <!-- الشاشة 1: اختيار القضية -->
+            <div id="step-choose-case" class="step-card">
+                <h2 class="step-title">📁 اختيار القضية</h2>
+                <p class="step-desc">اختر القضية الجنائية التي ستُدار حولها جلسة المحاكمة اليوم:</p>
+                <div id="cases-list-container" class="cases-scroll-grid">
+                    <p style="text-align: center; color: var(--gold-glow);">جاري تحميل القضايا المحلية...</p>
+                </div>
+                <button id="btn-confirm-case" class="btn-action-gold" disabled>المتابعة وتحديد اللاعبين</button>
+            </div>
+
+            <!-- الشاشة 2: إعداد اللاعبين والـ PIN (مخفية افتراضياً) -->
+            <div id="step-setup-players" class="step-card" style="display: none;">
+                <h2 class="step-title">👥 إعداد اللاعبين ورمز الحماية (PIN)</h2>
+                <p class="step-desc">
+                    القضية المختارة: <strong id="selected-case-name" style="color: var(--gold-glow);"></strong>
+                </p>
+
+                <div style="display: flex; align-items: center; justify-content: space-between; background: rgba(0,0,0,0.25); padding: 8px 12px; border-radius: 10px;">
+                    <span style="font-size: 0.85rem; font-weight: 700;">عدد اللاعبين:</span>
+                    <div style="display: flex; align-items: center; gap: 8px;">
+                        <button type="button" id="btn-players-minus" style="width: 32px; height: 32px; border-radius: 6px; border: 1px solid var(--gold-glow); background: transparent; color: var(--gold-glow); font-size: 1.2rem; cursor: pointer;">-</button>
+                        <strong id="players-count-display" style="font-size: 1.1rem; color: var(--gold-glow); min-width: 24px; text-align: center;">4</strong>
+                        <button type="button" id="btn-players-plus" style="width: 32px; height: 32px; border-radius: 6px; border: 1px solid var(--gold-glow); background: transparent; color: var(--gold-glow); font-size: 1.2rem; cursor: pointer;">+</button>
+                    </div>
+                </div>
+
+                <div style="display: flex; gap: 10px; margin: 4px 0;">
+                    <label style="flex: 1; display: flex; align-items: center; gap: 6px; font-size: 0.8rem; cursor: pointer;">
+                        <input type="radio" name="offline-mode-toggle" value="scripted" checked />
+                        <span>📜 وضع السكريبتات</span>
+                    </label>
+                    <label style="flex: 1; display: flex; align-items: center; gap: 6px; font-size: 0.8rem; cursor: pointer;">
+                        <input type="radio" name="offline-mode-toggle" value="improvisation" />
+                        <span>🎭 وضع الارتجال القضائي</span>
+                    </label>
+                </div>
+
+                <div style="font-size: 0.75rem; color: #cbd5e1;">
+                    🔒 أدخل اسم كل لاعب مع رمز PIN سري مكون من 4 أرقام لحماية دوره عند تمرير الجهاز:
+                </div>
+
+                <div id="players-inputs-container" style="display: flex; flex-direction: column; gap: 8px; max-height: 45vh; overflow-y: auto;">
+                    <!-- يتم حقن صفوف اللاعبين برمجياً -->
+                </div>
+
+                <div style="display: flex; gap: 8px;">
+                    <button id="btn-back-to-cases" type="button" style="width: 35%; padding: 12px; background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.2); color: #fff; border-radius: 12px; font-weight: 700; cursor: pointer;">‹ رجوع</button>
+                    <button id="btn-start-offline-game" type="button" class="btn-action-gold" style="width: 65%;">⚖️ توزيع الأدوار وبدء الجلسة</button>
+                </div>
+            </div>
+
+            <!-- الشاشة 3: قاعة المحاكمة وتمرير الجهاز (Pass & Play Hub) -->
+            <div id="step-courtroom" class="step-card" style="display: none;">
+                <div style="display: flex; align-items: center; justify-content: space-between;">
+                    <h2 class="step-title">🏛️ قاعة المحاكمة (Pass & Play)</h2>
+                    <span id="game-mode-badge" style="font-size: 0.7rem; color: var(--gold-glow); border: 1px solid var(--gold-glow); padding: 2px 6px; border-radius: 6px;"></span>
+                </div>
+                <div style="background: rgba(213, 167, 92, 0.12); border-right: 3px solid var(--gold-glow); padding: 10px; border-radius: 8px; font-size: 0.8rem; line-height: 1.5;">
+                    📱 <strong>طريقة اللعب:</strong> مرّر الجهاز لكل لاعب على حدة ليضغط على اسمه ويدخل الـ PIN الخاص به للاطلاع على دوره والمصلحة السرية، ثم يضغط إخفاء وقفل لتسليمه للّاعب التالي!
+                </div>
+
+                <div id="seats-grid" class="player-seat-grid">
+                    <!-- كروت اللاعبين المحمية -->
+                </div>
+
+                <div style="border-top: 1px solid rgba(255,255,255,0.1); padding-top: 12px; display: flex; flex-direction: column; gap: 8px;">
+                    <div style="display: flex; gap: 8px;">
+                        <button id="btn-judge-tools" type="button" style="flex: 1; padding: 10px; background: rgba(213,167,92,0.18); border: 1.5px solid var(--gold-glow); color: var(--gold-glow); border-radius: 10px; font-weight: 700; cursor: pointer;">🔨 لوحة القاضي (الاستجواب)</button>
+                        <button id="btn-defense-tools" type="button" style="flex: 1; padding: 10px; background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.2); color: #fff; border-radius: 10px; font-weight: 700; cursor: pointer;">🛡️ أدلة الدفاع</button>
+                    </div>
+                    <button id="btn-trigger-verdict" type="button" style="padding: 12px; background: #ff5252; border: none; color: #fff; border-radius: 10px; font-family: inherit; font-size: 0.9rem; font-weight: 800; cursor: pointer; box-shadow: 0 4px 15px rgba(255,82,82,0.3);">⚖️ إصدار الحكم النهائي وإسدال الستار</button>
+                </div>
+            </div>
+
+            <!-- الشاشة 4: شاشة النتائج والحكم النهائي -->
+            <div id="step-results" class="step-card" style="display: none;">
+                <h2 id="results-headline" style="text-align: center; color: var(--gold-glow); font-size: 1.3rem; margin: 0;">نطق الحكم النهائي</h2>
+                <div id="verdict-banner" style="padding: 14px; border-radius: 12px; text-align: center; font-weight: 800; font-size: 1.05rem;"></div>
+
+                <div id="identities-reveal-table" style="display: flex; flex-direction: column; gap: 8px;">
+                    <!-- كشف هويات كل اللاعبين والجرائم الجانبية والنقاط -->
+                </div>
+
+                <div style="display: flex; gap: 8px; margin-top: 10px;">
+                    <button id="btn-play-again" type="button" class="btn-action-gold" style="flex: 1;">🔄 جولة جديدة</button>
+                    <a href="rooms.html" class="btn-back-rooms" style="text-align: center; padding: 12px 16px;">الرئيسية</a>
+                </div>
+            </div>
+        </div>
+
+        <!-- ================================================================= -->
+        <!-- المودالات التفاعلية لحماية الأدوار والاستجواب والحكم -->
+        <!-- ================================================================= -->
+
+        <!-- مودال إدخال الـ PIN لفتح بطاقة الدور -->
+        <div id="modal-pin-entry" class="modal-overlay" style="display: none;">
+            <div class="modal-box" style="text-align: center; max-width: 320px;">
+                <div style="font-size: 2rem; margin-bottom: 8px;">🔒</div>
+                <h3 id="pin-modal-player-name" style="margin: 0 0 6px 0; color: var(--gold-glow); font-size: 1.1rem;">لاعب 1</h3>
+                <p style="font-size: 0.8rem; color: #cbd5e1; margin: 0;">أدخل رمز PIN السري الخاص بك للاطلاع على دورك:</p>
+
+                <div class="pin-display-dots">
+                    <span class="pin-dot" id="dot-0"></span>
+                    <span class="pin-dot" id="dot-1"></span>
+                    <span class="pin-dot" id="dot-2"></span>
+                    <span class="pin-dot" id="dot-3"></span>
+                </div>
+
+                <div class="numpad-grid">
+                    <button type="button" class="numpad-btn" data-num="1">1</button>
+                    <button type="button" class="numpad-btn" data-num="2">2</button>
+                    <button type="button" class="numpad-btn" data-num="3">3</button>
+                    <button type="button" class="numpad-btn" data-num="4">4</button>
+                    <button type="button" class="numpad-btn" data-num="5">5</button>
+                    <button type="button" class="numpad-btn" data-num="6">6</button>
+                    <button type="button" class="numpad-btn" data-num="7">7</button>
+                    <button type="button" class="numpad-btn" data-num="8">8</button>
+                    <button type="button" class="numpad-btn" data-num="9">9</button>
+                    <button type="button" class="numpad-btn" id="btn-pin-clear" style="color: #ff5252; font-size: 0.9rem;">مسح</button>
+                    <button type="button" class="numpad-btn" data-num="0">0</button>
+                    <button type="button" class="numpad-btn" id="btn-pin-cancel" style="font-size: 0.85rem;">إلغاء</button>
+                </div>
+                <div id="pin-error-msg" style="color: #ff5252; font-size: 0.78rem; margin-top: 8px; min-height: 18px;"></div>
+            </div>
+        </div>
+
+        <!-- مودال بطاقة الدور السرية (Privacy Role Card) -->
+        <div id="modal-role-card" class="modal-overlay" style="display: none;">
+            <div class="modal-box">
+                <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-gold); padding-bottom: 10px;">
+                    <div>
+                        <span id="role-card-badge" style="font-size: 0.72rem; color: var(--gold-glow); font-weight: 800;"></span>
+                        <h2 id="role-card-title" style="margin: 2px 0 0 0; color: #fff; font-size: 1.25rem;">اسم الدور</h2>
+                    </div>
+                    <span id="role-card-player" style="font-size: 0.85rem; color: rgba(255,255,255,0.7); font-weight: 700;"></span>
+                </div>
+
+                <div style="display: flex; gap: 4px; margin: 12px 0 8px; border-bottom: 1px solid rgba(255,255,255,0.1);">
+                    <button type="button" id="tab-btn-public" class="role-tab-btn active" style="flex:1; padding: 6px; background: transparent; border: none; border-bottom: 2px solid var(--gold-glow); color: var(--gold-glow); font-family: inherit; font-size: 0.75rem; font-weight: 700; cursor: pointer;">القصة المعلنة</button>
+                    <button type="button" id="tab-btn-secret" class="role-tab-btn" style="flex:1; padding: 6px; background: transparent; border: none; border-bottom: 2px solid transparent; color: #cbd5e1; font-family: inherit; font-size: 0.75rem; font-weight: 700; cursor: pointer;">🔒 المصلحة والتكليف السري</button>
+                    <button type="button" id="tab-btn-improv" class="role-tab-btn" style="flex:1; padding: 6px; background: transparent; border: none; border-bottom: 2px solid transparent; color: #cbd5e1; font-family: inherit; font-size: 0.75rem; font-weight: 700; cursor: pointer;">توجيهات الأداء</button>
+                </div>
+
+                <!-- محتوى التاب العام -->
+                <div id="tab-pane-public" style="font-family: 'Harmattan', sans-serif; font-size: 1.25rem; line-height: 1.5; color: rgba(255,255,255,0.9); margin-bottom: 18px;">
+                    <p id="role-public-story-text" style="margin: 0;"></p>
+                </div>
+
+                <!-- محتوى التاب السري -->
+                <div id="tab-pane-secret" style="display: none; background: rgba(255, 82, 82, 0.08); border: 1.5px solid rgba(255, 82, 82, 0.4); border-radius: 10px; padding: 12px; margin-bottom: 18px;">
+                    <strong style="color: #ff7070; font-size: 0.85rem; display: block; margin-bottom: 4px;">⚠️ سري للغاية (لا تظهره لأحد):</strong>
+                    <p id="role-secret-interest-text" style="font-family: 'Harmattan', sans-serif; font-size: 1.2rem; line-height: 1.5; color: #fff; margin: 0;"></p>
+                </div>
+
+                <!-- محتوى تاب الارتجال -->
+                <div id="tab-pane-improv" style="display: none; font-size: 0.82rem; color: #cbd5e1; line-height: 1.5; margin-bottom: 18px;">
+                    <div id="role-improv-content"></div>
+                </div>
+
+                <!-- الزر الإجباري الأساسي لحماية الخصوصية -->
+                <button type="button" id="btn-hide-and-lock-role" class="btn-action-gold" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: #fff; font-size: 1rem; box-shadow: 0 4px 15px rgba(16,185,129,0.3);">
+                    👁️‍🗨️ إخفاء الدور وقفل الشاشة للّاعب التالي
+                </button>
+            </div>
+        </div>
+
+        <!-- مودال لوحة القاضي المحقق (استجواب المشتبه بهم) -->
+        <div id="modal-judge-tools" class="modal-overlay" style="display: none;">
+            <div class="modal-box">
+                <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-gold); padding-bottom: 8px;">
+                    <h3 style="margin: 0; color: var(--gold-glow); font-size: 1.1rem;">🔨 لوحة القاضي المحقق</h3>
+                    <button type="button" class="btn-close-modal" id="btn-close-judge" style="background: transparent; border: none; color: #94a3b8; font-size: 1.3rem; cursor: pointer;">&times;</button>
+                </div>
+                <p style="font-size: 0.8rem; color: #cbd5e1; margin: 8px 0;">اختر مشتبهاً به لاستعراض أسئلة التحقيق والادعاءات المسجلة ضده لتوجيهها إليه:</p>
+                <div id="judge-suspects-select" style="display: flex; gap: 6px; overflow-x: auto; padding-bottom: 6px; margin-bottom: 10px;"></div>
+                <div id="judge-questions-box" style="max-height: 40vh; overflow-y: auto; display: flex; flex-direction: column; gap: 8px;"></div>
+            </div>
+        </div>
+
+        <!-- مودال أدلة محامي الدفاع -->
+        <div id="modal-defense-tools" class="modal-overlay" style="display: none;">
+            <div class="modal-box">
+                <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-gold); padding-bottom: 8px;">
+                    <h3 style="margin: 0; color: var(--gold-glow); font-size: 1.1rem;">🛡️ أدلة وتفنيد محامي الدفاع</h3>
+                    <button type="button" class="btn-close-modal" id="btn-close-defense" style="background: transparent; border: none; color: #94a3b8; font-size: 1.3rem; cursor: pointer;">&times;</button>
+                </div>
+                <div id="defense-clues-box" style="margin-top: 10px; max-height: 50vh; overflow-y: auto; display: flex; flex-direction: column; gap: 8px;"></div>
+            </div>
+        </div>
+
+        <!-- مودال اختيار المتهم للحكم النهائي -->
+        <div id="modal-verdict-pick" class="modal-overlay" style="display: none;">
+            <div class="modal-box" style="text-align: center;">
+                <div style="font-size: 2.2rem; margin-bottom: 6px;">⚖️</div>
+                <h3 style="margin: 0 0 6px 0; color: #ff5252; font-size: 1.2rem;">إصدار الحكم القضائي</h3>
+                <p style="font-size: 0.82rem; color: #cbd5e1; margin: 0 0 14px 0;">
+                    أيها القاضي المحقق، حدد الشخص الذي تثبت عليه جناية القتل لإنهاء المحاكمة:
+                </p>
+                <div id="verdict-candidates-list" style="display: flex; flex-direction: column; gap: 8px; max-height: 40vh; overflow-y: auto; margin-bottom: 14px;"></div>
+                <button type="button" id="btn-cancel-verdict" style="padding: 10px 16px; background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.2); color: #fff; border-radius: 8px; cursor: pointer;">إلغاء والتراجع للجلسة</button>
+            </div>
+        </div>
+
+        <script type="module">
+            import {
+                loadCases,
+                getCaseById,
+                distributeRoles,
+                getQuestionsForRole,
+                getCluesForDefense,
+                evaluateVerdict,
+                saveOfflineSession,
+                loadOfflineSession,
+                clearOfflineSession
+            } from "./js/offline-engine.js";
+            import "./js/offline-manager.js";
+
+            let allCases = [];
+            let selectedCase = null;
+            let currentPlayers = [];
+            let currentAssignments = {};
+            let selectedGameMode = "scripted";
+            let activeViewingPlayerId = null;
+            let currentPinInput = "";
+
+            // 1. تحميل القضايا عند الإقلاع
+            async function init() {
+                try {
+                    allCases = await loadCases();
+                    renderCasesList();
+                } catch (e) {
+                    document.getElementById("cases-list-container").innerHTML =
+                        "<p style='color:#ff5252; text-align:center;'>تعذر تحميل ملف القضايا محلياً.</p>";
+                }
+            }
+
+            function renderCasesList() {
+                const container = document.getElementById("cases-list-container");
+                container.innerHTML = "";
+
+                allCases.forEach((c) => {
+                    const card = document.createElement("div");
+                    card.className = "case-item-card" + (selectedCase && selectedCase.id === c.id ? " is-selected" : "");
+                    card.dataset.id = c.id;
+
+                    const img = c.image || "img/jud1.png";
+                    card.innerHTML = `
+                        <img src="${img}" class="case-thumb" alt="${c.title}" onerror="this.src='img/jud1.png'"/>
+                        <div class="case-info">
+                            <h4 class="case-name">${c.id}. ${c.title}</h4>
+                            <div class="case-meta">الحد الأدنى: ${c.required_players || 3} لاعبين | ${c.description ? c.description.slice(0, 60) + '...' : ''}</div>
+                        </div>
+                    `;
+
+                    card.addEventListener("click", () => {
+                        document.querySelectorAll(".case-item-card").forEach(el => el.classList.remove("is-selected"));
+                        card.classList.add("is-selected");
+                        selectedCase = c;
+                        document.getElementById("btn-confirm-case").disabled = false;
+                    });
+
+                    container.appendChild(card);
+                });
+
+                // اختيار أول قضية افتراضياً
+                if (allCases.length > 0 && !selectedCase) {
+                    container.firstChild.click();
+                }
+            }
+
+            // الانتقال لشاشة إعداد اللاعبين
+            document.getElementById("btn-confirm-case").addEventListener("click", () => {
+                if (!selectedCase) return;
+                document.getElementById("step-choose-case").style.display = "none";
+                document.getElementById("step-setup-players").style.display = "flex";
+                document.getElementById("selected-case-name").textContent = `${selectedCase.id}. ${selectedCase.title}`;
+
+                const minPlayers = Math.max(3, selectedCase.required_players || 3);
+                updatePlayersCount(minPlayers);
+            });
+
+            document.getElementById("btn-back-to-cases").addEventListener("click", () => {
+                document.getElementById("step-setup-players").style.display = "none";
+                document.getElementById("step-choose-case").style.display = "flex";
+            });
+
+            // تحكم عدد اللاعبين
+            let playersCount = 4;
+            const minAllowed = 3;
+            const maxAllowed = 10;
+
+            function updatePlayersCount(cnt) {
+                const minReq = Math.max(minAllowed, selectedCase?.required_players || 3);
+                playersCount = Math.max(minReq, Math.min(maxAllowed, cnt));
+                document.getElementById("players-count-display").textContent = playersCount;
+                renderPlayerInputs();
+            }
+
+            document.getElementById("btn-players-minus").addEventListener("click", () => updatePlayersCount(playersCount - 1));
+            document.getElementById("btn-players-plus").addEventListener("click", () => updatePlayersCount(playersCount + 1));
+
+            function renderPlayerInputs() {
+                const container = document.getElementById("players-inputs-container");
+                const existingData = [];
+                container.querySelectorAll(".player-row-setup").forEach((row, idx) => {
+                    existingData.push({
+                        name: row.querySelector(".player-input-name").value,
+                        pin: row.querySelector(".player-input-pin").value
+                    });
+                });
+
+                container.innerHTML = "";
+                for (let i = 0; i < playersCount; i++) {
+                    const defaultName = existingData[i]?.name || `لاعب ${i + 1}`;
+                    const defaultPin = existingData[i]?.pin || String(1000 + i * 111).slice(0, 4);
+
+                    const row = document.createElement("div");
+                    row.className = "player-row-setup";
+                    row.innerHTML = `
+                        <span class="player-num-tag">#${i + 1}</span>
+                        <input type="text" class="player-input-name" value="${defaultName}" placeholder="اسم اللاعب ${i + 1}" maxlength="20"/>
+                        <span style="font-size: 0.72rem; color: #cbd5e1;">PIN:</span>
+                        <input type="tel" class="player-input-pin" value="${defaultPin}" maxlength="4" placeholder="0000"/>
+                    `;
+                    container.appendChild(row);
+                }
+            }
+
+            // بدء المحاكمة وتوزيع الأدوار
+            document.getElementById("btn-start-offline-game").addEventListener("click", () => {
+                const rows = document.querySelectorAll(".player-row-setup");
+                currentPlayers = [];
+
+                rows.forEach((r, idx) => {
+                    const name = r.querySelector(".player-input-name").value.trim() || `لاعب ${idx + 1}`;
+                    let pin = r.querySelector(".player-input-pin").value.trim();
+                    if (!pin || pin.length < 4) pin = String(1000 + idx).slice(0, 4);
+
+                    currentPlayers.push({
+                        id: `p_${idx + 1}`,
+                        name,
+                        pin
+                    });
+                });
+
+                selectedGameMode = document.querySelector('input[name="offline-mode-toggle"]:checked')?.value || "scripted";
+
+                // توزيع الأدوار
+                currentAssignments = distributeRoles(selectedCase, currentPlayers, selectedGameMode);
+
+                // الانتقال لشاشة قاعة المحكمة
+                document.getElementById("step-setup-players").style.display = "none";
+                document.getElementById("step-courtroom").style.display = "flex";
+                document.getElementById("game-mode-badge").textContent = selectedGameMode === "improvisation" ? "🎭 وضع الارتجال" : "📜 وضع السكريبتات";
+
+                renderCourtroomSeats();
+            });
+
+            // رسم مقاعد اللاعبين
+            function renderCourtroomSeats() {
+                const grid = document.getElementById("seats-grid");
+                grid.innerHTML = "";
+
+                currentPlayers.forEach((player) => {
+                    const assignment = currentAssignments[player.id];
+                    const card = document.createElement("div");
+                    card.className = "player-seat-card" + (assignment.viewed ? " is-viewed" : "");
+                    card.innerHTML = `
+                        <div class="seat-icon">${assignment.viewed ? "✅" : "🔒"}</div>
+                        <div class="seat-name">${player.name}</div>
+                        <div class="seat-status">${assignment.viewed ? "تم الاطلاع" : "انقر لإدخال PIN"}</div>
+                    `;
+
+                    card.addEventListener("click", () => {
+                        openPinModal(player.id);
+                    });
+
+                    grid.appendChild(card);
+                });
+            }
+
+            // نافذة إدخال PIN
+            function openPinModal(playerId) {
+                activeViewingPlayerId = playerId;
+                currentPinInput = "";
+                updatePinDots();
+
+                const player = currentPlayers.find(p => p.id === playerId);
+                document.getElementById("pin-modal-player-name").textContent = player ? player.name : "اللاعب";
+                document.getElementById("pin-error-msg").textContent = "";
+                document.getElementById("modal-pin-entry").style.display = "flex";
+            }
+
+            function updatePinDots() {
+                for (let i = 0; i < 4; i++) {
+                    const dot = document.getElementById(`dot-${i}`);
+                    if (dot) {
+                        dot.classList.toggle("filled", i < currentPinInput.length);
+                    }
+                }
+            }
+
+            // لوحة أزرار الأرقام
+            document.querySelectorAll(".numpad-btn[data-num]").forEach(btn => {
+                btn.addEventListener("click", () => {
+                    if (currentPinInput.length < 4) {
+                        currentPinInput += btn.dataset.num;
+                        updatePinDots();
+                        if (currentPinInput.length === 4) {
+                            validatePin();
+                        }
+                    }
+                });
+            });
+
+            document.getElementById("btn-pin-clear").addEventListener("click", () => {
+                currentPinInput = "";
+                updatePinDots();
+                document.getElementById("pin-error-msg").textContent = "";
+            });
+
+            document.getElementById("btn-pin-cancel").addEventListener("click", () => {
+                document.getElementById("modal-pin-entry").style.display = "none";
+                activeViewingPlayerId = null;
+            });
+
+            function validatePin() {
+                const player = currentPlayers.find(p => p.id === activeViewingPlayerId);
+                if (player && player.pin === currentPinInput) {
+                    document.getElementById("modal-pin-entry").style.display = "none";
+                    openRoleCardModal(activeViewingPlayerId);
+                } else {
+                    document.getElementById("pin-error-msg").textContent = "رمز PIN غير صحيح، حاول مجدداً.";
+                    setTimeout(() => {
+                        currentPinInput = "";
+                        updatePinDots();
+                    }, 500);
+                }
+            }
+
+            // فتح بطاقة الدور
+            function openRoleCardModal(playerId) {
+                const assignment = currentAssignments[playerId];
+                if (!assignment) return;
+
+                document.getElementById("role-card-badge").textContent = assignment.role_type === "judge" ? "القاضي" : (assignment.role_type === "lawyer" ? "محامي" : "مشتبه به");
+                document.getElementById("role-card-title").textContent = assignment.role_name;
+                document.getElementById("role-card-player").textContent = `اللاعب: ${assignment.playerName}`;
+
+                document.getElementById("role-public-story-text").textContent = assignment.public_story || "لا توجد قصة معلنة.";
+                document.getElementById("role-secret-interest-text").textContent = assignment.secret_interest || "لا توجد مصلحة سرية مسجلة.";
+
+                // محتوى الارتجال
+                const improvBox = document.getElementById("role-improv-content");
+                if (assignment.improvGuidance) {
+                    const g = assignment.improvGuidance;
+                    improvBox.innerHTML = `
+                        <p style="margin: 0 0 6px 0;"><strong>🎯 الهدف الأدائي:</strong> ${g.acting_goal || ''}</p>
+                        <p style="margin: 0 0 6px 0;"><strong>🤫 ما تخفيه:</strong> ${g.what_you_hide || ''}</p>
+                        <p style="margin: 0;"><strong>🧠 ما تعرفه:</strong> ${g.what_you_know || ''}</p>
+                    `;
+                } else {
+                    improvBox.innerHTML = "<p>وضع السكريبتات نشط - التزم بالأقوال والادعاءات المعلنة.</p>";
+                }
+
+                // ضبط التاب الأول
+                switchRoleTab("public");
+
+                document.getElementById("modal-role-card").style.display = "flex";
+            }
+
+            function switchRoleTab(tab) {
+                const tabs = ["public", "secret", "improv"];
+                tabs.forEach(t => {
+                    const btn = document.getElementById(`tab-btn-${t}`);
+                    const pane = document.getElementById(`tab-pane-${t}`);
+                    if (btn && pane) {
+                        const active = t === tab;
+                        btn.style.borderBottomColor = active ? "var(--gold-glow)" : "transparent";
+                        btn.style.color = active ? "var(--gold-glow)" : "#cbd5e1";
+                        pane.style.display = active ? "block" : "none";
+                    }
+                });
+            }
+
+            document.getElementById("tab-btn-public").addEventListener("click", () => switchRoleTab("public"));
+            document.getElementById("tab-btn-secret").addEventListener("click", () => switchRoleTab("secret"));
+            document.getElementById("tab-btn-improv").addEventListener("click", () => switchRoleTab("improv"));
+
+            // إخفاء وقفل الدور للّاعب التالي
+            document.getElementById("btn-hide-and-lock-role").addEventListener("click", () => {
+                if (activeViewingPlayerId && currentAssignments[activeViewingPlayerId]) {
+                    currentAssignments[activeViewingPlayerId].viewed = true;
+                }
+                document.getElementById("modal-role-card").style.display = "none";
+                activeViewingPlayerId = null;
+                renderCourtroomSeats();
+            });
+
+            // لوحة القاضي (استجواب)
+            document.getElementById("btn-judge-tools").addEventListener("click", () => {
+                renderJudgeSuspects();
+                document.getElementById("modal-judge-tools").style.display = "flex";
+            });
+
+            document.getElementById("btn-close-judge").addEventListener("click", () => {
+                document.getElementById("modal-judge-tools").style.display = "none";
+            });
+
+            function renderJudgeSuspects() {
+                const selectContainer = document.getElementById("judge-suspects-select");
+                selectContainer.innerHTML = "";
+
+                const suspects = Object.values(currentAssignments).filter(a => a.role_type === "suspect" || a.role_type === "innocent_impostor");
+                suspects.forEach((s, idx) => {
+                    const chip = document.createElement("button");
+                    chip.type = "button";
+                    chip.textContent = s.role_name;
+                    chip.style.cssText = "all:unset; padding: 6px 12px; background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.2); border-radius: 8px; font-size: 0.75rem; font-weight: 700; cursor: pointer; white-space: nowrap;";
+                    chip.addEventListener("click", () => {
+                        selectContainer.querySelectorAll("button").forEach(b => {
+                            b.style.borderColor = "rgba(255,255,255,0.2)";
+                            b.style.background = "rgba(255,255,255,0.06)";
+                        });
+                        chip.style.borderColor = "var(--gold-glow)";
+                        chip.style.background = "rgba(213,167,92,0.2)";
+                        showSuspectQuestions(s);
+                    });
+                    selectContainer.appendChild(chip);
+                    if (idx === 0) chip.click();
+                });
+            }
+
+            function showSuspectQuestions(suspect) {
+                const box = document.getElementById("judge-questions-box");
+                box.innerHTML = "";
+
+                const questions = getQuestionsForRole(selectedCase, suspect.role_name);
+                if (questions.length === 0) {
+                    box.innerHTML = "<p style='color:#cbd5e1; font-size:0.8rem;'>لا توجد أسئلة مسجلة لهذا الدور، اطرح عليه أسئلة استجواب حرة.</p>";
+                    return;
+                }
+
+                questions.forEach(q => {
+                    const item = document.createElement("div");
+                    item.style.cssText = "background: rgba(0,0,0,0.3); padding: 8px 10px; border-radius: 8px; border-right: 3px solid var(--gold-glow); font-size: 0.8rem; line-height: 1.4;";
+                    item.textContent = q.text || q.question;
+                    box.appendChild(item);
+                });
+            }
+
+            // لوحة الدفاع
+            document.getElementById("btn-defense-tools").addEventListener("click", () => {
+                const box = document.getElementById("defense-clues-box");
+                box.innerHTML = "";
+
+                const clues = getCluesForDefense(selectedCase);
+                if (clues.length === 0) {
+                    box.innerHTML = "<p style='color:#cbd5e1; font-size:0.8rem;'>لا توجد أدلة إضافية خاصة بالمرافعة لهذه القضية.</p>";
+                } else {
+                    clues.forEach(clue => {
+                        const item = document.createElement("div");
+                        item.style.cssText = "background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; padding: 10px; font-size: 0.8rem; line-height: 1.4;";
+                        item.innerHTML = `<strong style="color:var(--gold-glow);">${clue.target_role || 'شاهد'}:</strong> ${clue.text || clue}`;
+                        box.appendChild(item);
+                    });
+                }
+                document.getElementById("modal-defense-tools").style.display = "flex";
+            });
+
+            document.getElementById("btn-close-defense").addEventListener("click", () => {
+                document.getElementById("modal-defense-tools").style.display = "none";
+            });
+
+            // إصدار الحكم
+            document.getElementById("btn-trigger-verdict").addEventListener("click", () => {
+                const candidatesContainer = document.getElementById("verdict-candidates-list");
+                candidatesContainer.innerHTML = "";
+
+                const suspects = Object.values(currentAssignments).filter(a => a.role_type !== "judge");
+                suspects.forEach(s => {
+                    const btn = document.createElement("button");
+                    btn.type = "button";
+                    btn.style.cssText = "padding: 12px; background: rgba(255,255,255,0.06); border: 1.5px solid rgba(255,255,255,0.15); border-radius: 10px; color: #fff; font-family: inherit; font-size: 0.9rem; font-weight: 700; cursor: pointer; text-align: right; display: flex; justify-content: space-between; align-items: center;";
+                    btn.innerHTML = `
+                        <span>${s.playerName} (${s.role_name})</span>
+                        <span style="color:#ff5252; font-size:0.75rem;">اتهام بالجناية ⚖️</span>
+                    `;
+                    btn.addEventListener("click", () => {
+                        document.getElementById("modal-verdict-pick").style.display = "none";
+                        processFinalVerdict(s.playerId);
+                    });
+                    candidatesContainer.appendChild(btn);
+                });
+
+                document.getElementById("modal-verdict-pick").style.display = "flex";
+            });
+
+            document.getElementById("btn-cancel-verdict").addEventListener("click", () => {
+                document.getElementById("modal-verdict-pick").style.display = "none";
+            });
+
+            // معالجة ونطق الحكم النهائي
+            function processFinalVerdict(accusedPlayerId) {
+                const outcome = evaluateVerdict(accusedPlayerId, currentAssignments);
+                if (!outcome) return;
+
+                document.getElementById("step-courtroom").style.display = "none";
+                document.getElementById("step-results").style.display = "flex";
+
+                const banner = document.getElementById("verdict-banner");
+                if (outcome.isCorrect) {
+                    banner.style.background = "rgba(74, 222, 128, 0.2)";
+                    banner.style.border = "2px solid #4ade80";
+                    banner.style.color = "#4ade80";
+                    banner.innerHTML = `
+                        🎉 أصاب القاضي! تم القبض على الجاني الحقيقي (${outcome.realGuiltyPlayer?.playerName} - ${outcome.realGuiltyPlayer?.role_name}) وتطبيق العدالة!
+                    `;
+                } else {
+                    banner.style.background = "rgba(255, 82, 82, 0.2)";
+                    banner.style.border = "2px solid #ff5252";
+                    banner.style.color = "#ff7070";
+                    banner.innerHTML = `
+                        ⚠️ حكم خاطئ! أُدين بريء (${outcome.accusedPlayer?.playerName})، ونجح الجاني الحقيقي (${outcome.realGuiltyPlayer?.playerName} - ${outcome.realGuiltyPlayer?.role_name}) في التضليل والإفلات!
+                    `;
+                }
+
+                // كشف تفصيلي بالهويات والجرائم الجانبية
+                const table = document.getElementById("identities-reveal-table");
+                table.innerHTML = "";
+
+                Object.values(currentAssignments).forEach(p => {
+                    const score = outcome.scores[p.playerId]?.points || 0;
+                    const card = document.createElement("div");
+                    card.style.cssText = "background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.1); border-radius: 10px; padding: 10px; display: flex; flex-direction: column; gap: 4px;";
+                    card.innerHTML = `
+                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                            <strong style="color: ${p.is_guilty ? '#ff5252' : 'var(--gold-glow)'}; font-size: 0.95rem;">${p.playerName}: ${p.role_name} ${p.is_guilty ? '(🔴 الجاني الفعلي)' : ''}</strong>
+                            <span style="font-weight: 800; color: #4ade80; font-size: 0.9rem;">+${score} نقطة</span>
+                        </div>
+                        <div style="font-size: 0.78rem; color: #cbd5e1;"><strong>المصلحة/الجريمة الخفية:</strong> ${p.secret_interest || 'لا توجد'}</div>
+                    `;
+                    table.appendChild(card);
+                });
+            }
+
+            // إعادة المحاكمة
+            document.getElementById("btn-play-again").addEventListener("click", () => {
+                document.getElementById("step-results").style.display = "none";
+                document.getElementById("step-choose-case").style.display = "flex";
+            });
+
+            init();
+        </script>
+    </body>
+</html>
