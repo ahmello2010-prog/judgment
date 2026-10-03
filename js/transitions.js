@@ -171,6 +171,11 @@ export function initCinematicTransitions() {
             const anchor = e.target.closest("a");
             if (!anchor) return;
 
+            if (anchor.dataset.offlineLocked === "true" || anchor.classList.contains("btn-offline-locked")) {
+                e.preventDefault();
+                return;
+            }
+
             const href = anchor.getAttribute("href");
 
             if (

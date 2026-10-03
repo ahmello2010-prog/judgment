@@ -5,13 +5,23 @@
 const CACHE_NAME = "judgment-cache-v3"; // يتطابق مع CACHE_NAME في sw.js
 const OFFLINE_READY_FLAG = "judgment_offline_ready";
 
+// رسالة التحذير المعتمدة للمستخدم عند الدخول لأول مرة بدون إنترنت
+export const FIRST_TIME_OFFLINE_WARNING_MSG =
+    "عزيزي اللاعب .. مرحبا بك في محكمة الأدوار .. لكي تبدأ التجربة في زيارتك الاولى يرجى تشغيل الانترنت حتى يتاح لك اللعب بلا انترنت في اي وقت اخر .. شكرا لصبرك";
+
 // رسالة التنبيه المعتمدة عند محاولة استخدام ميزات الأونلاين أثناء انقطاع الإنترنت
 export const OFFLINE_ONLINE_REQUIRED_MSG =
     "لا يمكن استخدام إنشاء أو الانضمام إلى غرفة بدون اتصال بالإنترنت.\nفعّل الإنترنت ثم حاول مرة أخرى.";
 
 // التحقق الفعلي من اكتمال تخزين الملفات الجوهرية داخل Cache Storage
 export async function isOfflineReady() {
-    if (!("caches" in window)) return false;
+    if (!("caches" in window)) {
+        try {
+            return localStorage.getItem(OFFLINE_READY_FLAG) === "true";
+        } catch (_) {
+            return false;
+        }
+    }
     try {
         const hasCache = await caches.has(CACHE_NAME);
         if (!hasCache) return false;
@@ -20,13 +30,17 @@ export async function isOfflineReady() {
         // فحص وجود الملفات الجوهرية التي لا يمكن بدونها تشغيل اللعبة
         const requiredPaths = ["/offline.html", "/cases.json", "/css/style.css", "/js/offline-engine.js"];
         for (const path of requiredPaths) {
-            const match = await cache.match(path);
+            const match = await cache.match(path, { ignoreSearch: true });
             if (!match) return false;
         }
         return true;
     } catch (e) {
         console.warn("[OfflineManager] Cache check failed:", e);
-        return false;
+        try {
+            return localStorage.getItem(OFFLINE_READY_FLAG) === "true";
+        } catch (_) {
+            return false;
+        }
     }
 }
 
@@ -63,17 +77,28 @@ export async function checkRealInternet(timeoutMs = 3000) {
 
 // تجهيز وتخزين كافة الأصول في الكاش عند توفر الإنترنت
 export async function prepareOfflineAssets() {
-    if (!("caches" in window)) return false;
+    if (!("caches" in window)) {
+        try {
+            localStorage.setItem(OFFLINE_READY_FLAG, "true");
+        } catch (_) {}
+        return true;
+    }
     try {
         const cache = await caches.open(CACHE_NAME);
-        const filesToCache = [
+        const coreFiles = [
             "/",
             "/index.html",
             "/rooms.html",
-            "/guide.html",
             "/offline.html",
-            "/css/style.css",
             "/cases.json",
+            "/css/style.css",
+            "/js/offline-engine.js",
+            "/js/offline-manager.js",
+            "/js/app.js"
+        ];
+
+        const secondaryFiles = [
+            "/guide.html",
             "/site.webmanifest",
             "/favicon.ico",
             "/favicon.svg",
@@ -81,14 +106,11 @@ export async function prepareOfflineAssets() {
             "/apple-touch-icon.png",
             "/fonts/Alexandria-Bold.ttf",
             "/fonts/Harmattan-Medium.ttf",
-            "/js/app.js",
             "/js/improv.js",
             "/js/radio.js",
             "/js/soundtrack.js",
             "/js/transitions.js",
             "/js/tts.js",
-            "/js/offline-manager.js",
-            "/js/offline-engine.js",
             "/img/backg.jpeg",
             "/img/create.jpg",
             "/img/join.jpg",
@@ -101,8 +123,29 @@ export async function prepareOfflineAssets() {
             "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js"
         ];
 
+        // المرحلة 1: تخزين الملفات الجوهرية أولاً لضمان جاهزية الأوفلاين بأسرع وقت
         await Promise.allSettled(
-            filesToCache.map(async (url) => {
+            coreFiles.map(async (url) => {
+                try {
+                    const res = await fetch(url, { cache: "reload" });
+                    if (res.ok) await cache.put(url, res);
+                } catch (err) {}
+            })
+        );
+
+        const readyAfterCore = await isOfflineReady();
+        if (readyAfterCore) {
+            try {
+                localStorage.setItem(OFFLINE_READY_FLAG, "true");
+            } catch (_) {}
+            setStartGameButtonLocked(false);
+            hideFirstTimeOfflineModal();
+            window.dispatchEvent(new CustomEvent("judgment-offline-ready"));
+        }
+
+        // المرحلة 2: استكمال باقي الأصول المساعدة في الخلفية
+        await Promise.allSettled(
+            secondaryFiles.map(async (url) => {
                 try {
                     const res = await fetch(url, { cache: "reload" });
                     if (res.ok) await cache.put(url, res);
@@ -112,8 +155,11 @@ export async function prepareOfflineAssets() {
 
         const ready = await isOfflineReady();
         if (ready) {
-            localStorage.setItem(OFFLINE_READY_FLAG, "true");
-            window.dispatchEvent(new CustomEvent("judgment-offline-ready"));
+            try {
+                localStorage.setItem(OFFLINE_READY_FLAG, "true");
+            } catch (_) {}
+            setStartGameButtonLocked(false);
+            hideFirstTimeOfflineModal();
             console.log("⚡ [OfflineManager] الجهاز مجهز الآن بنجاح لوضع الأوفلاين!");
             return true;
         }
@@ -123,8 +169,75 @@ export async function prepareOfflineAssets() {
     return false;
 }
 
-// عرض المودال المطلوب عند أول زيارة بدون إنترنت
+let indexOfflineWatcherTimer = null;
+let isCheckingIndexRecovery = false;
+
+function stopIndexOfflineRecoveryWatcher() {
+    if (indexOfflineWatcherTimer) {
+        clearInterval(indexOfflineWatcherTimer);
+        indexOfflineWatcherTimer = null;
+    }
+}
+
+function startIndexOfflineRecoveryWatcher() {
+    if (indexOfflineWatcherTimer || typeof window === "undefined") return;
+    indexOfflineWatcherTimer = setInterval(async () => {
+        if (isCheckingIndexRecovery) return;
+        const startBtn = document.getElementById("btn-start-game-index");
+        if (!startBtn || startBtn.dataset.offlineLocked !== "true") {
+            stopIndexOfflineRecoveryWatcher();
+            return;
+        }
+        isCheckingIndexRecovery = true;
+        try {
+            const hasInternet = await checkRealInternet(2200);
+            if (hasInternet) {
+                setStartGameButtonLocked(false);
+                hideFirstTimeOfflineModal();
+                prepareOfflineAssets().catch(() => {});
+            }
+        } catch (_) {
+        } finally {
+            isCheckingIndexRecovery = false;
+        }
+    }, 3000);
+}
+
+// قفل أو فتح زر "ابدأ اللعبة" في صفحة index.html عند الزيارة الأولى بدون إنترنت
+export function setStartGameButtonLocked(locked) {
+    if (typeof document === "undefined") return;
+    const startBtn = document.getElementById("btn-start-game-index");
+    if (!startBtn) return;
+
+    if (locked) {
+        startBtn.dataset.offlineLocked = "true";
+        startBtn.classList.add("btn-offline-locked");
+        startBtn.setAttribute("aria-disabled", "true");
+        startIndexOfflineRecoveryWatcher();
+    } else {
+        delete startBtn.dataset.offlineLocked;
+        startBtn.classList.remove("btn-offline-locked");
+        startBtn.removeAttribute("aria-disabled");
+        stopIndexOfflineRecoveryWatcher();
+    }
+}
+
+// إخفاء نافذة تحذير الزيارة الأولى
+export function hideFirstTimeOfflineModal() {
+    if (typeof document === "undefined") return;
+    const modal = document.getElementById("first-time-offline-modal");
+    if (modal) {
+        modal.style.display = "none";
+    }
+}
+
+// عرض المودال التحذيري المطلوب عند أول زيارة بدون إنترنت
 export function showFirstTimeOfflineModal() {
+    if (typeof document === "undefined") return;
+
+    // قفل زر ابدأ اللعبة حتى يتوفر الإنترنت
+    setStartGameButtonLocked(true);
+
     let modal = document.getElementById("first-time-offline-modal");
     if (!modal) {
         modal = document.createElement("div");
@@ -175,92 +288,105 @@ export function showFirstTimeOfflineModal() {
                     font-size: 1.25rem;
                     font-weight: 800;
                     margin: 0 0 14px 0;
-                ">تجهيز اللعبة للعمل بدون إنترنت</h2>
-                <p style="
+                ">تنبيه الزيارة الأولى</h2>
+                <p id="first-time-offline-modal-text" style="
                     font-family: 'Harmattan', sans-serif;
-                    font-size: 1.3rem;
-                    line-height: 1.6;
-                    color: rgba(255, 255, 255, 0.9);
-                    margin: 0 0 22px 0;
-                ">
-                    هذه أول مرة يتم فيها تشغيل Judgment على هذا الجهاز بدون اتصال بالإنترنت.
-                    <br/><br/>
-                    لتجهيز اللعبة للعمل بدون إنترنت، يجب تشغيل الإنترنت مرة واحدة على الأقل.
-                </p>
-                <div style="display: flex; gap: 10px;">
+                    font-size: 1.35rem;
+                    line-height: 1.65;
+                    color: rgba(255, 255, 255, 0.95);
+                    margin: 0 0 24px 0;
+                ">${FIRST_TIME_OFFLINE_WARNING_MSG}</p>
+                <div style="display: flex; justify-content: center;">
                     <button id="btn-offline-dismiss" type="button" style="
-                        flex: 1;
-                        padding: 12px 14px;
-                        background: rgba(255, 255, 255, 0.08);
-                        border: 1px solid rgba(255, 255, 255, 0.2);
-                        color: #ffffff;
-                        border-radius: 12px;
-                        font-family: 'Alexandria', sans-serif;
-                        font-size: 0.95rem;
-                        font-weight: 700;
-                        cursor: pointer;
-                        transition: background 0.2s;
-                    ">حسناً، فهمت</button>
-                    <button id="btn-offline-retry" type="button" style="
-                        flex: 1;
-                        padding: 12px 14px;
+                        width: 100%;
+                        padding: 13px 18px;
                         background: linear-gradient(135deg, #d5a75c 0%, #b8860b 100%);
                         color: #050a12;
                         border: none;
                         border-radius: 12px;
                         font-family: 'Alexandria', sans-serif;
-                        font-size: 0.95rem;
+                        font-size: 1rem;
                         font-weight: 800;
                         cursor: pointer;
                         box-shadow: 0 4px 16px rgba(213, 167, 92, 0.35);
                         transition: transform 0.2s, opacity 0.2s;
-                    ">إعادة المحاولة</button>
+                    ">حسناً، فهمت</button>
                 </div>
-                <div id="offline-retry-status" style="
-                    margin-top: 12px;
-                    font-size: 0.82rem;
-                    color: #cbd5e1;
-                    min-height: 18px;
-                "></div>
             </div>
         `;
         document.body.appendChild(modal);
+    } else {
+        const msgEl = modal.querySelector("#first-time-offline-modal-text");
+        if (msgEl) {
+            msgEl.textContent = FIRST_TIME_OFFLINE_WARNING_MSG;
+        }
+        modal.style.display = "flex";
+    }
 
-        const dismissBtn = modal.querySelector("#btn-offline-dismiss");
-        const retryBtn = modal.querySelector("#btn-offline-retry");
-        const statusEl = modal.querySelector("#offline-retry-status");
-
+    const dismissBtn = modal.querySelector("#btn-offline-dismiss");
+    if (dismissBtn && !dismissBtn.dataset.boundDismiss) {
+        dismissBtn.dataset.boundDismiss = "true";
         dismissBtn.addEventListener("click", () => {
             modal.style.display = "none";
         });
+    }
+}
 
-        retryBtn.addEventListener("click", async () => {
-            retryBtn.disabled = true;
-            retryBtn.style.opacity = "0.6";
-            statusEl.textContent = "جاري التحقق من توفر الإنترنت...";
+// حارس زر "ابدأ اللعبة" في index.html لمنع الدخول في الزيارة الأولى بدون إنترنت
+export function setupIndexStartButtonGuard() {
+    if (typeof document === "undefined" || window.__indexStartGuardBound) return;
+    window.__indexStartGuardBound = true;
 
-            const hasInternet = await checkRealInternet();
-            if (hasInternet) {
-                statusEl.textContent = "تم رصد الاتصال! جاري تجهيز ملفات اللعبة محلياً...";
-                const success = await prepareOfflineAssets();
-                if (success) {
-                    statusEl.textContent = "اكتمل التجهيز بنجاح! يتم الآن فتح اللعبة...";
-                    setTimeout(() => {
-                        modal.style.display = "none";
-                        modal.remove();
-                        window.location.reload();
-                    }, 1200);
-                    return;
+    document.addEventListener(
+        "click",
+        async (e) => {
+            const startBtn = e.target.closest && e.target.closest("#btn-start-game-index");
+            if (!startBtn) return;
+
+            const isLocked =
+                startBtn.dataset.offlineLocked === "true" || startBtn.classList.contains("btn-offline-locked");
+
+            if (isLocked) {
+                e.preventDefault();
+                e.stopPropagation();
+                e.stopImmediatePropagation();
+
+                // فحص ما إذا كان المستخدم قد قام بتشغيل الإنترنت للتو قبل الضغط
+                const hasInternet = await checkRealInternet(2000);
+                if (hasInternet) {
+                    setStartGameButtonLocked(false);
+                    hideFirstTimeOfflineModal();
+                    prepareOfflineAssets().catch(() => {});
+                    const targetHref = startBtn.getAttribute("href") || "rooms.html";
+                    if (typeof window.cinematicNavigate === "function") {
+                        window.cinematicNavigate(targetHref);
+                    } else {
+                        window.location.href = targetHref;
+                    }
+                } else {
+                    showFirstTimeOfflineModal();
                 }
+                return;
             }
 
-            statusEl.textContent = "تعذر الاتصال بالإنترنت، يرجى تفعيل الشبكة والمحاولة مجدداً.";
-            retryBtn.disabled = false;
-            retryBtn.style.opacity = "1";
-        });
-    } else {
-        modal.style.display = "flex";
-    }
+            // حماية إضافية: إذا انقطع الإنترنت قبل اكتمال تجهيز الزيارة الأولى
+            let flagReady = false;
+            try {
+                flagReady = localStorage.getItem(OFFLINE_READY_FLAG) === "true";
+            } catch (_) {}
+
+            if (!flagReady && typeof navigator !== "undefined" && navigator.onLine === false) {
+                const cacheReady = await isOfflineReady();
+                if (!cacheReady) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    e.stopImmediatePropagation();
+                    showFirstTimeOfflineModal();
+                }
+            }
+        },
+        true // مرحلة الـ Capture لمنع أي انتقال قبل التحقق
+    );
 }
 
 let roomsNoticeActiveSeq = 0;
@@ -433,15 +559,33 @@ export async function initOfflineManager() {
     // حماية مباشرة: فحص ما إذا كنا داخل create.html أو join.html بدون إنترنت
     guardOnlinePage();
 
-    // تفعيل حارس النقر الفوري لبطاقات الغرف
+    // تفعيل حارس النقر الفوري لزر البداية في index.html وبطاقات الغرف في rooms.html
+    setupIndexStartButtonGuard();
     setupRoomsClickGuard();
+
+    // فحص فوري مبكر للزيارة الأولى بدون إنترنت (قبل انتظار أي عمليات شبكية)
+    let hasSavedFlag = false;
+    try {
+        hasSavedFlag = localStorage.getItem(OFFLINE_READY_FLAG) === "true";
+    } catch (_) {}
+
+    if (!hasSavedFlag && typeof navigator !== "undefined" && navigator.onLine === false) {
+        const quickCacheCheck = await isOfflineReady();
+        if (!quickCacheCheck) {
+            showFirstTimeOfflineModal();
+        }
+    }
 
     // 1. تسجيل مستمعي تغير الشبكة لتحديث التنبيه تلقائياً
     if (typeof window !== "undefined") {
-        window.addEventListener("online", () => {
+        window.addEventListener("online", async () => {
             updateRoomsOfflineNotice(true);
-            // تحديث الكاش إن لزم عند عودة الشبكة
-            prepareOfflineAssets().catch(() => {});
+            const hasNet = await checkRealInternet(2500);
+            if (hasNet) {
+                setStartGameButtonLocked(false);
+                hideFirstTimeOfflineModal();
+                prepareOfflineAssets().catch(() => {});
+            }
         });
         window.addEventListener("offline", () => {
             updateRoomsOfflineNotice(true);
@@ -469,8 +613,6 @@ export async function initOfflineManager() {
         }
 
         // ⏱️ آلية Polling دورية (كل 10 ثوانٍ) مخصصة لبيئة Android WebView
-        // تضمن رصد انقطاع/عودة الإنترنت حتى لو لم يطلق النظام أحداث offline/online
-        // الآلية محمية بـ isCheckingRoomsNotice و sequence token لمنع تداخل وفوضى الـ checks
         if (!window.__roomsOfflinePollingBound) {
             window.__roomsOfflinePollingBound = true;
             setInterval(() => {
@@ -498,15 +640,20 @@ export async function initOfflineManager() {
         // فحص وجود اتصال بالإنترنت
         const hasInternet = await checkRealInternet();
         if (hasInternet) {
-            // إنترنت متوفر في الزيارة الأولى: نقوم بتجهيز الكاش بالكامل في الخلفية
+            // إنترنت متوفر في الزيارة الأولى: فتح الزر وتجهيز الكاش بالكامل في الخلفية
+            setStartGameButtonLocked(false);
+            hideFirstTimeOfflineModal();
             prepareOfflineAssets();
         } else {
-            // أول زيارة بدون إنترنت واللعبة غير مجهزة في الكاش: عرض المودال المطلوب
+            // أول زيارة بدون إنترنت واللعبة غير مجهزة في الكاش: عرض المودال المطلوب وقفل زر البداية
             showFirstTimeOfflineModal();
         }
     } else {
         // اللعبة مجهزة مسبقاً في Cache Storage
-        localStorage.setItem(OFFLINE_READY_FLAG, "true");
+        try {
+            localStorage.setItem(OFFLINE_READY_FLAG, "true");
+        } catch (_) {}
+        setStartGameButtonLocked(false);
         if (navigator.onLine) {
             prepareOfflineAssets().catch(() => {});
         }
@@ -518,12 +665,15 @@ if (typeof window !== "undefined") {
     window.isOfflineReady = isOfflineReady;
     window.checkRealInternet = checkRealInternet;
     window.showFirstTimeOfflineModal = showFirstTimeOfflineModal;
+    window.hideFirstTimeOfflineModal = hideFirstTimeOfflineModal;
+    window.setStartGameButtonLocked = setStartGameButtonLocked;
     window.updateRoomsOfflineNotice = updateRoomsOfflineNotice;
     window.showOnlineRequiredAlert = showOnlineRequiredAlert;
     window.hideAlertModal = hideAlertModal;
     window.canAccessOnlineFeature = canAccessOnlineFeature;
     window.guardOnlinePage = guardOnlinePage;
     window.setupRoomsClickGuard = setupRoomsClickGuard;
+    window.setupIndexStartButtonGuard = setupIndexStartButtonGuard;
 }
 
 if (typeof document !== "undefined") {

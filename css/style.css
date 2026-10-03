@@ -285,6 +285,21 @@ a.btn-main:active {
     border: 2px solid var(--gold-glow);
 }
 
+a.btn-main.btn-offline-locked {
+    background-color: rgba(45, 52, 64, 0.85);
+    color: rgba(213, 167, 92, 0.55);
+    border: 2px dashed rgba(213, 167, 92, 0.45);
+    box-shadow: none;
+    cursor: not-allowed;
+    filter: grayscale(0.45);
+}
+
+a.btn-main.btn-offline-locked:active {
+    transform: none;
+    background-color: rgba(45, 52, 64, 0.85);
+    color: rgba(213, 167, 92, 0.55);
+}
+
 .btn-hidden {
     opacity: 0;
     transform: translateY(-100px) scale(0.3);

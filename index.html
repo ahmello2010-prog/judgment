@@ -9,7 +9,7 @@
         <meta property="og:description" content="محكمة الأدوار - لعبة التحقيق والاستراتيجية الذهنية" />
 
         <!-- استدعاء المكون المباشر لـ Lottie ليعمل فقط أثناء فترة التحميل -->
-        <script src="https://lottie.host/5c8b4548-c18c-407f-9e64-00014c2aa006/UAYSrmYfhz.lottie"></script>
+        <script async src="https://lottie.host/5c8b4548-c18c-407f-9e64-00014c2aa006/UAYSrmYfhz.lottie"></script>
         <link rel="icon" type="image/png" href="/favicon-96x96.png" sizes="96x96" />
         <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
         <link rel="shortcut icon" href="/favicon.ico" />
@@ -47,6 +47,98 @@
             </div>
         </div>
 
+        <!-- نافذة التحذير للمستخدم عند الدخول لأول مرة بدون اتصال بالإنترنت -->
+        <div
+            id="first-time-offline-modal"
+            class="modal-overlay-active"
+            style="
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100vw;
+                height: 100vh;
+                background: rgba(5, 10, 18, 0.94);
+                backdrop-filter: blur(8px);
+                -webkit-backdrop-filter: blur(8px);
+                z-index: 2147483647;
+                display: none;
+                justify-content: center;
+                align-items: center;
+                padding: 20px;
+                direction: rtl;
+                box-sizing: border-box;
+                font-family: &quot;Alexandria&quot;, sans-serif;
+            ">
+            <div
+                style="
+                    background: linear-gradient(180deg, #162032 0%, #0d1523 100%);
+                    border: 2px solid var(--gold-glow, #d5a75c);
+                    border-radius: 20px;
+                    padding: 30px 22px;
+                    max-width: 440px;
+                    width: 100%;
+                    text-align: center;
+                    box-shadow:
+                        0 16px 40px rgba(0, 0, 0, 0.8),
+                        0 0 25px rgba(213, 167, 92, 0.25);
+                    color: #ffffff;
+                ">
+                <div
+                    style="
+                        width: 64px;
+                        height: 64px;
+                        margin: 0 auto 16px;
+                        border-radius: 50%;
+                        background: rgba(213, 167, 92, 0.15);
+                        border: 2px solid var(--gold-glow, #d5a75c);
+                        display: flex;
+                        align-items: center;
+                        justify-content: center;
+                        font-size: 1.8rem;
+                    ">
+                    ⚖️
+                </div>
+                <h2 style="color: var(--gold-glow, #d5a75c); font-size: 1.25rem; font-weight: 800; margin: 0 0 14px 0">
+                    تنبيه الزيارة الأولى
+                </h2>
+                <p
+                    id="first-time-offline-modal-text"
+                    style="
+                        font-family: &quot;Harmattan&quot;, sans-serif;
+                        font-size: 1.35rem;
+                        line-height: 1.65;
+                        color: rgba(255, 255, 255, 0.95);
+                        margin: 0 0 24px 0;
+                    ">
+                    عزيزي اللاعب .. مرحبا بك في محكمة الأدوار .. لكي تبدأ التجربة في زيارتك الاولى يرجى تشغيل الانترنت
+                    حتى يتاح لك اللعب بلا انترنت في اي وقت اخر .. شكرا لصبرك
+                </p>
+                <div style="display: flex; justify-content: center">
+                    <button
+                        id="btn-offline-dismiss"
+                        type="button"
+                        style="
+                            width: 100%;
+                            padding: 13px 18px;
+                            background: linear-gradient(135deg, #d5a75c 0%, #b8860b 100%);
+                            color: #050a12;
+                            border: none;
+                            border-radius: 12px;
+                            font-family: &quot;Alexandria&quot;, sans-serif;
+                            font-size: 1rem;
+                            font-weight: 800;
+                            cursor: pointer;
+                            box-shadow: 0 4px 16px rgba(213, 167, 92, 0.35);
+                            transition:
+                                transform 0.2s,
+                                opacity 0.2s;
+                        ">
+                        حسناً، فهمت
+                    </button>
+                </div>
+            </div>
+        </div>
+
         <!-- استدعاء ملف الجافا سكريبت الموحد (يحتوي على محرك الموسيقى المستمر soundtrack.js) -->
         <script type="module" src="js/offline-manager.js"></script>
         <script type="module" src="js/app.js"></script>
@@ -56,6 +148,15 @@
                 const textPart2 = "حيث عالم التحقيق والاستراتيجية الذهنية";
                 const subtitleElement = document.getElementById("dynamic-subtitle");
                 const startButton = document.getElementById("btn-start-game-index");
+                const firstTimeModal = document.getElementById("first-time-offline-modal");
+                const dismissBtn = document.getElementById("btn-offline-dismiss");
+
+                if (dismissBtn && firstTimeModal && !dismissBtn.dataset.boundDismiss) {
+                    dismissBtn.dataset.boundDismiss = "true";
+                    dismissBtn.addEventListener("click", function () {
+                        firstTimeModal.style.display = "none";
+                    });
+                }
 
                 // 🎵 صوت هبوط وارتطام الزر السينمائي
                 const sfxButtonDrop = new Audio("img/uh (1).mp3");
