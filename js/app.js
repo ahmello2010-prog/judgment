@@ -27,6 +27,7 @@ import {
 import "./soundtrack.js";
 import "./radio.js";
 import "./transitions.js";
+import { courtVoiceEngine } from "./voice.js";
 
 const navigateTo = (url) => {
     if (typeof window !== "undefined" && window.cinematicNavigate) {
@@ -958,6 +959,13 @@ function listenToFinalLobby() {
     if (!window.courtRoomEntryTimestamp) {
         window.courtRoomEntryTimestamp = Date.now();
     }
+
+    // 🎙️ تهيئة وتشغيل محرك الصوت المباشر (LiveKit / WebRTC) لقاعة المحكمة
+    courtVoiceEngine.init({
+        db,
+        roomCode: currentRoomCode,
+        myUid: mySecretUID
+    });
 
     onValue(roomRef, (snapshot) => {
         if (snapshot.exists()) {
@@ -1964,6 +1972,9 @@ function renderCircularSeats(playersList, assignments, gameState) {
 
                 container.appendChild(seatBox);
             });
+
+            // 🎙️ تحديث شارات حالة المايك على الكراسي بعد إعادة رسمها
+            courtVoiceEngine.updateAllSeatsVoiceBadges(gameState);
         })
         .catch((err) => console.log("انتظار استقرار مزامنة المقاعد...", err));
 }
@@ -3932,7 +3943,18 @@ function injectLawyerActionControls(
                         .getElementById("seats-container")
                         ?.querySelector(`[data-uid="${mySecretUID}"]`)
                         ?.getAttribute("data-name") || "لاعب";
-                update(gameStateRef, { lastSpeakRequestName: myPlayerName, requestTimestamp: Date.now() });
+                const nowTs = Date.now();
+                update(gameStateRef, {
+                    lastSpeakRequestName: myPlayerName,
+                    requestTimestamp: nowTs,
+                    speak_request: {
+                        uid: mySecretUID,
+                        name: myPlayerName,
+                        role_type: myRoleCard.role_type || "suspect",
+                        role_name: myRoleCard.role_name || "",
+                        timestamp: nowTs
+                    }
+                });
                 btnSpeak.setAttribute("data-frozen", "true");
                 btnSpeak.style.setProperty("cursor", "not-allowed", "important");
                 btnSpeak.style.setProperty("opacity", "0.5", "important");
@@ -4449,7 +4471,9 @@ function staleCourtEventsReset() {
         private_network_message: null,
         network_reveal: null,
         lastSpeakRequestName: null,
-        requestTimestamp: null
+        requestTimestamp: null,
+        speak_request: null,
+        voice_state: null
     };
 }
 
