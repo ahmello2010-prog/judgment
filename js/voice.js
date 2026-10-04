@@ -574,7 +574,7 @@ class CourtVoiceEngine {
             const speakerName = this.playersMap[this.activeSpeakerUID] || "لاعب";
             const speakerRole = this.assignmentsMap[this.activeSpeakerUID]?.role_name || "";
             label.textContent = `🎙️ المتحدث الآن: ${speakerName}${speakerRole ? ` (${speakerRole})` : ""}`;
-            bar.style.display = " inline-flex";
+            bar.style.display = "inline-flex";
         } else {
             bar.style.display = "none";
         }
