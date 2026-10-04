@@ -27,7 +27,6 @@ import {
 import "./soundtrack.js";
 import "./radio.js";
 import "./transitions.js";
-import { courtVoiceEngine } from "./voice.js";
 
 const navigateTo = (url) => {
     if (typeof window !== "undefined" && window.cinematicNavigate) {
@@ -580,7 +579,7 @@ async function loadAndDisplayCases() {
             innerHTML += `
                 <!-- حاوية الصورة المعبرة بتصميم متناسق ودائري الأطراف مع وجود حماية لو الصورة مش موجودة -->
                 <div style="width: 100%; max-width: 130px; aspect-ratio: 1; border-radius: 12px; overflow: hidden; margin-bottom: 12px; border: 1px solid rgba(213, 167, 92, 0.2); box-shadow: 0 4px 10px rgba(0,0,0,0.4);">
-                    <img src="${caseImage}" alt="${item.title}" style="width: 100%; height: 100%; object-fit: cover; display: block;" onerror="this.src='img/logo.jpeg'">
+                    <img src="${caseImage}" alt="${item.title}" style="width: 100%; height: 100%; object-fit: cover; display: block;" onerror="this.src='https://placehold.co{item.id}'">
                 </div>
 
                 <!-- عنوان القضية متموضع بالكامل في المنتصف بدون وصف -->
@@ -960,13 +959,6 @@ function listenToFinalLobby() {
         window.courtRoomEntryTimestamp = Date.now();
     }
 
-    // 🎙️ تهيئة وتشغيل محرك الصوت المباشر (LiveKit / WebRTC) لقاعة المحكمة
-    courtVoiceEngine.init({
-        db,
-        roomCode: currentRoomCode,
-        myUid: mySecretUID
-    });
-
     onValue(roomRef, (snapshot) => {
         if (snapshot.exists()) {
             const roomData = snapshot.val();
@@ -1041,7 +1033,6 @@ function listenToFinalLobby() {
             let myLawyerType = "none";
 
             // 🎭🔊 نمط الجولة الحالي وبطاقتي: يستخدمهما توجيه الارتجال وحارس سرية المتحدث الصوتي
-            window.currentGameState = gameState;
             window.currentGameMode = normalizeGameMode(gameState.gameMode);
             window.myCurrentRoleCard = myRoleCard;
             if (myRoleCard.secret_interest) registerForbiddenSpeech(myRoleCard.secret_interest);
@@ -1312,36 +1303,32 @@ function listenToFinalLobby() {
                     modal.style.setProperty("display", "flex", "important");
                     modal.className = "modal-overlay-active";
 
-                    const btnConfirmExit = document.getElementById("btn-player-confirm-exit");
-                    if (btnConfirmExit) {
-                        btnConfirmExit.addEventListener("click", function () {
-                            modal.style.setProperty("display", "none", "important");
-                            modal.classList.remove("modal-overlay-active");
+                    // مستمع زر التأكيد الفعلي لمسح اسم اللاعب العادي من السيرفر والخروج الفوري لـ rooms.html
+                    document.getElementById("btn-player-confirm-exit").addEventListener("click", function () {
+                        modal.style.setProperty("display", "none", "important");
+                        modal.classList.remove("modal-overlay-active");
 
-                            clearCourtTransientUI();
+                        clearCourtTransientUI();
 
-                            const playerKey = sessionStorage.getItem("myPlayerKeyInRoom");
-                            if (playerKey) {
-                                const exactPlayerPath = ref(db, "rooms/" + currentRoomCode + "/players/" + playerKey);
-                                remove(exactPlayerPath).then(() => {
-                                    sessionStorage.removeItem("activeRoomCode");
-                                    sessionStorage.removeItem("myPlayerKeyInRoom");
-                                    navigateTo("rooms.html");
-                                });
-                            } else {
+                        const playerKey = sessionStorage.getItem("myPlayerKeyInRoom");
+                        if (playerKey) {
+                            const exactPlayerPath = ref(db, "rooms/" + currentRoomCode + "/players/" + playerKey);
+                            remove(exactPlayerPath).then(() => {
+                                sessionStorage.removeItem("activeRoomCode");
+                                sessionStorage.removeItem("myPlayerKeyInRoom");
                                 navigateTo("rooms.html");
-                            }
-                        });
-                    }
+                            });
+                        } else {
+                            navigateTo("rooms.html");
+                        }
+                    });
 
-                    const btnCancelExit = document.getElementById("btn-player-cancel-exit");
-                    if (btnCancelExit) {
-                        btnCancelExit.addEventListener("click", function () {
-                            modal.style.setProperty("display", "none", "important");
-                            modal.classList.remove("modal-overlay-active");
-                            if (btnModalClose) btnModalClose.style.setProperty("display", "block", "important");
-                        });
-                    }
+                    // زر التراجع وإغلاق المودال
+                    document.getElementById("btn-player-cancel-exit").addEventListener("click", function () {
+                        modal.style.setProperty("display", "none", "important");
+                        modal.classList.remove("modal-overlay-active");
+                        if (btnModalClose) btnModalClose.style.setProperty("display", "block", "important");
+                    });
                 };
 
                 if (!window.hasLobbyPopstateListenerAttached) {
@@ -1977,9 +1964,6 @@ function renderCircularSeats(playersList, assignments, gameState) {
 
                 container.appendChild(seatBox);
             });
-
-            // 🎙️ تحديث شارات حالة المايك على الكراسي بعد إعادة رسمها
-            courtVoiceEngine.updateAllSeatsVoiceBadges(gameState);
         })
         .catch((err) => console.log("انتظار استقرار مزامنة المقاعد...", err));
 }
@@ -2368,8 +2352,6 @@ function runLobbyLoadingEngine(callback) {
         return;
     }
 
-    window.__lobbyEngineStarted = true;
-
     // فتح شاشة اللودينج في الصدارة المطلقة
     loadingScreen.style.display = "flex";
     loadingScreen.style.opacity = "1";
@@ -2511,7 +2493,7 @@ document.addEventListener("DOMContentLoaded", function () {
                     }
                 }
             } else {
-                clearSessionAndDestroyLocalMemory();
+                clearSessionAndRedirect();
             }
         });
     };
@@ -2609,11 +2591,9 @@ document.addEventListener("DOMContentLoaded", function () {
 
             // اصطياد عناصر المودال الداعمة المكتوبة في الـ HTML الأصلي الخاص بك
             const modalTitle =
-                document.querySelector("#host-exit-modal h2") || document.getElementById("modal-alert-title");
+                document.getElementById("modal-alert-title") || document.querySelector("#host-exit-modal h2");
             const modalMessage =
-                document.querySelector("#host-exit-modal p") ||
-                document.querySelector("#host-exit-modal div[style*='Harmattan']") ||
-                document.getElementById("modal-alert-message");
+                document.getElementById("modal-alert-message") || document.querySelector("#host-exit-modal p");
 
             if (isHost) {
                 // [وضعية الأدمن]: نسف وتدمير جماعي للغرفة أونلاين
@@ -3952,18 +3932,7 @@ function injectLawyerActionControls(
                         .getElementById("seats-container")
                         ?.querySelector(`[data-uid="${mySecretUID}"]`)
                         ?.getAttribute("data-name") || "لاعب";
-                const nowTs = Date.now();
-                update(gameStateRef, {
-                    lastSpeakRequestName: myPlayerName,
-                    requestTimestamp: nowTs,
-                    speak_request: {
-                        uid: mySecretUID,
-                        name: myPlayerName,
-                        role_type: myRoleCard.role_type || "suspect",
-                        role_name: myRoleCard.role_name || "",
-                        timestamp: nowTs
-                    }
-                });
+                update(gameStateRef, { lastSpeakRequestName: myPlayerName, requestTimestamp: Date.now() });
                 btnSpeak.setAttribute("data-frozen", "true");
                 btnSpeak.style.setProperty("cursor", "not-allowed", "important");
                 btnSpeak.style.setProperty("opacity", "0.5", "important");
@@ -4480,9 +4449,7 @@ function staleCourtEventsReset() {
         private_network_message: null,
         network_reveal: null,
         lastSpeakRequestName: null,
-        requestTimestamp: null,
-        speak_request: null,
-        voice_state: null
+        requestTimestamp: null
     };
 }
 
@@ -4491,12 +4458,13 @@ function triggerKillFeedAlert(alertText, isJudgeReveal = false, options = {}) {
     const isPrivateLawyerAlert =
         alertText.startsWith("سؤال للادعاء") || alertText.startsWith("🚨 تنبيه: لقد نفدت جميع الأسئلة");
 
-    const activeRoleCard = window.myCurrentRoleCard || {};
+    // سحب رتبة اللاعب الحالي من الذاكرة لضمان المطابقة
+    const myPlayerKey = sessionStorage.getItem("myPlayerKeyInRoom");
 
     // إذا كان الإشعار خاصاً بالتحقيق، ويستقبله جهاز لاعب آخر (غير محامي المحكمة)، يتم حظره فوراً ومنع بنائه
     if (isPrivateLawyerAlert && window.location.pathname.includes("game.html")) {
         // فحص إضافي: القاضي وبقية المشتبه بهم يخرجون من الدالة ولا يرون هذا الشريط السينمائي نهائياً
-        if (activeRoleCard.role_type !== "lawyer" || !String(activeRoleCard.role_name || "").includes("ادعاء")) {
+        if (myRoleCard.role_type !== "lawyer" || !myRoleCard.role_name.includes("ادعاء")) {
             return;
         }
     }
