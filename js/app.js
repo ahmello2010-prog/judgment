@@ -5296,20 +5296,172 @@ function mountCaseStoryAudio(anchorEl, audioUrl) {
     if (!anchorEl || !audioUrl) return;
     stopCaseStoryAudio();
 
+    // 🎨 ستايل المشغل (مرة واحدة فقط) - بألوان هوية اللعبة: كحلي ليلي + ذهب
+    if (!document.getElementById("case-story-audio-style")) {
+        const st = document.createElement("style");
+        st.id = "case-story-audio-style";
+        st.textContent = `
+            .case-story-audio { margin: 0 0 16px 0; direction: rtl; text-align: right; font-family: 'Alexandria', sans-serif; }
+            .case-story-audio .csa-label { color: var(--gold-glow, #d5a75c); font-size: 0.7rem; font-weight: 700; margin-bottom: 8px; }
+            .case-story-audio .csa-card {
+                display: flex; align-items: center; gap: 12px; padding: 10px 14px;
+                background: linear-gradient(180deg, #142230 0%, #0d1620 100%);
+                border: 1px solid rgba(213, 167, 92, 0.28); border-radius: 14px;
+                box-shadow: inset 0 0 12px rgba(0, 0, 0, 0.45), 0 4px 14px rgba(0, 0, 0, 0.35);
+            }
+            .case-story-audio .csa-play {
+                flex: 0 0 auto; width: 42px; height: 42px; border: none; border-radius: 50%; cursor: pointer;
+                display: flex; align-items: center; justify-content: center; padding: 0;
+                background: linear-gradient(135deg, var(--gold-glow, #d5a75c) 0%, #b89149 100%);
+                color: #050a18; box-shadow: 0 4px 14px rgba(213, 167, 92, 0.35);
+                transition: transform 0.15s ease, box-shadow 0.15s ease; -webkit-tap-highlight-color: transparent;
+            }
+            .case-story-audio .csa-play:active { transform: scale(0.92); }
+            .case-story-audio .csa-play svg { width: 18px; height: 18px; fill: currentColor; }
+            .case-story-audio .csa-play.is-loading { opacity: 0.7; animation: csa-pulse 1s ease-in-out infinite; }
+            @keyframes csa-pulse { 50% { box-shadow: 0 0 0 7px rgba(213, 167, 92, 0.12); } }
+            .case-story-audio .csa-mid { flex: 1 1 auto; min-width: 0; display: flex; flex-direction: column; gap: 6px; }
+            .case-story-audio .csa-track {
+                position: relative; height: 6px; border-radius: 6px; cursor: pointer; touch-action: none;
+                background: rgba(213, 167, 92, 0.18);
+            }
+            .case-story-audio .csa-track::before { content: ""; position: absolute; inset: -10px 0; } /* منطقة لمس أكبر */
+            .case-story-audio .csa-fill {
+                position: absolute; top: 0; right: 0; height: 100%; width: 0%; border-radius: 6px;
+                background: linear-gradient(270deg, var(--gold-glow, #d5a75c), #b89149);
+            }
+            .case-story-audio .csa-knob {
+                position: absolute; top: 50%; right: 0%; width: 14px; height: 14px; border-radius: 50%;
+                background: #f9f5eb; border: 2px solid var(--gold-glow, #d5a75c);
+                transform: translate(50%, -50%); box-shadow: 0 0 8px rgba(213, 167, 92, 0.6);
+            }
+            .case-story-audio .csa-time {
+                direction: ltr; text-align: left; font-size: 0.65rem; color: #8ea1b4;
+                font-variant-numeric: tabular-nums; letter-spacing: 0.3px;
+            }
+            .case-story-audio .csa-speed {
+                flex: 0 0 auto; min-width: 42px; padding: 5px 8px; cursor: pointer;
+                background: rgba(213, 167, 92, 0.1); color: var(--gold-glow, #d5a75c);
+                border: 1px solid rgba(213, 167, 92, 0.3); border-radius: 20px;
+                font-family: inherit; font-size: 0.65rem; font-weight: 700; -webkit-tap-highlight-color: transparent;
+            }
+            .case-story-audio .csa-speed:active { background: rgba(213, 167, 92, 0.25); }
+            .case-story-audio button:focus-visible { outline: 2px solid #f9f5eb; outline-offset: 2px; }
+        `;
+        document.head.appendChild(st);
+    }
+
+    const ICON_PLAY =
+        '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5.14v13.72a1 1 0 0 0 1.52.85l11.02-6.86a1 1 0 0 0 0-1.7L9.52 4.29A1 1 0 0 0 8 5.14z"/></svg>';
+    const ICON_PAUSE =
+        '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="6" y="5" width="4.2" height="14" rx="1.2"/><rect x="13.8" y="5" width="4.2" height="14" rx="1.2"/></svg>';
+
     const wrap = document.createElement("div");
     wrap.className = "case-story-audio";
-    wrap.style.cssText = "margin: 0 0 16px 0; direction: rtl; text-align: right;";
-
-    const label = document.createElement("div");
-    label.textContent = "🎧 استمع إلى راوي القضية";
-    label.style.cssText =
-        "color: var(--gold-glow, #d5a75c); font-family: 'Alexandria', sans-serif; font-size: 0.7rem; font-weight: 700; margin-bottom: 6px;";
+    wrap.innerHTML = `
+        <div class="csa-label">🎧 استمع إلى راوي القضية</div>
+        <div class="csa-card">
+            <button type="button" class="csa-play" aria-label="تشغيل">${ICON_PLAY}</button>
+            <div class="csa-mid">
+                <div class="csa-track" role="slider" aria-label="موضع التشغيل" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
+                    <div class="csa-fill"></div><div class="csa-knob"></div>
+                </div>
+                <div class="csa-time">0:00 / 0:00</div>
+            </div>
+            <button type="button" class="csa-speed" aria-label="سرعة الصوت">1x</button>
+        </div>
+    `;
 
     const audio = document.createElement("audio");
-    audio.controls = true;
     audio.preload = "none";
-    audio.src = audioUrl;
-    audio.style.cssText = "width: 100%; height: 38px;";
+    audio.src = audioUrl; // بدون controls: التحكم كله من المشغل المخصص
+
+    const playBtn = wrap.querySelector(".csa-play");
+    const track = wrap.querySelector(".csa-track");
+    const fill = wrap.querySelector(".csa-fill");
+    const knob = wrap.querySelector(".csa-knob");
+    const timeEl = wrap.querySelector(".csa-time");
+    const speedBtn = wrap.querySelector(".csa-speed");
+
+    const fmt = (s) => {
+        if (!isFinite(s) || s < 0) s = 0;
+        return `${Math.floor(s / 60)}:${String(Math.floor(s % 60)).padStart(2, "0")}`;
+    };
+    const render = () => {
+        const dur = audio.duration;
+        const pct = isFinite(dur) && dur > 0 ? Math.min(100, (audio.currentTime / dur) * 100) : 0;
+        fill.style.width = pct + "%";
+        knob.style.right = pct + "%";
+        track.setAttribute("aria-valuenow", String(Math.round(pct)));
+        timeEl.textContent = `${fmt(audio.currentTime)} / ${fmt(dur)}`;
+    };
+    const setIcon = () => {
+        playBtn.innerHTML = audio.paused ? ICON_PLAY : ICON_PAUSE;
+        playBtn.setAttribute("aria-label", audio.paused ? "تشغيل" : "إيقاف مؤقت");
+    };
+
+    playBtn.addEventListener("click", (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        if (audio.paused) {
+            playBtn.classList.add("is-loading");
+            audio.play().catch(() => playBtn.classList.remove("is-loading"));
+        } else {
+            audio.pause();
+        }
+    });
+
+    // السحب والضغط على الشريط (RTL: البداية من اليمين)
+    const seekFromEvent = (e) => {
+        if (!isFinite(audio.duration) || audio.duration <= 0) return;
+        const rect = track.getBoundingClientRect();
+        const ratio = Math.max(0, Math.min(1, (rect.right - e.clientX) / rect.width));
+        audio.currentTime = ratio * audio.duration;
+        render();
+    };
+    let dragging = false;
+    track.addEventListener("pointerdown", (e) => {
+        dragging = true;
+        try {
+            track.setPointerCapture(e.pointerId);
+        } catch (err) {
+            /* تجاهل */
+        }
+        seekFromEvent(e);
+    });
+    track.addEventListener("pointermove", (e) => {
+        if (dragging) seekFromEvent(e);
+    });
+    const endDrag = () => {
+        dragging = false;
+    };
+    track.addEventListener("pointerup", endDrag);
+    track.addEventListener("pointercancel", endDrag);
+
+    const speeds = [1, 1.25, 1.5, 0.75];
+    let speedIdx = 0;
+    speedBtn.addEventListener("click", (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        speedIdx = (speedIdx + 1) % speeds.length;
+        audio.playbackRate = speeds[speedIdx];
+        speedBtn.textContent = speeds[speedIdx] + "x";
+    });
+
+    audio.addEventListener("play", setIcon);
+    audio.addEventListener("pause", setIcon);
+    audio.addEventListener("playing", () => {
+        playBtn.classList.remove("is-loading");
+        setIcon();
+    });
+    audio.addEventListener("ended", () => {
+        audio.currentTime = 0;
+        setIcon();
+        render();
+    });
+    audio.addEventListener("timeupdate", render);
+    audio.addEventListener("loadedmetadata", render);
+    audio.addEventListener("durationchange", render);
 
     // لو الرابط فيه مشكلة نرجع للقارئ الآلي بدل ما يبقى المستخدم بدون صوت
     audio.addEventListener("error", () => {
@@ -5318,8 +5470,7 @@ function mountCaseStoryAudio(anchorEl, audioUrl) {
         mountVoiceControls(anchorEl, { kind: "public" });
     });
 
-    wrap.appendChild(label);
-    wrap.appendChild(audio);
+    wrap.appendChild(audio); // عنصر الصوت غير ظاهر (بدون controls)
     anchorEl.insertAdjacentElement("afterend", wrap);
     caseStoryAudioEl = audio;
 }
