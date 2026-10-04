@@ -1,20 +1,20 @@
 {
-    "name": "judgment",
-    "version": "1.0.0",
-    "description": "محكمة الأدوار - لعبة التحقيق والاستراتيجية الذهنية",
-    "type": "module",
-    "main": "server.js",
-    "scripts": {
-        "dev": "node server.js",
-        "start": "node server.js",
-        "build": "echo 'Build complete'",
-        "lint": "node --check server.js && node --check api/livekit-token.js && node --check js/app.js && node --check js/voice.js"
-    },
-    "dependencies": {
-        "express": "^4.19.2",
-        "livekit-client": "^2.22.3",
-        "livekit-server-sdk": "^2.19.1",
-        "msedge-tts": "^2.0.4",
-        "ws": "^8.22.0"
-    }
+  "name": "judgment",
+  "version": "1.0.0",
+  "description": "محكمة الأدوار - لعبة التحقيق والاستراتيجية الذهنية",
+  "type": "module",
+  "main": "server.js",
+  "scripts": {
+    "dev": "node server.js",
+    "start": "node server.js",
+    "build": "echo 'Build complete'",
+    "lint": "node --check server.js && node --check api/livekit-token.js && node --check js/app.js && node --check js/voice.js"
+  },
+  "dependencies": {
+    "express": "^4.19.2",
+    "livekit-client": "^2.22.3",
+    "livekit-server-sdk": "^2.19.1",
+    "msedge-tts": "^2.0.4",
+    "ws": "^8.22.0"
+  }
 }

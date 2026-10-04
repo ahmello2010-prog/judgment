@@ -2,7 +2,13 @@
 // 🎙️ محرك الصوت المباشر لقاعة المحكمة (LiveKit + Built-in WebRTC Fallback)
 // يدير الاتصال الصوتي وصلاحيات المايك بناءً على حالة الجولة في Firebase
 // ==========================================================================
-import { ref, onValue, update, set, remove } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+import {
+    ref,
+    onValue,
+    update,
+    set,
+    remove
+} from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
 
 let LiveKitClientModule = null;
 
@@ -13,9 +19,7 @@ async function loadLiveKitClient() {
         return LiveKitClientModule;
     } catch (e) {
         try {
-            LiveKitClientModule = await import(
-                "https://cdn.jsdelivr.net/npm/livekit-client@2.9.1/dist/livekit-client.esm.mjs"
-            );
+            LiveKitClientModule = await import("https://cdn.jsdelivr.net/npm/livekit-client@2.9.1/dist/livekit-client.esm.mjs");
             return LiveKitClientModule;
         } catch (err) {
             console.warn("Could not load LiveKit ESM module:", err);
@@ -430,7 +434,11 @@ class CourtVoiceEngine {
             // إذا كانت هناك مواجهة دليل جارية ولم يرد عليها المتهم بعد، يُفتح له المايك للتبرير الشفهي
             const evConf = gameState.active_evidence_confrontation;
             const evResp = gameState.evidence_response;
-            if (evConf && evConf.target_uid && (!evResp || !evResp.timestamp || evResp.timestamp < evConf.timestamp)) {
+            if (
+                evConf &&
+                evConf.target_uid &&
+                (!evResp || !evResp.timestamp || evResp.timestamp < evConf.timestamp)
+            ) {
                 this.evidenceTargetUID = evConf.target_uid;
             } else {
                 this.evidenceTargetUID = "none";
@@ -509,7 +517,8 @@ class CourtVoiceEngine {
         let requesterName = gameState.speak_request?.name || gameState.lastSpeakRequestName || "";
 
         if (!requesterUid && requesterName) {
-            requesterUid = Object.keys(this.playersMap).find((uid) => this.playersMap[uid] === requesterName) || null;
+            requesterUid =
+                Object.keys(this.playersMap).find((uid) => this.playersMap[uid] === requesterName) || null;
         }
 
         if (!requesterUid || requesterUid === this.myUid) return;
@@ -1135,7 +1144,9 @@ class CourtVoiceEngine {
 
             const isSpeaking = !!peerSt.speaking && !isMuted;
             const isAllowedSpeaker =
-                uid === this.activeSpeakerUID || uid === this.evidenceTargetUID || (isJudge && !isMuted);
+                uid === this.activeSpeakerUID ||
+                uid === this.evidenceTargetUID ||
+                (isJudge && !isMuted);
 
             badge.classList.remove("state-speaking", "state-allowed", "state-requested", "state-muted");
 
