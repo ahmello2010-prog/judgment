@@ -98,7 +98,10 @@ app.all("/api/livekit-token", (req, res) => livekitTokenHandler(req, res));
 app.all("/getLiveKitToken", (req, res) => livekitTokenHandler(req, res));
 
 // تقديم مكتبة livekit-client مباشرة من node_modules للواجهة الأمامية
-app.use("/vendor/livekit", express.static(path.join(__dirname, "node_modules/livekit-client/dist")));
+app.use(
+    "/vendor/livekit",
+    express.static(path.join(__dirname, "node_modules/livekit-client/dist"))
+);
 
 // Serve static assets from project root
 app.use(

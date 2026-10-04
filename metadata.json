@@ -1,0 +1,5 @@
+{
+  "name": "محكمة الأدوار",
+  "description": "محكمة الأدوار - لعبة التحقيق والاستراتيجية الذهنية",
+  "requestFramePermissions": ["microphone"]
+}
