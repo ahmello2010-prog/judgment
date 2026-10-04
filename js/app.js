@@ -580,7 +580,7 @@ async function loadAndDisplayCases() {
             innerHTML += `
                 <!-- حاوية الصورة المعبرة بتصميم متناسق ودائري الأطراف مع وجود حماية لو الصورة مش موجودة -->
                 <div style="width: 100%; max-width: 130px; aspect-ratio: 1; border-radius: 12px; overflow: hidden; margin-bottom: 12px; border: 1px solid rgba(213, 167, 92, 0.2); box-shadow: 0 4px 10px rgba(0,0,0,0.4);">
-                    <img src="${caseImage}" alt="${item.title}" style="width: 100%; height: 100%; object-fit: cover; display: block;" onerror="this.src='https://placehold.co{item.id}'">
+                    <img src="${caseImage}" alt="${item.title}" style="width: 100%; height: 100%; object-fit: cover; display: block;" onerror="this.src='img/logo.jpeg'">
                 </div>
 
                 <!-- عنوان القضية متموضع بالكامل في المنتصف بدون وصف -->
@@ -1041,6 +1041,7 @@ function listenToFinalLobby() {
             let myLawyerType = "none";
 
             // 🎭🔊 نمط الجولة الحالي وبطاقتي: يستخدمهما توجيه الارتجال وحارس سرية المتحدث الصوتي
+            window.currentGameState = gameState;
             window.currentGameMode = normalizeGameMode(gameState.gameMode);
             window.myCurrentRoleCard = myRoleCard;
             if (myRoleCard.secret_interest) registerForbiddenSpeech(myRoleCard.secret_interest);
@@ -1311,32 +1312,36 @@ function listenToFinalLobby() {
                     modal.style.setProperty("display", "flex", "important");
                     modal.className = "modal-overlay-active";
 
-                    // مستمع زر التأكيد الفعلي لمسح اسم اللاعب العادي من السيرفر والخروج الفوري لـ rooms.html
-                    document.getElementById("btn-player-confirm-exit").addEventListener("click", function () {
-                        modal.style.setProperty("display", "none", "important");
-                        modal.classList.remove("modal-overlay-active");
+                    const btnConfirmExit = document.getElementById("btn-player-confirm-exit");
+                    if (btnConfirmExit) {
+                        btnConfirmExit.addEventListener("click", function () {
+                            modal.style.setProperty("display", "none", "important");
+                            modal.classList.remove("modal-overlay-active");
 
-                        clearCourtTransientUI();
+                            clearCourtTransientUI();
 
-                        const playerKey = sessionStorage.getItem("myPlayerKeyInRoom");
-                        if (playerKey) {
-                            const exactPlayerPath = ref(db, "rooms/" + currentRoomCode + "/players/" + playerKey);
-                            remove(exactPlayerPath).then(() => {
-                                sessionStorage.removeItem("activeRoomCode");
-                                sessionStorage.removeItem("myPlayerKeyInRoom");
+                            const playerKey = sessionStorage.getItem("myPlayerKeyInRoom");
+                            if (playerKey) {
+                                const exactPlayerPath = ref(db, "rooms/" + currentRoomCode + "/players/" + playerKey);
+                                remove(exactPlayerPath).then(() => {
+                                    sessionStorage.removeItem("activeRoomCode");
+                                    sessionStorage.removeItem("myPlayerKeyInRoom");
+                                    navigateTo("rooms.html");
+                                });
+                            } else {
                                 navigateTo("rooms.html");
-                            });
-                        } else {
-                            navigateTo("rooms.html");
-                        }
-                    });
+                            }
+                        });
+                    }
 
-                    // زر التراجع وإغلاق المودال
-                    document.getElementById("btn-player-cancel-exit").addEventListener("click", function () {
-                        modal.style.setProperty("display", "none", "important");
-                        modal.classList.remove("modal-overlay-active");
-                        if (btnModalClose) btnModalClose.style.setProperty("display", "block", "important");
-                    });
+                    const btnCancelExit = document.getElementById("btn-player-cancel-exit");
+                    if (btnCancelExit) {
+                        btnCancelExit.addEventListener("click", function () {
+                            modal.style.setProperty("display", "none", "important");
+                            modal.classList.remove("modal-overlay-active");
+                            if (btnModalClose) btnModalClose.style.setProperty("display", "block", "important");
+                        });
+                    }
                 };
 
                 if (!window.hasLobbyPopstateListenerAttached) {
@@ -2363,6 +2368,8 @@ function runLobbyLoadingEngine(callback) {
         return;
     }
 
+    window.__lobbyEngineStarted = true;
+
     // فتح شاشة اللودينج في الصدارة المطلقة
     loadingScreen.style.display = "flex";
     loadingScreen.style.opacity = "1";
@@ -2504,7 +2511,7 @@ document.addEventListener("DOMContentLoaded", function () {
                     }
                 }
             } else {
-                clearSessionAndRedirect();
+                clearSessionAndDestroyLocalMemory();
             }
         });
     };
@@ -2602,9 +2609,11 @@ document.addEventListener("DOMContentLoaded", function () {
 
             // اصطياد عناصر المودال الداعمة المكتوبة في الـ HTML الأصلي الخاص بك
             const modalTitle =
-                document.getElementById("modal-alert-title") || document.querySelector("#host-exit-modal h2");
+                document.querySelector("#host-exit-modal h2") || document.getElementById("modal-alert-title");
             const modalMessage =
-                document.getElementById("modal-alert-message") || document.querySelector("#host-exit-modal p");
+                document.querySelector("#host-exit-modal p") ||
+                document.querySelector("#host-exit-modal div[style*='Harmattan']") ||
+                document.getElementById("modal-alert-message");
 
             if (isHost) {
                 // [وضعية الأدمن]: نسف وتدمير جماعي للغرفة أونلاين
@@ -4482,13 +4491,12 @@ function triggerKillFeedAlert(alertText, isJudgeReveal = false, options = {}) {
     const isPrivateLawyerAlert =
         alertText.startsWith("سؤال للادعاء") || alertText.startsWith("🚨 تنبيه: لقد نفدت جميع الأسئلة");
 
-    // سحب رتبة اللاعب الحالي من الذاكرة لضمان المطابقة
-    const myPlayerKey = sessionStorage.getItem("myPlayerKeyInRoom");
+    const activeRoleCard = window.myCurrentRoleCard || {};
 
     // إذا كان الإشعار خاصاً بالتحقيق، ويستقبله جهاز لاعب آخر (غير محامي المحكمة)، يتم حظره فوراً ومنع بنائه
     if (isPrivateLawyerAlert && window.location.pathname.includes("game.html")) {
         // فحص إضافي: القاضي وبقية المشتبه بهم يخرجون من الدالة ولا يرون هذا الشريط السينمائي نهائياً
-        if (myRoleCard.role_type !== "lawyer" || !myRoleCard.role_name.includes("ادعاء")) {
+        if (activeRoleCard.role_type !== "lawyer" || !String(activeRoleCard.role_name || "").includes("ادعاء")) {
             return;
         }
     }
