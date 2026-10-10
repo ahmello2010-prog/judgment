@@ -673,7 +673,9 @@ function activateCasesClickEngine() {
                                             activeCase.roles_pool.real_guilty.secret_interest ||
                                             "تضليل القاضي لتنجو بجريمتك.",
                                         is_guilty: true,
-                                        role_type: "suspect"
+                                        role_type: "suspect",
+                                        radar_choices: activeCase.roles_pool.real_guilty.radar_choices || [],
+                                        radar_correct_choice: null
                                     };
                                     console.log(
                                         "🎲 النتيجة الحركية للخلط: حقن كارت (الجاني الحقيقي الفعلي) بنسبة 36%."
@@ -689,7 +691,9 @@ function activateCasesClickEngine() {
                                             public_story: randomSuspect.public_story,
                                             secret_interest: randomSuspect.secret_interest, // جريمة جانبية حقيقية من الـ JSON
                                             is_guilty: false,
-                                            role_type: "suspect"
+                                            role_type: "suspect",
+                                            radar_choices: randomSuspect.radar_choices || [],
+                                            radar_correct_choice: randomSuspect.radar_correct_choice || null
                                         };
                                         console.log(
                                             `🎲 النتيجة الحركية للخلط: حقن كارت مشتبه به بجريمة جانبية (${randomSuspect.role_name}) بنسبة 32%.`
@@ -701,7 +705,9 @@ function activateCasesClickEngine() {
                                             public_story: activeCase.roles_pool.real_guilty.public_story,
                                             secret_interest: activeCase.roles_pool.real_guilty.secret_interest,
                                             is_guilty: true,
-                                            role_type: "suspect"
+                                            role_type: "suspect",
+                                            radar_choices: activeCase.roles_pool.real_guilty.radar_choices || [],
+                                            radar_correct_choice: null
                                         };
                                     }
                                 } else {
@@ -710,6 +716,18 @@ function activateCasesClickEngine() {
                                     if (suspectsPool.length > 0) {
                                         const randomSuspect =
                                             suspectsPool[Math.floor(Math.random() * suspectsPool.length)];
+                                        // بناء 4 اختيارات مضللة كلها خاطئة تماماً (حذف التهمة الجانبية الفعلية واستبدالها باختيار مضلل رابع)
+                                        const wrongOnly = (randomSuspect.radar_choices || []).filter(
+                                            (ch) => ch !== randomSuspect.radar_correct_choice
+                                        );
+                                        const otherSuspect =
+                                            suspectsPool.find((s) => s.role_name !== randomSuspect.role_name) || {};
+                                        const extraDecoy = (otherSuspect.radar_choices || []).find(
+                                            (ch) => ch !== otherSuspect.radar_correct_choice && !wrongOnly.includes(ch)
+                                        );
+                                        const impostorChoices = extraDecoy
+                                            ? [...wrongOnly, extraDecoy].slice(0, 4)
+                                            : [...(randomSuspect.radar_choices || [])];
                                         selectedSuspectCard = {
                                             role_name: randomSuspect.role_name,
                                             public_story: randomSuspect.public_story,
@@ -717,7 +735,9 @@ function activateCasesClickEngine() {
                                             secret_interest:
                                                 "أنت بريء تماماً من التهمة الكبرى، ولكن عليك تلفيق الأكاذيب والحوارات البارعة ضد أدلة القاضي لتضليله وتشتيت الجلسة.",
                                             is_guilty: false,
-                                            role_type: "innocent_impostor" // رتبة مخصصة للنظام لتسهيل فرز النقاط لاحقاً
+                                            role_type: "innocent_impostor", // رتبة مخصصة للنظام لتسهيل فرز النقاط لاحقاً
+                                            radar_choices: impostorChoices,
+                                            radar_correct_choice: null
                                         };
                                         console.log(
                                             `🎲 النتيجة الحركية للخلط: حقن كارت (البريء تماماً المحتال) باستخدام مظهر (${randomSuspect.role_name}) بنسبة 32%.`
@@ -774,7 +794,9 @@ function activateCasesClickEngine() {
                                         activeCase.roles_pool.real_guilty.secret_interest ||
                                         "تضليل العدالة تماماً لتنجو بجريمتك.",
                                     is_guilty: true, // الهوية السحابية للمذنب
-                                    role_type: "suspect"
+                                    role_type: "suspect",
+                                    radar_choices: activeCase.roles_pool.real_guilty.radar_choices || [],
+                                    radar_correct_choice: null
                                 };
                                 finalRolesToDistribute.push(mainGuiltyCard); // 🔴 حقن فوري مباشر لضمان وجوده بالجلسة دائماً
 
@@ -789,6 +811,8 @@ function activateCasesClickEngine() {
                                     secret_interest: card.secret_interest,
                                     is_guilty: false,
                                     role_type: "suspect",
+                                    radar_choices: card.radar_choices || [],
+                                    radar_correct_choice: card.radar_correct_choice || null,
                                     // 🌟 [شبكة المعرفة]: تُنقل خاماً هنا فقط لتُحل لاحقاً بعد اكتمال التوزيع، ثم تُحذف
                                     linked_to: card.linked_to || null,
                                     link_type: card.link_type || null,
@@ -828,6 +852,10 @@ function activateCasesClickEngine() {
                                             : "إثبات البراءة النزيهة.",
                                         is_guilty: false, // جميع المتبقين أبرياء قطعياً
                                         role_type: "suspect",
+                                        radar_choices: characterCard ? characterCard.radar_choices || [] : [],
+                                        radar_correct_choice: characterCard
+                                            ? characterCard.radar_correct_choice || null
+                                            : null,
                                         // 🌟 [شبكة المعرفة]: تُنقل خاماً هنا فقط لتُحل لاحقاً بعد اكتمال التوزيع، ثم تُحذف
                                         linked_to: characterCard ? characterCard.linked_to || null : null,
                                         link_type: characterCard ? characterCard.link_type || null : null,
@@ -990,7 +1018,8 @@ function listenToFinalLobby() {
                     if (
                         key.startsWith("locked_target_") ||
                         key.startsWith("locked_accuse_target_") ||
-                        key.startsWith("locked_radar_target_")
+                        key.startsWith("locked_radar_target_") ||
+                        key.startsWith("failed_radar_")
                     ) {
                         localStorage.removeItem(key);
                     }
@@ -4453,7 +4482,12 @@ function staleCourtEventsReset() {
         private_network_message: null,
         network_reveal: null,
         lastSpeakRequestName: null,
-        requestTimestamp: null
+        requestTimestamp: null,
+        radar_revealed_players: null,
+        radar_failed_attempts: null,
+        radarSelectedUID: null,
+        radarSelectedName: null,
+        radarTimestamp: null
     };
 }
 
@@ -4562,82 +4596,62 @@ function openJudgeRadarModal(playersList, assignments, gameStateRef) {
     const modal = document.getElementById("custom-alert-modal");
     if (!modal) return;
 
+    // 🔒 حارس الصلاحية: الرادار متاح للقاضي ومحامي النيابة فقط، وليس لمحامي الدفاع أو المشتبه بهم
+    const myRoleCard = assignments[mySecretUID] || {};
+    if (myRoleCard.role_type !== "judge" && !(myRoleCard.role_type === "lawyer" && !isDefenseLawyerCard(myRoleCard))) {
+        return;
+    }
+
     get(gameStateRef).then((stateSnap) => {
         const currentGameState = stateSnap.val() || {};
         const activeCaseId = currentGameState.caseId || "none";
+        const radarRevealedPlayers = currentGameState.radar_revealed_players || {};
+        const myFailedMap =
+            (currentGameState.radar_failed_attempts && currentGameState.radar_failed_attempts[mySecretUID]) || {};
 
         fetch("cases.json")
             .then((res) => res.json())
             .then((allCases) => {
                 const activeCase = allCases.find((c) => c.id == activeCaseId);
-                // 🎭 في وضع الارتجال لا تُعرض أدلة مكتوبة مسبقاً
-                const improvisationRadar = isImprovisationMode(currentGameState);
-                const evidencePool =
-                    !improvisationRadar && activeCase && activeCase.lawyers_evidence_pool
-                        ? activeCase.lawyers_evidence_pool["court_evidence"] || []
-                        : [];
 
                 document.getElementById("modal-alert-title").textContent = "كاشف الشبهات";
 
                 let htmlContent = `
                     <div style="text-align: right; font-family: 'Alexandria', sans-serif; direction: rtl;">
-                        <label style="color: var(--gold-glow); font-size: 0.8rem; font-weight: 700; display: block; margin-bottom: 6px;">1. اختر اللاعب المستهدف:</label>
-                        <select id="court-target-player" style="width: 100%; padding: 10px; background: #161c26; color: #fff; border: 1px solid var(--gold-glow); border-radius: 6px; font-family: 'Alexandria'; font-size: 0.85rem; outline: none; margin-bottom: 15px;">
+                        <label style="color: var(--gold-glow); font-size: 0.8rem; font-weight: 700; display: block; margin-bottom: 6px;">1. اختر الشخصية التي تريد فحصها:</label>
+                        <select id="court-target-player" style="width: 100%; padding: 10px; background: #161c26; color: #fff; border: 1px solid var(--gold-glow); border-radius: 6px; font-family: 'Alexandria'; font-size: 0.85rem; outline: none; margin-bottom: 14px;">
                 `;
 
                 playersList.forEach((p) => {
                     const card = assignments[p.id] || {};
                     if (card.role_type !== "judge" && card.role_type !== "lawyer") {
-                        htmlContent += `<option value="${p.id}">${p.name} (${card.role_name})</option>`;
+                        const isRevealed =
+                            radarRevealedPlayers[p.id] === true ||
+                            localStorage.getItem(`locked_radar_target_${p.id}_${currentRoomCode}`) === "true";
+                        const isFailedForMe =
+                            myFailedMap[p.id] === true ||
+                            localStorage.getItem(`failed_radar_${mySecretUID}_target_${p.id}_${currentRoomCode}`) ===
+                                "true";
+                        const statusTag = isRevealed ? " ✅ (انكشفت شبهته)" : isFailedForMe ? " 🔒 (مغلق لك)" : "";
+                        htmlContent += `<option value="${escapeHtml(p.id)}">${escapeHtml(p.name)} (${escapeHtml(card.role_name)})${statusTag}</option>`;
                     }
                 });
 
-                // 🌟 [استهداف بالمعرّف]: دالة مساعدة لتوليد قائمة أدلة الدليل المطابقة حصرياً للاعب مستهدف معين
-                const buildFilteredEvidenceOptions = (targetUID) => {
-                    const targetCard = assignments[targetUID] || {};
-                    const matched = evidencePool.filter((item) => resolveEvidenceItemMatchGlobal(item, targetCard));
-                    const poolToRender = matched.length > 0 ? matched : evidencePool;
-                    if (poolToRender.length === 0) {
-                        return improvisationRadar
-                            ? `<option value="none">وضع الارتجال: لا أدلة مكتوبة، استند إلى استجوابك</option>`
-                            : `<option value="none">لا توجد أدلة مسجلة لهذه القضية حالياً</option>`;
-                    }
-                    return poolToRender
-                        .map((item, index) => `<option value="evidence_${index + 1}">${item.text}</option>`)
-                        .join("");
-                };
-
-                const firstSuspectUID =
-                    playersList.find((p) => {
-                        const c = assignments[p.id] || {};
-                        return c.role_type !== "judge" && c.role_type !== "lawyer";
-                    })?.id || "";
-
                 htmlContent += `
                         </select>
 
-                        <label style="color: var(--gold-glow); font-size: 0.8rem; font-weight: 700; display: block; margin-bottom: 6px;">2. اختار الدليل الذي ساعدك:</label>
-                        <select id="court-verdict-type" style="width: 100%; padding: 10px; background: #161c26; color: #fff; border: 1px solid var(--gold-glow); border-radius: 6px; font-family: 'Alexandria'; font-size: 0.85rem; outline: none; margin-bottom: 15px;">
-                `;
+                        <label style="color: var(--gold-glow); font-size: 0.8rem; font-weight: 700; display: block; margin-bottom: 8px;">2. اختر التهمة الجانبية التي تعتقد أن الشخصية ارتكبتها:</label>
+                        <div id="radar-choices-container" style="display: flex; flex-direction: column; gap: 8px; margin-bottom: 12px;"></div>
 
-                htmlContent += buildFilteredEvidenceOptions(firstSuspectUID);
-
-                htmlContent += `
-                        </select>
-
-                        <label style="color: var(--gold-glow); font-size: 0.8rem; font-weight: 700; display: block; margin-bottom: 6px;">3. اكتب الشبهة الجانبية المتوقعة (من 8 إلى 25 حرفاً):</label>
-                        <input type="text" id="judge-radar-input" placeholder="اكتب الشبهة التي قد تشك فيها" maxlength="25" style="width:100%; padding:10px; background:#161c26; color:#fff; border:1px solid var(--gold-glow); border-radius:6px; font-family:'Alexandria'; font-size:0.75rem; outline:none; text-align:center; margin-bottom:4px;">
-
-                        <div id="radar-status-message" style="font-size: 0.75rem; font-weight: 700; text-align: center; margin-bottom: 15px; height: 18px; color: #fff;">بانتظار كتابة الشبهة وإتمام الفحص...</div>
+                        <div id="radar-status-message" style="font-size: 0.78rem; font-weight: 700; text-align: center; margin-bottom: 14px; min-height: 22px; line-height: 1.6; color: #fff;"></div>
 
                         <div style="display: flex; gap: 12px; width: 100%;">
-                            <button id="btn-radar-submit-reveal" disabled style="flex: 1; padding: 12px; background: #131a18; border: 2px solid #52ff7d; color: #52ff7d; font-family: 'Alexandria'; font-weight: 700; border-radius: 6px; cursor: not-allowed; opacity: 0.4;">🔒 الكشف</button>
-                            <button id="btn-radar-surrender" style="flex: 1; padding: 12px; background: #1a1315; border: 2px solid #ff5252; color: #ff5252; font-family: 'Alexandria'; font-weight: 700; border-radius: 6px; cursor: pointer;">الإستسلام</button>
+                            <button id="btn-radar-submit-reveal" disabled style="flex: 1; padding: 12px; background: #131a18; border: 2px solid #52ff7d; color: #52ff7d; font-family: 'Alexandria'; font-weight: 700; border-radius: 6px; cursor: not-allowed; opacity: 0.4;">🔒 تأكيد الفحص</button>
+                            <button id="btn-radar-surrender" style="flex: 1; padding: 12px; background: #1a1315; border: 2px solid #ff5252; color: #ff5252; font-family: 'Alexandria'; font-weight: 700; border-radius: 6px; cursor: pointer;">إغلاق</button>
                         </div>
                     </div>
                 `;
 
-                // حقن الكود بالكامل
                 document.getElementById("modal-alert-message").innerHTML = htmlContent;
 
                 // حجب زر الإغلاق الموحد القديم
@@ -4648,25 +4662,200 @@ function openJudgeRadarModal(playersList, assignments, gameStateRef) {
                 modal.style.setProperty("display", "flex", "important");
                 modal.className = "modal-overlay-active";
 
-                // 🌟 [الربط الفوري والحاسم]: لقط الأزرار وتأمين حدث الإغلاق من المنبع لمنع التبخر الرقمي
-                const inputField = document.getElementById("judge-radar-input");
+                const choicesContainer = document.getElementById("radar-choices-container");
                 const statusMsg = document.getElementById("radar-status-message");
                 const btnReveal = document.getElementById("btn-radar-submit-reveal");
                 const btnSurrender = document.getElementById("btn-radar-surrender");
                 const targetPlayerSelect = document.getElementById("court-target-player");
-                const verdictTypeSelect = document.getElementById("court-verdict-type");
 
-                // 🌟 [استهداف حي]: إعادة توليد قائمة الأدلة المطابقة فور تغيير اللاعب المستهدف
-                if (targetPlayerSelect && verdictTypeSelect) {
+                let selectedChoiceText = null;
+
+                // فحص موحد: هل الشخصية بريئة تماماً ولا تملك أي جريمة جانبية حقيقية؟
+                const isCompletelyInnocentCard = (card) => {
+                    if (!card) return true;
+                    const isGuilty = card.is_guilty === true || card.is_guilty === "true";
+                    if (isGuilty) return false;
+                    if (card.role_type === "innocent_impostor") return true;
+                    const secret = String(card.secret_interest || "").trim();
+                    if (!secret) return true;
+                    if (
+                        secret.includes("إثبات البراءة النزيهة") ||
+                        secret.includes("تلفيق الأكاذيب والحوارات") ||
+                        secret.includes("لا توجد مصلحة سرية")
+                    ) {
+                        return true;
+                    }
+                    // إذا لم تتضمن المصلحة السرية جريمة جانبية فعلية محددة بين قوسين ولا يوجد اختيار صحيح مسجل
+                    if (!extractSideCrime(secret) && !card.radar_correct_choice) {
+                        return true;
+                    }
+                    return false;
+                };
+
+                // دالة استخراج الاختيارات الأربعة والتهمة الصحيحة للشخصية المستهدفة من الكارت أو من ملف القضية
+                const resolveTargetRadarData = (targetUID) => {
+                    const targetCard = assignments[targetUID] || {};
+                    const isGuilty = targetCard.is_guilty === true || targetCard.is_guilty === "true";
+                    const isCompletelyInnocent = isCompletelyInnocentCard(targetCard);
+
+                    let rawChoices = Array.isArray(targetCard.radar_choices) ? [...targetCard.radar_choices] : [];
+                    let correctChoice = targetCard.radar_correct_choice || null;
+
+                    if (rawChoices.length === 0 && activeCase) {
+                        if (isGuilty && activeCase.roles_pool && activeCase.roles_pool.real_guilty) {
+                            rawChoices = [...(activeCase.roles_pool.real_guilty.radar_choices || [])];
+                            correctChoice = null;
+                        } else {
+                            const matchedSuspect = (activeCase.suspects_pool || []).find(
+                                (s) => s.role_name === targetCard.role_name
+                            );
+                            if (matchedSuspect) {
+                                rawChoices = [...(matchedSuspect.radar_choices || [])];
+                                correctChoice = isCompletelyInnocent
+                                    ? null
+                                    : matchedSuspect.radar_correct_choice || null;
+                            } else if (Array.isArray(activeCase.suspects_pool) && activeCase.suspects_pool.length > 0) {
+                                rawChoices = [...(activeCase.suspects_pool[0].radar_choices || [])];
+                                correctChoice = null;
+                            }
+                        }
+                    }
+
+                    // القاعدة الموحدة للجاني الحقيقي وللبريء تماماً (الذي لا يملك أي جريمة جانبية):
+                    // كل الاختيارات الأربعة خاطئة دائماً مهما اختار اللاعب، دون تمييز بينهما أو كشف لهويتهما
+                    if (isGuilty || isCompletelyInnocent) {
+                        correctChoice = null;
+                    }
+
+                    return {
+                        choices: rawChoices,
+                        correctChoice,
+                        isGuilty,
+                        isCompletelyInnocent,
+                        hasValidSideCrime: !isGuilty && !isCompletelyInnocent && !!correctChoice,
+                        secretInterest: targetCard.secret_interest || ""
+                    };
+                };
+
+                // خلط عشوائي متوازن (Fisher-Yates) لعرض 4 اختيارات بترتيب عشوائي عند الفحص
+                const shuffleChoices = (arr) => {
+                    const copy = [...arr];
+                    for (let i = copy.length - 1; i > 0; i--) {
+                        const j = Math.floor(Math.random() * (i + 1));
+                        [copy[i], copy[j]] = [copy[j], copy[i]];
+                    }
+                    return copy.slice(0, 4);
+                };
+
+                const renderTargetRadarState = (targetUID) => {
+                    selectedChoiceText = null;
+                    choicesContainer.innerHTML = "";
+                    btnReveal.disabled = true;
+                    btnReveal.style.opacity = "0.4";
+                    btnReveal.style.cursor = "not-allowed";
+                    btnReveal.textContent = "🔒 تأكيد الفحص";
+
+                    if (!targetUID) {
+                        statusMsg.textContent = "لا يوجد مشتبه بهم متاحون للفحص.";
+                        statusMsg.style.color = "#ffb34d";
+                        return;
+                    }
+
+                    const isAlreadyRevealed =
+                        radarRevealedPlayers[targetUID] === true ||
+                        localStorage.getItem(`locked_radar_target_${targetUID}_${currentRoomCode}`) === "true";
+
+                    const isAlreadyFailedForMe =
+                        myFailedMap[targetUID] === true ||
+                        localStorage.getItem(`failed_radar_${mySecretUID}_target_${targetUID}_${currentRoomCode}`) ===
+                            "true";
+
+                    const radarData = resolveTargetRadarData(targetUID);
+
+                    // حالة 1: تم كشف الجريمة الجانبية لهذه الشخصية مسبقاً بنجاح (فقط للشخصيات التي تملك جريمة جانبية فعلية)
+                    if (isAlreadyRevealed && radarData.hasValidSideCrime) {
+                        choicesContainer.innerHTML = `
+                            <div style="background: rgba(82, 255, 125, 0.08); border: 1.5px solid #52ff7d; border-radius: 8px; padding: 12px; color: #fff; font-family: 'Harmattan', sans-serif; font-size: 1.1rem; line-height: 1.5;">
+                                <strong style="color: #52ff7d; font-family: 'Alexandria', sans-serif; font-size: 0.78rem; display: block; margin-bottom: 6px;">✅ التهمة الجانبية المكشوفة لهذه الشخصية:</strong>
+                                ${escapeHtml(radarData.secretInterest)}
+                            </div>
+                        `;
+                        statusMsg.textContent = "✅ تم كشف التهمة الجانبية الفعلية لهذه الشخصية بنجاح.";
+                        statusMsg.style.color = "#52ff7d";
+                        btnReveal.textContent = "✅ تم الكشف";
+                        return;
+                    }
+
+                    // حالة 2: أخطأ هذا اللاعب (القاضي أو محامي النيابة) سابقاً في فحص هذه الشخصية — تُغلق فرصته ضدها
+                    if (isAlreadyFailedForMe) {
+                        choicesContainer.innerHTML = `
+                            <div style="background: rgba(255, 82, 82, 0.08); border: 1.5px dashed #ff5252; border-radius: 8px; padding: 12px; color: #ffb3b3; font-size: 0.8rem; text-align: center; line-height: 1.6;">
+                                🔒 لقد استنفدت فرصتك في فحص هذه الشخصية بعد اختيار غير مطابق، ولا يمكنك إعادة المحاولة معها.
+                            </div>
+                        `;
+                        statusMsg.textContent = "❌ فرصة استخدام الرادار ضد هذه الشخصية مغلقة بالنسبة لك.";
+                        statusMsg.style.color = "#ff5252";
+                        btnReveal.textContent = "🔒 مغلق";
+                        return;
+                    }
+
+                    // حالة 3: الشخصية متاحة للفحص — عرض 4 اختيارات عشوائية
+                    const shuffled = shuffleChoices(radarData.choices);
+                    if (shuffled.length === 0) {
+                        statusMsg.textContent = "لا تتوفر اختيارات فحص لهذه الشخصية حالياً.";
+                        statusMsg.style.color = "#ffb34d";
+                        return;
+                    }
+
+                    statusMsg.textContent = "اختر إحدى الشبهات الأربع ثم اضغط على (تأكيد الفحص)...";
+                    statusMsg.style.color = "#cfd8e3";
+
+                    shuffled.forEach((choiceText) => {
+                        const choiceBtn = document.createElement("button");
+                        choiceBtn.type = "button";
+                        choiceBtn.className = "radar-choice-option-btn";
+                        choiceBtn.textContent = choiceText;
+                        choiceBtn.style.cssText = `
+                            width: 100%; padding: 10px 12px; background: #161c26; color: #fff;
+                            border: 1.5px solid rgba(213, 167, 92, 0.45); border-radius: 8px;
+                            font-family: 'Alexandria', sans-serif; font-size: 0.78rem; font-weight: 600;
+                            text-align: right; line-height: 1.5; cursor: pointer; transition: all 0.2s ease;
+                        `;
+
+                        choiceBtn.addEventListener("click", () => {
+                            selectedChoiceText = choiceText;
+                            choicesContainer.querySelectorAll(".radar-choice-option-btn").forEach((b) => {
+                                b.style.borderColor = "rgba(213, 167, 92, 0.45)";
+                                b.style.background = "#161c26";
+                                b.style.color = "#fff";
+                            });
+                            choiceBtn.style.borderColor = "#52ff7d";
+                            choiceBtn.style.background = "rgba(82, 255, 125, 0.12)";
+                            choiceBtn.style.color = "#52ff7d";
+
+                            btnReveal.disabled = false;
+                            btnReveal.style.opacity = "1";
+                            btnReveal.style.cursor = "pointer";
+                            btnReveal.textContent = "📡 تأكيد الفحص";
+                            statusMsg.textContent = "اضغط على (تأكيد الفحص) لحسم اختيارك...";
+                            statusMsg.style.color = "var(--gold-glow)";
+                        });
+
+                        choicesContainer.appendChild(choiceBtn);
+                    });
+                };
+
+                if (targetPlayerSelect) {
+                    renderTargetRadarState(targetPlayerSelect.value);
                     targetPlayerSelect.addEventListener("change", function () {
-                        verdictTypeSelect.innerHTML = buildFilteredEvidenceOptions(targetPlayerSelect.value);
+                        renderTargetRadarState(targetPlayerSelect.value);
                     });
                 }
 
                 if (btnSurrender) {
                     btnSurrender.addEventListener("click", function (event) {
                         event.preventDefault();
-                        event.stopPropagation(); // كسر الـ Bubbling نهائياً وحماية الرتب
+                        event.stopPropagation();
 
                         modal.style.setProperty("display", "none", "important");
                         modal.className = "modal-overlay-hidden";
@@ -4675,86 +4864,88 @@ function openJudgeRadarModal(playersList, assignments, gameStateRef) {
                     });
                 }
 
-                // محرك الفحص والمطابقة الحية (شغال 100% بدون أي تجميد)
-                inputField.addEventListener("input", function () {
-                    const textVal = inputField.value.trim();
-                    const targetUID = document.getElementById("court-target-player").value;
-                    const targetRoleInfo = assignments[targetUID] || {};
-                    const secretInterestText = targetRoleInfo.secret_interest || "";
-
-                    if (textVal.length < 8) {
-                        statusMsg.textContent = "⚠️ الشبهة قصيرة جداً (الحد الأدنى 8 حروف لصياغة التهمة)";
-                        statusMsg.style.color = "#ffb34d";
-                        btnReveal.disabled = true;
-                        btnReveal.style.opacity = "0.4";
-                        btnReveal.style.cursor = "not-allowed";
-                        btnReveal.textContent = "🔒 الكشف";
-                        return;
-                    }
-
-                    if (
-                        textVal.includes("بريء") ||
-                        textVal.includes("براءة") ||
-                        textVal.includes("البريء") ||
-                        textVal.includes("البراءة")
-                    ) {
-                        statusMsg.textContent = "❌ المنصة مخصصة لكشف التهمة الجنائية السرية وليس لإثبات البراءة!";
-                        statusMsg.style.color = "#ff5252";
-                        btnReveal.disabled = true;
-                        btnReveal.style.opacity = "0.4";
-                        btnReveal.style.cursor = "not-allowed";
-                        btnReveal.textContent = "🔒 اكتب الشبهة";
-                        return;
-                    }
-
-                    if (secretInterestText.includes(textVal) || textVal.includes(secretInterestText)) {
-                        statusMsg.textContent = "✅ رصد دقيق! الشبهة متطابقة مع السجلات السرية المخفية للاعب.";
-                        statusMsg.style.color = "#52ff7d";
-                        btnReveal.disabled = false;
-                        btnReveal.style.opacity = "1";
-                        btnReveal.style.cursor = "pointer";
-                        btnReveal.textContent = "تسجيل الشبهة الجانبية";
-                    } else {
-                        statusMsg.textContent = "❌ رصد خاطئ! لا توجد تهمة متطابقة في سجلات اللاعب السرية.";
-                        statusMsg.style.color = "#ff5252";
-                        btnReveal.disabled = true;
-                        btnReveal.style.opacity = "0.4";
-                        btnReveal.style.cursor = "not-allowed";
-                        btnReveal.textContent = "خطأ في الكشف";
-                    }
-                });
-
-                // ربط مستمع التأكيد السحابي للرادار
+                // تنفيذ الفحص عند الضغط على زر التأكيد
                 btnReveal.addEventListener("click", () => {
-                    if (btnReveal.disabled) return;
-                    const targetUID = document.getElementById("court-target-player").value;
-                    const targetSelect = document.getElementById("court-target-player");
-                    const targetName = targetSelect.options[targetSelect.selectedIndex].text.split(" (")[0];
+                    if (btnReveal.disabled || !selectedChoiceText) return;
+                    const targetUID = targetPlayerSelect ? targetPlayerSelect.value : "";
+                    if (!targetUID) return;
 
-                    modal.style.setProperty("display", "none", "important");
-                    if (globalCloseBtn) globalCloseBtn.style.setProperty("display", "block", "important");
+                    const targetCard = assignments[targetUID] || {};
+                    const targetPlayerObj = playersList.find((p) => p.id === targetUID);
+                    const targetName = targetPlayerObj ? targetPlayerObj.name : "المتهم";
 
-                    // 1️⃣ حفظ محلي احتياطي للجهاز الحالي
-                    localStorage.setItem(`locked_radar_target_${targetUID}_${currentRoomCode}`, "true");
+                    const radarData = resolveTargetRadarData(targetUID);
+                    // الجاني الحقيقي والبريء تماماً كلاهما لا يملكان radar_correct_choice وتكون النتيجة خاطئة دائماً مهما اختار اللاعب
+                    const isCorrectPick =
+                        radarData.hasValidSideCrime && selectedChoiceText.trim() === radarData.correctChoice.trim();
 
-                    const myRoleCard = assignments[mySecretUID] || {};
-                    const isLawyerAction = myRoleCard.role_type === "lawyer";
-                    const alertIdentityText = isLawyerAction
-                        ? `📡 محامي الادعاء (${myRoleCard.role_name}) التقط شبهة جانبية صحيحة بحق: ${targetName}`
-                        : `📡 سيادة القاضي التقط شبهة جانبية صحيحة بحق: ${targetName}`;
+                    btnReveal.disabled = true;
+                    btnReveal.style.opacity = "0.4";
+                    btnReveal.style.cursor = "not-allowed";
 
-                    // 2️⃣ 🌟 [التوصيل السحابي]: دفع معرف اللاعب الذي تم كشفه إلى السيرفر تحت حقل مخصص ليعلم به الجميع فوراً
-                    const sRef = ref(db, `rooms/${currentRoomCode}/game_state/radar_revealed_players/${targetUID}`);
-                    set(sRef, true).then(() => {
-                        // 3️⃣ تحديث التوقيت لبث الإشعار التيكر التلقائي
-                        update(gameStateRef, {
-                            radarSelectedUID: targetUID,
-                            radarSelectedName: targetName,
-                            radarTimestamp: Date.now()
-                        }).then(() => {
-                            triggerKillFeedAlert(alertIdentityText, true);
+                    if (isCorrectPick) {
+                        // ✅ إجابة صحيحة: كشف تفاصيل الجريمة الجانبية الفعلية للشخصية + بث سحابي
+                        radarRevealedPlayers[targetUID] = true;
+                        localStorage.setItem(`locked_radar_target_${targetUID}_${currentRoomCode}`, "true");
+
+                        const opt = targetPlayerSelect.querySelector(`option[value="${targetUID}"]`);
+                        if (opt && !opt.textContent.includes("✅")) {
+                            opt.textContent = `${targetName} (${targetCard.role_name || ""}) ✅ (انكشفت شبهته)`;
+                        }
+
+                        choicesContainer.innerHTML = `
+                            <div style="background: rgba(82, 255, 125, 0.1); border: 1.5px solid #52ff7d; border-radius: 8px; padding: 12px; color: #fff; font-family: 'Harmattan', sans-serif; font-size: 1.12rem; line-height: 1.55;">
+                                <strong style="color: #52ff7d; font-family: 'Alexandria', sans-serif; font-size: 0.8rem; display: block; margin-bottom: 6px;">✅ رصد مطابق! تفاصيل الجريمة الجانبية الفعلية:</strong>
+                                ${escapeHtml(radarData.secretInterest)}
+                            </div>
+                        `;
+                        statusMsg.textContent = "✅ أصبت! كشف الرادار تفاصيل التهمة الجانبية الفعلية لهذه الشخصية.";
+                        statusMsg.style.color = "#52ff7d";
+                        btnReveal.textContent = "✅ تم الكشف";
+
+                        const isLawyerAction = myRoleCard.role_type === "lawyer";
+                        const alertIdentityText = isLawyerAction
+                            ? `📡 محامي الادعاء (${myRoleCard.role_name}) التقط شبهة جانبية صحيحة بحق: ${targetName}`
+                            : `📡 سيادة القاضي التقط شبهة جانبية صحيحة بحق: ${targetName}`;
+
+                        const sRef = ref(db, `rooms/${currentRoomCode}/game_state/radar_revealed_players/${targetUID}`);
+                        set(sRef, true).then(() => {
+                            update(gameStateRef, {
+                                radarSelectedUID: targetUID,
+                                radarSelectedName: targetName,
+                                radarTimestamp: Date.now()
+                            }).then(() => {
+                                triggerKillFeedAlert(alertIdentityText, true);
+                            });
                         });
-                    });
+                    } else {
+                        // ❌ إجابة خاطئة (أو الجاني الحقيقي): إغلاق فرصة استخدام الرادار ضد هذه الشخصية لهذا اللاعب
+                        myFailedMap[targetUID] = true;
+                        localStorage.setItem(
+                            `failed_radar_${mySecretUID}_target_${targetUID}_${currentRoomCode}`,
+                            "true"
+                        );
+
+                        const opt = targetPlayerSelect.querySelector(`option[value="${targetUID}"]`);
+                        if (opt && !opt.textContent.includes("🔒") && !opt.textContent.includes("✅")) {
+                            opt.textContent = `${targetName} (${targetCard.role_name || ""}) 🔒 (مغلق لك)`;
+                        }
+
+                        const failRef = ref(
+                            db,
+                            `rooms/${currentRoomCode}/game_state/radar_failed_attempts/${mySecretUID}/${targetUID}`
+                        );
+                        set(failRef, true).catch(() => {});
+
+                        choicesContainer.innerHTML = `
+                            <div style="background: rgba(255, 82, 82, 0.08); border: 1.5px dashed #ff5252; border-radius: 8px; padding: 12px; color: #ffb3b3; font-size: 0.8rem; text-align: center; line-height: 1.6;">
+                                ❌ فحص غير مطابق! لم تثبت هذه الشبهة في السجلات السرية للشخصية، وقد أُغلقت فرصة فحصها مجدداً بالنسبة لك.
+                            </div>
+                        `;
+                        statusMsg.textContent = "❌ اختيار خاطئ! أُغلقت فرصة استخدام الرادار ضد هذه الشخصية.";
+                        statusMsg.style.color = "#ff5252";
+                        btnReveal.textContent = "🔒 مغلق";
+                    }
                 });
             });
     });
@@ -5248,7 +5439,8 @@ const endCurrentCourtSession = (verdictOutcomeData) => {
         if (
             key.startsWith("locked_target_") ||
             key.startsWith("locked_accuse_target_") ||
-            key.startsWith("locked_radar_target_")
+            key.startsWith("locked_radar_target_") ||
+            key.startsWith("failed_radar_")
         ) {
             localStorage.removeItem(key);
         }

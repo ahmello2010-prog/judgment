@@ -51,6 +51,8 @@ export function distributeRoles(activeCase, playersList, gameMode = GAME_MODES.S
                 secret_interest: activeCase.roles_pool?.real_guilty?.secret_interest || "تضليل القاضي لتنجو بجريمتك.",
                 is_guilty: true,
                 role_type: "suspect",
+                radar_choices: activeCase.roles_pool?.real_guilty?.radar_choices || [],
+                radar_correct_choice: null,
                 claims: activeCase.roles_pool?.real_guilty?.claims || [],
                 character_context: activeCase.roles_pool?.real_guilty?.character_context || null
             };
@@ -65,6 +67,8 @@ export function distributeRoles(activeCase, playersList, gameMode = GAME_MODES.S
                     secret_interest: randomSuspect.secret_interest,
                     is_guilty: false,
                     role_type: "suspect",
+                    radar_choices: randomSuspect.radar_choices || [],
+                    radar_correct_choice: randomSuspect.radar_correct_choice || null,
                     claims: randomSuspect.claims || [],
                     character_context: randomSuspect.character_context || null
                 };
@@ -75,13 +79,25 @@ export function distributeRoles(activeCase, playersList, gameMode = GAME_MODES.S
                     secret_interest:
                         activeCase.roles_pool?.real_guilty?.secret_interest || "تضليل القاضي لتنجو بجريمتك.",
                     is_guilty: true,
-                    role_type: "suspect"
+                    role_type: "suspect",
+                    radar_choices: activeCase.roles_pool?.real_guilty?.radar_choices || [],
+                    radar_correct_choice: null
                 };
             }
         } else {
             // بريء محتال
             const suspects = activeCase.suspects_pool || [];
             const randomSuspect = suspects[Math.floor(Math.random() * suspects.length)] || {};
+            const wrongOnly = (randomSuspect.radar_choices || []).filter(
+                (ch) => ch !== randomSuspect.radar_correct_choice
+            );
+            const otherSuspect = suspects.find((s) => s.role_name !== randomSuspect.role_name) || {};
+            const extraDecoy = (otherSuspect.radar_choices || []).find(
+                (ch) => ch !== otherSuspect.radar_correct_choice && !wrongOnly.includes(ch)
+            );
+            const impostorChoices = extraDecoy
+                ? [...wrongOnly, extraDecoy].slice(0, 4)
+                : [...(randomSuspect.radar_choices || [])];
             selectedSuspectCard = {
                 role_name: randomSuspect.role_name || "مشتبه به غامض",
                 public_story: randomSuspect.public_story || "",
@@ -89,6 +105,8 @@ export function distributeRoles(activeCase, playersList, gameMode = GAME_MODES.S
                     "أنت بريء تماماً من التهمة الكبرى، ولكن عليك تلفيق الأكاذيب والحوارات البارعة ضد أدلة القاضي لتضليله وتشتيت الجلسة.",
                 is_guilty: false,
                 role_type: "innocent_impostor",
+                radar_choices: impostorChoices,
+                radar_correct_choice: null,
                 claims: randomSuspect.claims || [],
                 character_context: randomSuspect.character_context || null
             };
@@ -143,6 +161,8 @@ export function distributeRoles(activeCase, playersList, gameMode = GAME_MODES.S
                 activeCase.roles_pool?.real_guilty?.secret_interest || "تضليل العدالة تماماً لتنجو بجريمتك.",
             is_guilty: true,
             role_type: "suspect",
+            radar_choices: activeCase.roles_pool?.real_guilty?.radar_choices || [],
+            radar_correct_choice: null,
             claims: activeCase.roles_pool?.real_guilty?.claims || [],
             character_context: activeCase.roles_pool?.real_guilty?.character_context || null
         });
@@ -154,6 +174,8 @@ export function distributeRoles(activeCase, playersList, gameMode = GAME_MODES.S
             secret_interest: card.secret_interest,
             is_guilty: false,
             role_type: "suspect",
+            radar_choices: card.radar_choices || [],
+            radar_correct_choice: card.radar_correct_choice || null,
             claims: card.claims || [],
             character_context: card.character_context || null
         }));
@@ -202,6 +224,8 @@ export function distributeRoles(activeCase, playersList, gameMode = GAME_MODES.S
             public_story: assignedRole.public_story,
             secret_interest: assignedRole.secret_interest,
             is_guilty: assignedRole.is_guilty,
+            radar_choices: assignedRole.radar_choices || [],
+            radar_correct_choice: assignedRole.radar_correct_choice || null,
             claims: assignedRole.claims || [],
             character_context: assignedRole.character_context || null,
             improvGuidance,
