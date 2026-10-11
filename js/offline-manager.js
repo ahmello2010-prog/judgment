@@ -104,7 +104,8 @@ export async function prepareOfflineAssets() {
             "/css/style.css",
             "/js/offline-engine.js",
             "/js/offline-manager.js",
-            "/js/app.js"
+            "/js/app.js",
+            "/js/scoring.js"
         ];
 
         const secondaryFiles = [

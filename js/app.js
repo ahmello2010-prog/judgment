@@ -22,11 +22,22 @@ import {
     isImprovisationMode,
     buildImprovisationGuidance,
     resolvePerformanceHelp,
-    escapeHtml
+    escapeHtml,
+    extractSideCrime
 } from "./improv.js";
 import "./soundtrack.js";
 import "./radio.js";
 import "./transitions.js";
+import {
+    isVerdictUnlocked,
+    earlyVerdictPoints,
+    prosecutorMirrorDelta,
+    radarBonus,
+    prosecutorPassivityDelta,
+    hasUsedRadar,
+    hasUsedAccusationPlatform,
+    accuseButtonState
+} from "./scoring.js";
 
 const navigateTo = (url) => {
     if (typeof window !== "undefined" && window.cinematicNavigate) {
@@ -610,7 +621,12 @@ function activateCasesClickEngine() {
             const gameState = snapshot.val();
             if (gameState && (gameState.status === "case_selected" || gameState.status === "go-to-game")) {
                 // ✅ تم التعديل هنا لـ go-to-game
-                update(gameStateRef, { status: "lobby", caseId: "none", ...staleCourtEventsReset() });
+                update(gameStateRef, {
+                    status: "lobby",
+                    caseId: "none",
+                    ...staleCourtEventsReset(),
+                    ...scoringRoundReset()
+                });
             }
         })
         .catch((err) => console.log("انتظار استقرار الاتصال..."));
@@ -906,6 +922,7 @@ function activateCasesClickEngine() {
                             update(gameStateRef, {
                                 status: "case_selected",
                                 ...staleCourtEventsReset(),
+                                ...scoringRoundReset(),
                                 caseId: caseId,
                                 assignments: assignments,
                                 interrogationsCount: 0,
@@ -1270,15 +1287,20 @@ function listenToFinalLobby() {
 
                     // ابحث عن دالة executeForceEndTrial بداخل كودك وحدث الـ update الأخير لها ليكون هكذا:
                     // 🌟 [شاشة النتائج الكبرى]: عدم تصفير الـ assignments أو الـ caseId هنا إطلاقاً - يجب أن تبقى حية لتُعرض في شاشة النتائج القادمة
-                    update(ref(db, "rooms/" + currentRoomCode + "/game_state"), {
-                        status: "game_over",
-                        ...staleCourtEventsReset(),
-                        last_verdict_outcome: { ended_reason: "forced_no_verdict" },
-                        court_lawyer_action: null,
-                        activeSpeakerUID: "none", // 🌟 تصفير المتحدث عند الإنهاء القسري
-                        isInterrogatingMode: false,
-                        interrogationsCount: 0
-                    });
+                    // 🌟 تسوية خصم عدم مشاركة محامي الادعاء مرة واحدة قبل إغلاق الجولة قسرياً
+                    settleProsecutorParticipation()
+                        .catch((err) => console.error("⚠️ فشلت تسوية مشاركة محامي الادعاء:", err))
+                        .then(() =>
+                            update(ref(db, "rooms/" + currentRoomCode + "/game_state"), {
+                                status: "game_over",
+                                ...staleCourtEventsReset(),
+                                last_verdict_outcome: { ended_reason: "forced_no_verdict" },
+                                court_lawyer_action: null,
+                                activeSpeakerUID: "none", // 🌟 تصفير المتحدث عند الإنهاء القسري
+                                isInterrogatingMode: false,
+                                interrogationsCount: 0
+                            })
+                        );
                 };
 
                 window.history.pushState({ noBack: true }, "");
@@ -3085,6 +3107,233 @@ function injectLawyerActionControls(
         listContainer.style.cssText =
             "display: flex; flex-direction: column; gap: 6px; max-height: 120px; overflow-y: auto; padding-left: 4px;";
 
+        // ======================================================================
+        // 🔒 منطق قفل واتهام محامي الادعاء — القواعد من scoring.js (نفس شرط الاستجوابين المطبق على القاضي)
+        // ======================================================================
+        const accuseStatusLine = document.createElement("div");
+        accuseStatusLine.id = "court-lawyer-accuse-status";
+        accuseStatusLine.style.cssText =
+            "font-family: 'Alexandria'; font-size: 0.68rem; color: #ffb34d; text-align: center; line-height: 1.5; display: none;";
+        const setAccuseStatus = (msg, color) => {
+            accuseStatusLine.textContent = msg || "";
+            accuseStatusLine.style.color = color || "#ffb34d";
+            accuseStatusLine.style.display = msg ? "block" : "none";
+        };
+
+        const accuseButtons = [];
+        let liveAccuseCtx = { interrogationsCount: 0, accusedTargets: {}, pendingJudgeAction: false };
+        const accuseLockKey = (uid) => `locked_accuse_target_${uid}_${currentRoomCode}`;
+        const accuseStateOf = (item) => {
+            const rec = liveAccuseCtx.accusedTargets[item.uid];
+            // السجل المرئي محلياً أثناء إرسالنا نحن لا يُعدّ قفلاً نهائياً حتى يتأكد نجاح الكتابة
+            const isOwnPending = (item.st.inFlight || item.st.unverified) && rec && rec.requestId === item.st.requestId;
+            return accuseButtonState({
+                interrogationsCount: liveAccuseCtx.interrogationsCount,
+                alreadyAccusedTarget:
+                    (!!rec && !isOwnPending) || localStorage.getItem(accuseLockKey(item.uid)) === "true",
+                pendingJudgeAction: liveAccuseCtx.pendingJudgeAction,
+                inFlight: item.st.inFlight,
+                unverified: item.st.unverified
+            });
+        };
+        const ACCUSE_UI = {
+            ready: { text: "🔴 اتهام", disabled: false },
+            locked_interrogations: { text: "🔒 بعد استجوابين", disabled: true },
+            pending_judge: { text: "⏳ بانتظار القاضي", disabled: true },
+            submitting: { text: "⏳ جارٍ الإرسال...", disabled: true },
+            unverified: { text: "🔄 تحقق من الإرسال", disabled: false },
+            locked_final: { text: "🔒 تم الاتهام", disabled: true }
+        };
+        const paintAccuseButton = (item) => {
+            const state = accuseStateOf(item);
+            const ui = ACCUSE_UI[state];
+            item.btn.textContent = ui.text;
+            item.btn.disabled = ui.disabled;
+            item.btn.dataset.accuseState = state;
+            item.btn.style.opacity = ui.disabled ? "0.4" : "1";
+            item.btn.style.cursor = ui.disabled ? "not-allowed" : "pointer";
+        };
+        const refreshAccuseButtons = () => accuseButtons.forEach(paintAccuseButton);
+
+        // مستمع حي واحد لحالة الجلسة: عدد الاستجوابات + سجلات الاتهام المؤكدة + وجود اتهام بانتظار القاضي
+        if (window.__courtAccuseUnsub) {
+            try {
+                window.__courtAccuseUnsub();
+            } catch (e) {
+                /* تجاهل */
+            }
+        }
+        window.__courtAccuseUnsub = onValue(gameStateRef, (liveSnap) => {
+            const gs = liveSnap.val() || {};
+            liveAccuseCtx = {
+                interrogationsCount: gs.interrogationsCount || 0,
+                accusedTargets: gs.prosecutor_accusations || {},
+                pendingJudgeAction: !!gs.court_lawyer_action
+            };
+            refreshAccuseButtons();
+        });
+
+        const withTimeout = (promise, ms) =>
+            new Promise((resolve, reject) => {
+                const timer = setTimeout(() => {
+                    const err = new Error("timeout");
+                    err.isTimeout = true;
+                    reject(err);
+                }, ms);
+                promise.then(
+                    (v) => {
+                        clearTimeout(timer);
+                        resolve(v);
+                    },
+                    (err) => {
+                        clearTimeout(timer);
+                        reject(err);
+                    }
+                );
+            });
+        const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+
+        // التحقق من الحالة المسجلة سحابياً (لا نفترض نجاحاً ولا فشلاً عند انقطاع الاتصال)
+        // الناتج: "confirmed" | "absent" | "unknown"
+        const verifyAccusationRecorded = async (item) => {
+            for (let attempt = 0; attempt < 3; attempt++) {
+                try {
+                    const recSnap = await withTimeout(
+                        get(ref(db, `rooms/${currentRoomCode}/game_state/prosecutor_accusations/${item.uid}`)),
+                        8000
+                    );
+                    const rec = recSnap.val();
+                    return rec && rec.requestId === item.st.requestId ? "confirmed" : "absent";
+                } catch (err) {
+                    await sleep(2000);
+                }
+            }
+            return "unknown";
+        };
+
+        const finalizeAccusationConfirmed = (item) => {
+            item.st.inFlight = false;
+            item.st.unverified = false;
+            // القفل النهائي المحلي يُكتب هنا فقط، بعد تأكيد نجاح الكتابة (السجل السحابي هو المرجع الأصلي)
+            localStorage.setItem(accuseLockKey(item.uid), "true");
+            setAccuseStatus("✅ أُرسل الاتهام وهو بانتظار قرار القاضي.", "#52ff7d");
+            refreshAccuseButtons();
+        };
+        const resolveAccusationVerification = async (item) => {
+            let verdict = await verifyAccusationRecorded(item);
+            if (verdict === "absent") {
+                // قد تكون الكتابة ما زالت في الطريق: محاولة تحقق ثانية قبل إعلان الفشل
+                await sleep(3000);
+                verdict = await verifyAccusationRecorded(item);
+            }
+            if (verdict === "confirmed") {
+                finalizeAccusationConfirmed(item);
+            } else if (verdict === "absent") {
+                item.st.inFlight = false;
+                item.st.unverified = false;
+                item.st.requestId = null;
+                setAccuseStatus("❌ لم يصل الاتهام إلى الخادم. لم يُسجَّل أي قفل، ويمكنك المحاولة مجدداً.", "#ff5252");
+                refreshAccuseButtons();
+            } else {
+                // الحالة غير مؤكدة (انقطاع اتصال): لا نقفل ولا نعيد الإرسال، نطلب التحقق لاحقاً
+                item.st.inFlight = false;
+                item.st.unverified = true;
+                setAccuseStatus(
+                    "⚠️ حالة الإرسال غير مؤكدة بسبب الاتصال. اضغط «تحقق من الإرسال» عند عودة الاتصال (لن يُعاد الإرسال).",
+                    "#ffb34d"
+                );
+                refreshAccuseButtons();
+            }
+        };
+
+        const handleAccuseClick = async (item) => {
+            if (item.st.inFlight) return; // 🛡️ منع الإرسال المتكرر أثناء وجود طلب قيد التنفيذ
+
+            // حالة "غير مؤكد": تحقق فقط، دون إعادة إرسال
+            if (item.st.unverified) {
+                item.st.inFlight = true;
+                refreshAccuseButtons();
+                await resolveAccusationVerification(item);
+                return;
+            }
+
+            item.st.inFlight = true;
+            setAccuseStatus("");
+            refreshAccuseButtons();
+
+            // 🔒 إعادة فحص الشروط من السيرفر لحظة النقر (لا اعتماد على حالة الواجهة وحدها: ريفرش/تعديل DOM لا يتجاوزان القفل)
+            let liveState;
+            try {
+                liveState = (await withTimeout(get(gameStateRef), 8000)).val() || {};
+            } catch (err) {
+                item.st.inFlight = false;
+                setAccuseStatus("⚠️ تعذر التحقق من حالة الجلسة. تأكد من الاتصال وحاول مجدداً.", "#ff5252");
+                refreshAccuseButtons();
+                return;
+            }
+            const gate = accuseButtonState({
+                interrogationsCount: liveState.interrogationsCount,
+                alreadyAccusedTarget:
+                    !!(liveState.prosecutor_accusations && liveState.prosecutor_accusations[item.uid]) ||
+                    localStorage.getItem(accuseLockKey(item.uid)) === "true",
+                pendingJudgeAction: !!liveState.court_lawyer_action,
+                inFlight: false,
+                unverified: false
+            });
+            if (gate !== "ready") {
+                item.st.inFlight = false;
+                const gateMsg = {
+                    locked_interrogations: "🔒 لا يمكن الاتهام قبل إكمال استجوابين.",
+                    locked_final: "🔒 سبق اتهام هذا المتهم.",
+                    pending_judge: "⏳ هناك اتهام بانتظار قرار القاضي."
+                };
+                setAccuseStatus(gateMsg[gate] || "", "#ffb34d");
+                refreshAccuseButtons();
+                return;
+            }
+
+            const requestId = `${mySecretUID}_${item.uid}_${Date.now()}`;
+            const sentAt = Date.now();
+            item.st.requestId = requestId;
+            console.log(`🚀 محامي الادعاء يرسل مذكرة اتهام صارمة ضد المتهم: ${item.name}`);
+
+            // كتابة ذرية واحدة: المذكرة نفسها + سجل الاتهام المؤكد (لا يظهر أحدهما دون الآخر)
+            const updates = {
+                court_lawyer_action: {
+                    type: "convict",
+                    targetUID: item.uid,
+                    targetName: item.name,
+                    lawyerName: myRoleCard.role_name || "محامي الادعاء",
+                    byUID: mySecretUID,
+                    requestId: requestId,
+                    timestamp: sentAt // إجباري لكسر حماية متصفح القاضي وجعله ينبثق فوراً
+                }
+            };
+            updates[`prosecutor_accusations/${item.uid}`] = {
+                by: mySecretUID,
+                requestId: requestId,
+                timestamp: sentAt,
+                confirmed: true
+            };
+
+            try {
+                await withTimeout(update(gameStateRef, updates), 12000);
+                console.log("✅ تم حقن المذكرة في السيرفر بنجاح وفي انتظار اعتماد سيادة القاضي.");
+                finalizeAccusationConfirmed(item);
+            } catch (err) {
+                if (err && err.isTimeout) {
+                    // نتيجة غير مؤكدة: نتحقق من الحالة المسجلة بدل افتراض النجاح أو الفشل
+                    await resolveAccusationVerification(item);
+                } else {
+                    console.error("❌ عطل في دفع طلب المحامي للسيرفر:", err);
+                    item.st.inFlight = false;
+                    item.st.requestId = null;
+                    setAccuseStatus("❌ فشل إرسال الاتهام. لم يُسجَّل أي قفل، يمكنك المحاولة مرة أخرى.", "#ff5252");
+                    refreshAccuseButtons();
+                }
+            }
+        };
+
         // سحب قائمة اللاعبين الحركية لفلترة وحقن المتهمين فقط
         get(ref(db, "rooms/" + currentRoomCode + "/players")).then((playersSnapshot) => {
             if (!playersSnapshot.exists()) return;
@@ -3120,48 +3369,26 @@ function injectLawyerActionControls(
                     // ج. زر إرسال طلب اتهام جنائي الأصلي (بجوار حاوية الأسئلة مباشرة)
                     // ==========================================================================
                     const btnAccuse = document.createElement("button");
+                    btnAccuse.type = "button";
+                    btnAccuse.id = `btn-accuse-${p.uid}`;
                     btnAccuse.textContent = "🔴 اتهام";
                     btnAccuse.style.cssText =
                         "padding: 5px 10px; background: #1a1315; border: 1px solid #ff5252; color: #ff5252; font-family: 'Alexandria'; font-size: 0.7rem; border-radius: 4px; cursor: pointer; font-weight: 700; height: fit-content;";
 
-                    // فحص القفل السحابي المحلي للاتهام لمنع الالتفاف بالريفرش
-                    const isAccuseLocked = localStorage.getItem(`locked_accuse_target_${p.uid}_${currentRoomCode}`);
-                    if (isAccuseLocked === "true") {
-                        btnAccuse.disabled = true;
-                        btnAccuse.style.opacity = "0.4";
-                        btnAccuse.style.cursor = "not-allowed";
-                        btnAccuse.textContent = "🔒 تم الاتهام";
-                    }
+                    // 🌟 القفل (استجوابان + قفل نهائي بعد نجاح الإرسال فقط) يُدار مركزياً عبر accuseStateOf/paintAccuseButton
+                    const accuseItem = {
+                        btn: btnAccuse,
+                        uid: p.uid,
+                        name: p.name,
+                        st: { inFlight: false, unverified: false, requestId: null }
+                    };
+                    accuseButtons.push(accuseItem);
+                    paintAccuseButton(accuseItem);
 
-                    // مستمع زر إرسال طلب اتهام جنائي المطور ليدفع المودال في وجه القاضي فوراً
                     btnAccuse.addEventListener("click", (e) => {
                         e.preventDefault();
                         e.stopPropagation();
-
-                        btnAccuse.disabled = true;
-                        btnAccuse.style.opacity = "0.4";
-                        btnAccuse.style.cursor = "not-allowed";
-                        btnAccuse.textContent = "🔒 تم الاتهام";
-                        localStorage.setItem(`locked_accuse_target_${p.uid}_${currentRoomCode}`, "true");
-
-                        console.log(`🚀 محامي الادعاء يرسل مذكرة اتهام صارمة ضد المتهم: ${p.name}`);
-
-                        // 🌟 [تأمين الدفع السحابي]: نحدث المرجع المباشر مع حقن كامل البيانات والطابع الزمني الفوري
-                        const targetActionRef = ref(db, "rooms/" + currentRoomCode + "/game_state/court_lawyer_action");
-
-                        set(targetActionRef, {
-                            type: "convict",
-                            targetUID: p.uid,
-                            targetName: p.name,
-                            lawyerName: myRoleCard.role_name || "محامي الادعاء",
-                            timestamp: Date.now() // إجباري لكسر حماية متصفح القاضي وجعله ينبثق فوراً
-                        })
-                            .then(() => {
-                                console.log("✅ تم حقن المذكرة في السيرفر بنجاح وفي انتظار اعتماد سيادة القاضي.");
-                            })
-                            .catch((err) => {
-                                console.error("❌ عطل في دفع طلب المحامي للسيرفر:", err);
-                            });
+                        handleAccuseClick(accuseItem);
                     });
 
                     // حقن زر الاتهام داخل الشبكة المتجاورة
@@ -3175,6 +3402,7 @@ function injectLawyerActionControls(
         });
 
         verdictPanel.appendChild(listContainer);
+        verdictPanel.appendChild(accuseStatusLine);
         appArena.appendChild(verdictPanel);
     }
     // ==========================================================================
@@ -3243,61 +3471,68 @@ function injectLawyerActionControls(
                 e.preventDefault();
                 e.stopPropagation(); // 🛡️ منع المستمع العام من التدخل وإغلاق المودال صامتاً
 
-                const targetUID = actionData.targetUID;
-                const targetRoleInfo = assignments[targetUID] || {};
-                const isTargetActuallyGuilty = targetRoleInfo.is_guilty === true;
+                if (btnApprove.disabled) return; // منع النقر المتكرر على الاعتماد
+                btnApprove.disabled = true;
+                const btnRejectNow = document.getElementById("btn-judge-reject-lawyer");
+                if (btnRejectNow) btnRejectNow.disabled = true;
+                const reenableButtons = () => {
+                    btnApprove.disabled = false;
+                    if (btnRejectNow) btnRejectNow.disabled = false;
+                };
 
-                const prosecutorUID = Object.keys(assignments).find(
-                    (uid) =>
-                        assignments[uid]?.role_type === "lawyer" &&
-                        (assignments[uid]?.role_name.includes("ادعاء") ||
-                            assignments[uid]?.role_name.includes("المحكمة"))
-                );
-                const judgeScoreRef = ref(db, `rooms/${currentRoomCode}/players_scores/${mySecretUID}`);
-                const prosecutorScoreRef = ref(db, `rooms/${currentRoomCode}/players_scores/${prosecutorUID}`);
+                // 🌟 [الحالة الحية]: نقرأ الحالة من السيرفر لحظة الاعتماد (لا نعتمد على لقطة قديمة لعدد الاستجوابات أو الكاشف)
+                get(ref(db, "rooms/" + currentRoomCode + "/game_state"))
+                    .then((liveSnap) => {
+                        const liveState = liveSnap.val() || {};
+                        const liveAction = liveState.court_lawyer_action;
 
-                // التقط حالة النتيجة الصحيحة للرادار التي تم فحصها وتخزينها بالـ localStorage سابقاً
-                const isRadarUsedAndMatched =
-                    localStorage.getItem(`locked_radar_target_${targetUID}_${currentRoomCode}`) === "true";
+                        // الاتهام لم يعد قائماً (سُحب/استُبدل) → لا نقاط
+                        if (!liveAction || (actionData.requestId && liveAction.requestId !== actionData.requestId)) {
+                            alert("⚠️ هذا الاتهام لم يعد قائماً.");
+                            reenableButtons();
+                            return;
+                        }
+                        // 🔒 شرط الاستجوابين: لا يُعتمد اتهام قبل إكمال استجوابين (حماية إضافية في جهة القاضي)
+                        if (!isVerdictUnlocked(liveState.interrogationsCount)) {
+                            alert("🔒 لا يمكن اعتماد الاتهام قبل إكمال استجوابين.");
+                            reenableButtons();
+                            return;
+                        }
 
-                // 🎙️ ميزان حسابات اتهام محامي المنصة المباشر أو المدعوم بالرادار طبقاً للنظام الجديد
-                // 🌟 [إصلاح البند 6 - الازدواج في تسجيل النقاط]: نقاط القاضي أُلغيت من هنا تماماً لأن executeVerdictEndGame
-                // أدناه سيحسم حكمه ونقاطه بشكل مستقل ودقيق حسب الشجرة الكبرى؛ تسجيلها هنا أيضاً كان يُضاعف رصيد القاضي
-                // خطأً (مرتين لكل قرار واحد). نقاط محامي الادعاء وحدها فريدة لهذا المسار ولا تتكرر فتبقى هنا كما هي.
-                if (!isRadarUsedAndMatched) {
-                    // أ. حالات الاتهام المباشر (دون استخدام الرادار أو كتابة شبهة)
-                    if (isTargetActuallyGuilty) {
-                        alert(`⚖️ اتهام مباشر صحيح بالمنصة الجنائية!\n- محامي الادعاء: +10 نقاط`);
-                        updateScore(prosecutorScoreRef, 10);
-                    } else {
-                        alert(`❌ اتهام مباشر خاطئ بالمنصة الجنائية!\n- محامي الادعاء: -10 نقاط`);
-                        updateScore(prosecutorScoreRef, -10);
-                    }
-                } else {
-                    // ب. حالات الاتهام بعد كشف الشبهة بالرادار
-                    if (isTargetActuallyGuilty) {
-                        alert(`⚖️ اتهام ذكي صحيح مدعوم بالرادار!\n- محامي الادعاء: +15 نقطة`);
-                        updateScore(prosecutorScoreRef, 15);
-                    } else {
-                        alert(`❌ اتهام ذكي خاطئ مدعوم بالرادار!\n- محامي الادعاء: -15 نقطة`);
-                        updateScore(prosecutorScoreRef, -15);
-                    }
-                }
+                        const liveAssignments = liveState.assignments || assignments;
+                        const targetUID = liveAction.targetUID;
+                        const targetRoleInfo = liveAssignments[targetUID] || {};
+                        const isTargetActuallyGuilty =
+                            targetRoleInfo.is_guilty === true || targetRoleInfo.is_guilty === "true";
 
-                // تحديد ما إذا كان طلب المحامي هو إدانة (convict) أو براءة وتوجيهه لمعادلات الشجرة القضائية
-                const isConviction = actionData.type === "convict";
+                        const prosecutorUID =
+                            liveAction.byUID ||
+                            Object.keys(liveAssignments).find(
+                                (uid) =>
+                                    liveAssignments[uid]?.role_type === "lawyer" &&
+                                    ((liveAssignments[uid]?.role_name || "").includes("ادعاء") ||
+                                        (liveAssignments[uid]?.role_name || "").includes("المحكمة"))
+                            );
 
-                // استدعاء شجرة المعادلات الحسابية الكبرى (المسرودة في الجزء الثالث)
-                executeVerdictEndGame(
-                    isTargetActuallyGuilty,
-                    actionData.targetName,
-                    isConviction,
-                    targetUID,
-                    assignments,
-                    gameState,
-                    modal,
-                    globalCloseBtn
-                );
+                        // 🌟 نقاط القاضي ومحامي الادعاء تُحسب كلها داخل executeVerdictEndGame (مصدر واحد، مرة واحدة):
+                        // القاضي حسب شجرة النقاط، ومحامي الادعاء يأخذ نفس نقاط القاضي بالضبط للاتهام المعتمد.
+                        executeVerdictEndGame(
+                            isTargetActuallyGuilty,
+                            liveAction.targetName,
+                            liveAction.type === "convict",
+                            targetUID,
+                            liveAssignments,
+                            liveState,
+                            modal,
+                            globalCloseBtn,
+                            { prosecutorAccusation: true, prosecutorUID }
+                        );
+                    })
+                    .catch((err) => {
+                        console.error("❌ تعذر قراءة الحالة الحية قبل اعتماد الاتهام:", err);
+                        alert("⚠️ تعذر التحقق من حالة الجلسة. تأكد من الاتصال ثم حاول مجدداً.");
+                        reenableButtons();
+                    });
             });
         }
 
@@ -3318,14 +3553,7 @@ function injectLawyerActionControls(
         }
     };
 
-    // دالة مساعدة داخلية لتحديث الأرصدة التراكمية بسلاسة دون تصفير
-    const updateScore = (scoreRef, points) => {
-        if (!scoreRef) return;
-        get(scoreRef).then((snap) => {
-            const current = snap.exists() ? snap.val() : 0;
-            set(scoreRef, current + points);
-        });
-    };
+    // (دالة updateScore المحلية القديمة أُزيلت: يُستخدم الآن updateScore العام القائم على runTransaction)
 
     // ==========================================================================
     // الجزء الرابع: منصة التطهير السحابي الموحدة وجدار حماية عقوبة خمول الادعاء
@@ -3351,17 +3579,8 @@ function injectLawyerActionControls(
                             assignments[uid]?.role_name.includes("المحكمة"))
                 );
 
-                // 1️⃣ [تطبيق عقوبة التخاذل القديمة المعدلة لـ -10 نقاط كما طلبت]:
-                if (prosecutorUID && !gameState.court_lawyer_action) {
-                    const prosecutorScoreRef = ref(db, `rooms/${currentRoomCode}/players_scores/${prosecutorUID}`);
-                    get(prosecutorScoreRef).then((scoreSnap) => {
-                        const currentScore = scoreSnap.exists() ? scoreSnap.val() : 0;
-                        set(prosecutorScoreRef, currentScore - 10);
-                        alert(
-                            "🚨 عقوبة التخاذل! تم إنهاء الجلسة دون استخدام منصة محامي الادعاء، وتم خصم 10 نقاط من رصيده."
-                        );
-                    });
-                }
+                // 1️⃣ خصم عدم المشاركة صار موحداً في settleProsecutorParticipation (مرة واحدة، عبر endCurrentCourtSession)
+                void prosecutorUID;
             }
 
             // 2️⃣ استدعاء دالة التطهير الكبرى لترحيل الجميع بسلاسة أونلاين
@@ -4903,6 +5122,9 @@ function openJudgeRadarModal(playersList, assignments, gameStateRef) {
                         statusMsg.style.color = "#52ff7d";
                         btnReveal.textContent = "✅ تم الكشف";
 
+                        // 📡 تسجيل نتيجة الكاشف سحابياً + مكافأة القرار الصحيح مرة واحدة (قاضي +5 / محامي ادعاء +10)
+                        recordRadarUsage(targetUID, true, myRoleCard.role_type);
+
                         const isLawyerAction = myRoleCard.role_type === "lawyer";
                         const alertIdentityText = isLawyerAction
                             ? `📡 محامي الادعاء (${myRoleCard.role_name}) التقط شبهة جانبية صحيحة بحق: ${targetName}`
@@ -4936,6 +5158,8 @@ function openJudgeRadarModal(playersList, assignments, gameStateRef) {
                             `rooms/${currentRoomCode}/game_state/radar_failed_attempts/${mySecretUID}/${targetUID}`
                         );
                         set(failRef, true).catch(() => {});
+                        // 📡 استخدام مسجّل بنتيجة خاطئة: لا مكافأة ولا خصم، لكنه يُحسب استخداماً للكاشف
+                        recordRadarUsage(targetUID, false, myRoleCard.role_type);
 
                         choicesContainer.innerHTML = `
                             <div style="background: rgba(255, 82, 82, 0.08); border: 1.5px dashed #ff5252; border-radius: 8px; padding: 12px; color: #ffb3b3; font-size: 0.8rem; text-align: center; line-height: 1.6;">
@@ -5163,7 +5387,39 @@ function executeVerdictEndGame(
     assignments,
     gameState,
     modal,
-    globalCloseBtn
+    globalCloseBtn,
+    options = {}
+) {
+    // 🛡️ حارس الحكم الواحد للجولة: أي استدعاء مكرر (نقرتان/مستمع/مسار آخر) لا يُحتسب مرة ثانية
+    claimScoringOnce("verdict_final").then((claimed) => {
+        if (!claimed) {
+            console.warn("⚠️ تم تجاهل حكم مكرر: النقاط احتُسبت لهذه الجولة مسبقاً.");
+            return;
+        }
+        executeVerdictEndGameInner(
+            isCorrectDecision,
+            targetedPlayerName,
+            isConvictionAction,
+            targetUID,
+            assignments,
+            gameState,
+            modal,
+            globalCloseBtn,
+            options
+        );
+    });
+}
+
+function executeVerdictEndGameInner(
+    isCorrectDecision,
+    targetedPlayerName,
+    isConvictionAction,
+    targetUID,
+    assignments,
+    gameState,
+    modal,
+    globalCloseBtn,
+    options = {}
 ) {
     if (modal) modal.style.setProperty("display", "none", "important");
     if (globalCloseBtn) globalCloseBtn.style.setProperty("display", "block", "important");
@@ -5176,6 +5432,11 @@ function executeVerdictEndGame(
     // مراجع أرصدة اللاعبين المعنيين بالجلسة الحالية لتحديثها في نفس الوقت
     const judgeScoreRef = ref(db, `rooms/${currentRoomCode}/players_scores/${mySecretUID}`);
     const targetScoreRef = ref(db, `rooms/${currentRoomCode}/players_scores/${targetUID}`);
+    // 🌟 [نقاط الاتهام المعتمد]: محامي الادعاء يأخذ نفس نقاط القاضي بالضبط، فقط عندما يكون الحكم هو اتهامه الذي اعتمده القاضي
+    const prosecutorScoreRef =
+        options.prosecutorAccusation && options.prosecutorUID
+            ? ref(db, `rooms/${currentRoomCode}/players_scores/${options.prosecutorUID}`)
+            : null;
 
     // 1️⃣ 🌟 [الإصلاح الجذري لهوية الجاني]: البحث القطعي عن الجاني بناءً على الـ Flag السحابي الثابت (is_guilty === true)
     let realGuiltyUID = "none";
@@ -5246,12 +5507,12 @@ function executeVerdictEndGame(
     // [تعديل سيادي]: شجرة الحسم المبكر المصححة بخصم صارم (15 للاستجواب 2) و (12 للاستجواب 3)
     // ==========================================================================
     if (currentInterrogationsCount === 2 || currentInterrogationsCount === 3) {
-        let positivePoints = currentInterrogationsCount === 2 ? 20 : 17;
-        let negativePoints = currentInterrogationsCount === 2 ? 15 : 12; // تثبيت العقوبة الصارمة بدقة بالملي
+        // 🌟 القيم من مصدر واحد (scoring.js): الاستجواب 2 → +20/-15 ، الاستجواب 3 → +17/-12 (نفس القيم الأصلية)
+        const earlyTable = earlyVerdictPoints(currentInterrogationsCount);
+        let positivePoints = earlyTable.positive;
+        let negativePoints = earlyTable.negative;
 
-        get(judgeScoreRef).then((scoreSnap) => {
-            const currentScore = scoreSnap.exists() ? scoreSnap.val() : 0;
-
+        get(judgeScoreRef).then(() => {
             // 🛡️ [حارس الفحص السيادي الحركي]: تحديد رتبة وهوية اللاعب المستهدف حياً من الـ JSON
             const targetRoleCard = assignments[targetUID] || {};
             const isTargetInnocentImpostor = targetRoleCard.role_type === "innocent_impostor";
@@ -5278,7 +5539,10 @@ function executeVerdictEndGame(
             }
 
             // حقن وتحديث الرصيد التراكمي الجديد في الفايربيس دون المساس بأرصدة الجولات السابقة
-            set(judgeScoreRef, currentScore + finalPoints).then(() => {
+            // 🌟 محامي الادعاء: نفس نقاط القاضي بالضبط (+20/+17/-15/-12) لاتهامه المعتمد فقط
+            const prosecutorEarlyDelta = prosecutorScoreRef ? prosecutorMirrorDelta(finalPoints) : null;
+            if (prosecutorEarlyDelta !== null) updateScore(prosecutorScoreRef, prosecutorEarlyDelta);
+            updateScore(judgeScoreRef, finalPoints).then(() => {
                 let msg =
                     finalPoints > 0
                         ? `🔨 حسم سريع وصحيح في الاستجواب (${currentInterrogationsCount})! ربحت +${positivePoints} نقطة كحكم مطلق صارم.`
@@ -5305,6 +5569,12 @@ function executeVerdictEndGame(
     // 🌟 [شاشة النتائج الكبرى]: توثيق نتيجة الحكم العادي حياً لبناء السرد القصصي الصحيح في شاشة النتائج القادمة
     // (إدانة الجاني الفعلي = فوز القاضي، وتبرئة البريء = فوز القاضي أيضاً - والعكس خسارة في كل الحالتين)
     const judgeWonThisVerdict = isConvictionAction ? isTargetActuallyGuilty : !isTargetActuallyGuilty;
+    // 🌟 نلتقط نقاط القاضي الفعلية لهذا الحكم ليحصل محامي الادعاء على نفسها بالضبط (اتهامه المعتمد فقط)
+    let judgeAccusationDelta = null;
+    const awardJudge = (points) => {
+        judgeAccusationDelta = points;
+        updateScore(judgeScoreRef, points);
+    };
     if (isConvictionAction) {
         // 🔴 أولاً: شجرة حالات الإدانة (تُطبق في الـ 3 لاعبين، والـ 4 لاعبين فأكثر عند اختيار القاضي للاعب)
         if (isTargetActuallyGuilty) {
@@ -5312,7 +5582,7 @@ function executeVerdictEndGame(
             alert(
                 `⚖️ حكم عادل ونزيه! أدان القاضي الجاني الفعلي (${targetedPlayerName}).\n- القاضي: +10 نقاط\n- الجاني: -10 نقاط\n- محامي الدفاع: -5 نقاط`
             );
-            updateScore(judgeScoreRef, 10);
+            awardJudge(10);
             updateScore(targetScoreRef, -10);
             updateScore(defenseScoreRef, -5);
         } else if (hasSideSuspect) {
@@ -5321,7 +5591,7 @@ function executeVerdictEndGame(
                 alert(
                     `❌ إدانة خاطئة لبريء مشبوه! لكن تم كشف وفضح شبهته بالرادار السحابي سابقاً.\n- القاضي: -5 نقاط\n- البريء المشبوه: +5 نقاط\n- محامي الدفاع: -10 نقاط`
                 );
-                updateScore(judgeScoreRef, -5);
+                awardJudge(-5);
                 updateScore(targetScoreRef, 5);
                 updateScore(defenseScoreRef, -10);
             } else {
@@ -5329,7 +5599,7 @@ function executeVerdictEndGame(
                 alert(
                     `❌ إدانة خاطئة لبريء مشبوه دون كشف الرادار السحابي!\n- القاضي: -10 نقاط\n- البريء المشبوه: +10 نقاط\n- محامي الدفاع: -5 نقاط`
                 );
-                updateScore(judgeScoreRef, -10);
+                awardJudge(-10);
                 updateScore(targetScoreRef, 10);
                 updateScore(defenseScoreRef, -5);
             }
@@ -5340,7 +5610,7 @@ function executeVerdictEndGame(
             alert(
                 `❌ كارثة قضائية! تم إدانة لاعب بريء تماماً ليس لديه أي شبهة.\n- القاضي: -10 نقاط\n- الجاني الحقيقي: +10 نقاط (مكافأة تضليل)\n- المتهم البريء: +10 نقاط\n- محامي الدفاع: -15 نقطة`
             );
-            updateScore(judgeScoreRef, -10);
+            awardJudge(-10);
             updateScore(guiltyScoreRef, 10);
             updateScore(targetScoreRef, 10);
             updateScore(defenseScoreRef, -15);
@@ -5352,7 +5622,7 @@ function executeVerdictEndGame(
             alert(
                 `🚪 حكم عادل ونزيه! منح القاضي البراءة للاعب بريء تماماً.\n- القاضي: +10 نقاط\n- المتهم البريء: +10 نقاط\n- محامي الدفاع: +15 نقطة`
             );
-            updateScore(judgeScoreRef, 10);
+            awardJudge(10);
             updateScore(targetScoreRef, 10);
             updateScore(defenseScoreRef, 15);
         } else if (isTargetActuallyGuilty) {
@@ -5360,7 +5630,7 @@ function executeVerdictEndGame(
             alert(
                 `⚠️ كارثة قضائية! وقعت المحكمة في فخ التبرئة الخاطئة وأفلت الجاني الحقيقي بجريمته.\n- القاضي: -10 نقاط\n- الجاني الفعلي: +10 نقاط\n- محامي الدفاع: +20 نقطة (مكافأة التضليل الكبرى)`
             );
-            updateScore(judgeScoreRef, -10);
+            awardJudge(-10);
             updateScore(targetScoreRef, 10);
             updateScore(defenseScoreRef, 20);
         } else if (hasSideSuspect) {
@@ -5369,7 +5639,7 @@ function executeVerdictEndGame(
                 alert(
                     `🔍 براءة مع كشف الشبهة! برأ القاضي المتهم من الجريمة الكبرى بذكاء وفضح شبهته بالرادار السحابي.\n- القاضي: +10 نقاط\n- المتهم المشبوه: -5 نقاط\n- محامي الدفاع: -5 نقاط`
                 );
-                updateScore(judgeScoreRef, 10);
+                awardJudge(10);
                 updateScore(targetScoreRef, -5);
                 updateScore(defenseScoreRef, -5);
             } else {
@@ -5377,13 +5647,18 @@ function executeVerdictEndGame(
                 alert(
                     `🚪 براءة طبيعية لمشتبه به! تبرئة من الكبرى مع نجاح المتهم في إخفاء شبهته الجانبية.\n- القاضي: +5 نقاط\n- المتهم المشبوه: +5 نقاط\n- محامي الدفاع: +10 نقاط`
                 );
-                updateScore(judgeScoreRef, 5);
+                awardJudge(5);
                 updateScore(targetScoreRef, 5);
                 updateScore(defenseScoreRef, 10);
             }
             // منح الجاني الحقيقي المستخبّي مكافأة النجاح في التضليل
             updateScore(guiltyScoreRef, 10);
         }
+    }
+
+    // 🌟 محامي الادعاء: نفس نقاط القاضي بالضبط للاتهام الذي اعتمده القاضي (مرة واحدة بفضل حارس verdict_final)
+    if (prosecutorScoreRef && judgeAccusationDelta !== null) {
+        updateScore(prosecutorScoreRef, prosecutorMirrorDelta(judgeAccusationDelta));
     }
 
     // ==========================================================================
@@ -5403,12 +5678,80 @@ function executeVerdictEndGame(
 }
 
 // دالة تتبع وتحديث الأرصدة التراكمية بسلاسة دون تصفير
+// 🌟 [منع ضياع/تكرار النقاط]: الكتابة عبر runTransaction بدل get ثم set، فلا تتصادم تحديثات متزامنة على الرصيد نفسه
 const updateScore = (scoreRef, points) => {
-    if (!scoreRef) return;
-    get(scoreRef).then((snap) => {
-        const current = snap.exists() ? snap.val() : 0;
-        set(scoreRef, current + points);
+    if (!scoreRef) return Promise.resolve();
+    return runTransaction(scoreRef, (current) => (typeof current === "number" ? current : 0) + points).catch((err) => {
+        console.error("⚠️ فشل تحديث الرصيد:", err);
     });
+};
+
+// 🛡️ [منع احتساب أي مكافأة/خصم/حكم مرتين]: مطالبة ذرية بمفتاح فريد لكل حدث نقاط داخل الجولة.
+// القيمة المرجعة true فقط للجهاز الذي سجّل المطالبة أولاً؛ أي تكرار (مستمع/إعادة تحميل/نقرتان) يرجع false.
+const claimScoringOnce = (key) => {
+    if (!currentRoomCode || !key) return Promise.resolve(false);
+    const claimRef = ref(db, `rooms/${currentRoomCode}/game_state/scoring_claims/${key}`);
+    return runTransaction(claimRef, (cur) => (cur ? undefined : { by: mySecretUID, ts: Date.now() }))
+        .then((res) => !!res.committed)
+        .catch((err) => {
+            console.error("⚠️ فشل تسجيل مطالبة النقاط:", key, err);
+            return false;
+        });
+};
+
+// تصفير سجلات النقاط والاستخدام لبداية جولة جديدة (يُدمج داخل update بداية الجولة فقط)
+const scoringRoundReset = () => ({
+    scoring_claims: null,
+    radar_usage: null,
+    prosecutor_accusations: null
+});
+
+// 🌟 [خصم عدم مشاركة محامي الادعاء]: -10 مرة واحدة فقط (إن غاب الكاشف أو منصة الاتهام أو كلاهما)
+// يُستدعى عند إغلاق الجولة من كل مسارات الإنهاء، ويعتمد على سجلات سحابية مؤكدة فقط (لا localStorage ولا نقرات)
+const settleProsecutorParticipation = () => {
+    if (!currentRoomCode) return Promise.resolve();
+    return get(ref(db, `rooms/${currentRoomCode}/game_state`)).then((snap) => {
+        const gs = snap.val() || {};
+        const assignments = gs.assignments || {};
+        const prosecutorUID = Object.keys(assignments).find(
+            (uid) =>
+                assignments[uid]?.role_type === "lawyer" &&
+                ((assignments[uid]?.role_name || "").includes("ادعاء") ||
+                    (assignments[uid]?.role_name || "").includes("المحكمة"))
+        );
+        if (!prosecutorUID) return;
+
+        const delta = prosecutorPassivityDelta({
+            usedRadar: hasUsedRadar(gs.radar_usage && gs.radar_usage[prosecutorUID]),
+            usedAccusationPlatform: hasUsedAccusationPlatform(gs.prosecutor_accusations, prosecutorUID)
+        });
+        if (delta === 0) return;
+
+        return claimScoringOnce("prosecutor_passivity").then((claimed) => {
+            if (!claimed) return;
+            return updateScore(ref(db, `rooms/${currentRoomCode}/players_scores/${prosecutorUID}`), delta).then(() => {
+                console.log(`🚨 خصم عدم مشاركة محامي الادعاء: ${delta}`);
+            });
+        });
+    });
+};
+
+// 📡 [مكافأة كاشف الشبهة]: تسجيل نتيجة الفحص سحابياً مرة واحدة لكل (لاعب، هدف). المكافأة تُمنح فقط
+// للجهاز الذي أنشأ السجل فعلاً (نتيجة صحيحة)، فلا تتكرر مع إعادة التحميل أو تكرار الاستماع.
+const recordRadarUsage = (targetUID, isCorrect, roleType) => {
+    if (!currentRoomCode || !targetUID) return Promise.resolve();
+    const usageRef = ref(db, `rooms/${currentRoomCode}/game_state/radar_usage/${mySecretUID}/${targetUID}`);
+    return runTransaction(usageRef, (cur) =>
+        cur ? undefined : { result: isCorrect ? "correct" : "wrong", ts: Date.now() }
+    )
+        .then((res) => {
+            if (!res.committed) return;
+            const bonus = radarBonus(roleType, isCorrect);
+            if (bonus > 0) {
+                return updateScore(ref(db, `rooms/${currentRoomCode}/players_scores/${mySecretUID}`), bonus);
+            }
+        })
+        .catch((err) => console.error("⚠️ فشل تسجيل نتيجة الكاشف:", err));
 };
 
 // 💥 دالة التطهير والإنهاء الكبرى لساحة المحكمة (تم تأمين المزامنة لمنع الـ Refresh)
@@ -5453,15 +5796,20 @@ const endCurrentCourtSession = (verdictOutcomeData) => {
     // 2️⃣ [شاشة النتائج الكبرى]: البث السحابي الذكي لتحديث الـ status إلى game_over فقط، مع الإبقاء على الـ assignments
     // وكذلك الـ caseId حيّين تماماً بدون تصفير، لأن شاشة النتائج القادمة تحتاجهما لعرض الأدوار والقصة السردية للقضية.
     // يتم قذف جهاز القاضي فوراً إلى صفحة results.html، وبقية المشاهدين سيلتقطون الـ game_over من المراقب العام وينتقلون خلفه
-    update(localGameStateUpdateRef, {
-        status: "game_over",
-        ...staleCourtEventsReset(),
-        last_verdict_outcome: verdictOutcomeData || { ended_reason: "forced_no_verdict" },
-        court_lawyer_action: null,
-        activeSpeakerUID: "none",
-        isInterrogatingMode: false,
-        interrogationsCount: 0
-    })
+    // 🌟 تسوية خصم عدم مشاركة محامي الادعاء قبل إغلاق الجولة (مرة واحدة، ولا تعطّل الإنهاء إن فشلت)
+    settleProsecutorParticipation()
+        .catch((err) => console.error("⚠️ فشلت تسوية مشاركة محامي الادعاء:", err))
+        .then(() =>
+            update(localGameStateUpdateRef, {
+                status: "game_over",
+                ...staleCourtEventsReset(),
+                last_verdict_outcome: verdictOutcomeData || { ended_reason: "forced_no_verdict" },
+                court_lawyer_action: null,
+                activeSpeakerUID: "none",
+                isInterrogatingMode: false,
+                interrogationsCount: 0
+            })
+        )
         .then(() => {
             navigateTo("results.html");
         })
