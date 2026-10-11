@@ -1287,20 +1287,16 @@ function listenToFinalLobby() {
 
                     // ابحث عن دالة executeForceEndTrial بداخل كودك وحدث الـ update الأخير لها ليكون هكذا:
                     // 🌟 [شاشة النتائج الكبرى]: عدم تصفير الـ assignments أو الـ caseId هنا إطلاقاً - يجب أن تبقى حية لتُعرض في شاشة النتائج القادمة
-                    // 🌟 تسوية خصم عدم مشاركة محامي الادعاء مرة واحدة قبل إغلاق الجولة قسرياً
-                    settleProsecutorParticipation()
-                        .catch((err) => console.error("⚠️ فشلت تسوية مشاركة محامي الادعاء:", err))
-                        .then(() =>
-                            update(ref(db, "rooms/" + currentRoomCode + "/game_state"), {
-                                status: "game_over",
-                                ...staleCourtEventsReset(),
-                                last_verdict_outcome: { ended_reason: "forced_no_verdict" },
-                                court_lawyer_action: null,
-                                activeSpeakerUID: "none", // 🌟 تصفير المتحدث عند الإنهاء القسري
-                                isInterrogatingMode: false,
-                                interrogationsCount: 0
-                            })
-                        );
+                    // 🚫 الإنهاء القسري من الأدمن: لا يكسب ولا يخسر أي لاعب أي نقطة (لا تسوية ولا خصم لأي دور)
+                    update(ref(db, "rooms/" + currentRoomCode + "/game_state"), {
+                        status: "game_over",
+                        ...staleCourtEventsReset(),
+                        last_verdict_outcome: { ended_reason: "forced_no_verdict" },
+                        court_lawyer_action: null,
+                        activeSpeakerUID: "none", // 🌟 تصفير المتحدث عند الإنهاء القسري
+                        isInterrogatingMode: false,
+                        interrogationsCount: 0
+                    });
                 };
 
                 window.history.pushState({ noBack: true }, "");
@@ -1816,16 +1812,14 @@ function renderCircularSeats(playersList, assignments, gameState) {
                             judgePanel.appendChild(btnQuestions);
                         }
 
-                        // 🌟 شرط الـ 3 و 4 لاعبين لحقن زر رادار الشبهات الاستكشافي فقط
-                        if (playersList.length < 5) {
-                            // زر رادار الشبهات (يفتح المودال البوكس الخاص بالقاضي للفحص)
-                            const btnRadarTrigger = document.createElement("button");
-                            btnRadarTrigger.id = "btn-judge-radar-trigger";
-                            btnRadarTrigger.className = "btn-judge-action btn-interrogate-style";
-                            btnRadarTrigger.textContent = "اكتشف الشبهة";
-                            btnRadarTrigger.style.margin = "0 4px";
-                            judgePanel.appendChild(btnRadarTrigger);
-                        }
+                        // 🌟 زر رادار الشبهات ثابت في منصة القاضي دائماً (3 لاعبين فأكثر، بما فيها ظهور محامي الادعاء)
+                        // زر رادار الشبهات (يفتح المودال البوكس الخاص بالقاضي للفحص)
+                        const btnRadarTrigger = document.createElement("button");
+                        btnRadarTrigger.id = "btn-judge-radar-trigger";
+                        btnRadarTrigger.className = "btn-judge-action btn-interrogate-style";
+                        btnRadarTrigger.textContent = "اكتشف الشبهة";
+                        btnRadarTrigger.style.margin = "0 4px";
+                        judgePanel.appendChild(btnRadarTrigger);
 
                         // 3. حاوية عداد الاستجوابات القضائية المركزي
                         const counterDiv = document.createElement("div");
@@ -5797,7 +5791,11 @@ const endCurrentCourtSession = (verdictOutcomeData) => {
     // وكذلك الـ caseId حيّين تماماً بدون تصفير، لأن شاشة النتائج القادمة تحتاجهما لعرض الأدوار والقصة السردية للقضية.
     // يتم قذف جهاز القاضي فوراً إلى صفحة results.html، وبقية المشاهدين سيلتقطون الـ game_over من المراقب العام وينتقلون خلفه
     // 🌟 تسوية خصم عدم مشاركة محامي الادعاء قبل إغلاق الجولة (مرة واحدة، ولا تعطّل الإنهاء إن فشلت)
-    settleProsecutorParticipation()
+    // 🚫 لا تسوية ولا خصم عند الإنهاء القسري (forced_no_verdict) أو أي إنهاء بلا حكم: لا نقاط لأي لاعب
+    const isRealVerdictEnd =
+        !!verdictOutcomeData &&
+        (verdictOutcomeData.ended_reason === "verdict" || verdictOutcomeData.ended_reason === "early_verdict");
+    (isRealVerdictEnd ? settleProsecutorParticipation() : Promise.resolve())
         .catch((err) => console.error("⚠️ فشلت تسوية مشاركة محامي الادعاء:", err))
         .then(() =>
             update(localGameStateUpdateRef, {
