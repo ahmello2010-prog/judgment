@@ -43,20 +43,9 @@
                 <p id="dynamic-subtitle" class="welcome-subtitle"></p>
 
                 <!-- الزر مخفي افتراضياً بانتهاء النص وسيهبط سينمائياً -->
-                <div style="display: flex; flex-direction: column; align-items: center; gap: 10px; width: 100%; max-width: 320px; margin: 0 auto;">
-                    <a id="btn-start-game-index" class="btn-main btn-hidden" data-i18n="index.start_game" href="rooms.html">ابدأ اللعبة</a>
-                    <a
-                        id="btn-download-apk-index"
-                        href="/download/role-court.apk"
-                        download="role-court.apk"
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        class="btn-hidden"
-                        style="display: inline-flex; align-items: center; justify-content: center; gap: 8px; width: 100%; padding: 12px 18px; font-family: 'Alexandria', sans-serif; font-size: 0.95rem; font-weight: 700; color: #f5d78e; text-decoration: none; background: rgba(13, 25, 43, 0.85); border: 1.5px solid rgba(213, 167, 92, 0.7); border-radius: 14px; backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4); transition: transform 0.2s, background 0.2s;">
-                        <span>📲</span>
-                        <span>تحميل تطبيق الأندرويد (.APK)</span>
-                    </a>
-                </div>
+                <a id="btn-start-game-index" class="btn-main btn-hidden" data-i18n="index.start_game" href="rooms.html"
+                    >ابدأ اللعبة</a
+                >
             </div>
         </div>
 
@@ -111,7 +100,9 @@
                     ">
                     ⚖️
                 </div>
-                <h2 data-i18n="offline.first_time_title" style="color: var(--gold-glow, #d5a75c); font-size: 1.25rem; font-weight: 800; margin: 0 0 14px 0">
+                <h2
+                    data-i18n="offline.first_time_title"
+                    style="color: var(--gold-glow, #d5a75c); font-size: 1.25rem; font-weight: 800; margin: 0 0 14px 0">
                     تنبيه الزيارة الأولى
                 </h2>
                 <p
@@ -232,11 +223,6 @@
                         startButton.classList.remove("btn-hidden");
                         startButton.classList.add("btn-cinema-drop");
                         sfxButtonDrop.play().catch(() => {});
-                    }
-                    const apkDownloadBtn = document.getElementById("btn-download-apk-index");
-                    if (apkDownloadBtn) {
-                        apkDownloadBtn.classList.remove("btn-hidden");
-                        apkDownloadBtn.classList.add("btn-cinema-drop");
                     }
                 }
 
