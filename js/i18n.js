@@ -26,14 +26,17 @@ export const translations = {
         "btn.refresh": "تحديث",
         "status.loading": "جاري التحميل...",
         "status.processing": "جاري معالجة البيانات...",
-        "custom_alert_title": "تنبيه قضائي",
-        "personal_score_label": "رصيدك",
+        custom_alert_title: "تنبيه قضائي",
+        personal_score_label: "رصيدك",
 
         // First time offline modal & alerts
         "offline.first_time_title": "تنبيه الزيارة الأولى",
-        "offline.first_time_msg": "عزيزي اللاعب .. مرحبا بك في محكمة الأدوار .. لكي تبدأ التجربة في زيارتك الاولى يرجى تشغيل الانترنت حتى يتاح لك اللعب بلا انترنت في اي وقت اخر .. شكرا لصبرك",
-        "offline.online_required_msg": "لا يمكن استخدام إنشاء أو الانضمام إلى غرفة بدون اتصال بالإنترنت.\nفعّل الإنترنت ثم حاول مرة أخرى.",
-        "offline.notice_banner": "⚠️ وضع عدم الاتصال مفعل: يمكنك بدء الجلسات الأوفلاين فوراً، بينما تتطلب الغرف الجماعية عبر الإنترنت اتصالاً بالشبكة.",
+        "offline.first_time_msg":
+            "عزيزي اللاعب .. مرحبا بك في محكمة الأدوار .. لكي تبدأ التجربة في زيارتك الاولى يرجى تشغيل الانترنت حتى يتاح لك اللعب بلا انترنت في اي وقت اخر .. شكرا لصبرك",
+        "offline.online_required_msg":
+            "لا يمكن استخدام إنشاء أو الانضمام إلى غرفة بدون اتصال بالإنترنت.\nفعّل الإنترنت ثم حاول مرة أخرى.",
+        "offline.notice_banner":
+            "⚠️ وضع عدم الاتصال مفعل: يمكنك بدء الجلسات الأوفلاين فوراً، بينما تتطلب الغرف الجماعية عبر الإنترنت اتصالاً بالشبكة.",
         "offline.redirect_alert": "تم توجيهك إلى وضع عدم الاتصال نظراً لانقطاع شبكة الإنترنت.",
 
         // index.html (Splash)
@@ -52,8 +55,9 @@ export const translations = {
         "rooms.user_guide": "دليل المستخدم",
         "rooms.rooms_log": "سجل الغرف",
         "rooms.translation_notice_title": "تنبيه الترجمة",
-        "rooms.translation_notice_body": "الترجمة لا تزال قيد الإنجاز ولم تكتمل بعد على جميع نصوص اللعبة، بالأخص نصوص القضايا وتفاصيل الأدوار. ترقبوا آخر التحديثات حتى تحصلوا على الترجمة كاملة!",
-        "rooms.download_game": "📥 تحميل اللعبة",
+        "rooms.translation_notice_body":
+            "الترجمة لا تزال قيد الإنجاز ولم تكتمل بعد على جميع نصوص اللعبة، بالأخص نصوص القضايا وتفاصيل الأدوار. ترقبوا آخر التحديثات حتى تحصلوا على الترجمة كاملة!",
+        "rooms.download_game": "تحميل اللعبة",
         "rooms.download_note": "رابط لعبتي لا تنسى تحميله لتحظى بتجربة لعب امتع",
         "rooms.foyer_badge": "بهو القضايا والتحقيق",
         "rooms.foyer_title": "محكمة الأدوار",
@@ -76,7 +80,8 @@ export const translations = {
         "rooms.feat_single_device": "جهاز واحد",
         "rooms.feat_secret_pin": "رمز سري PIN",
         "rooms.feat_no_net": "بلا شبكة",
-        "rooms.storage_tip": "للتحكم في مساحة التطبيق يرجى زيارة صفحة سجل الغرف ومسح كل الغرف القديمة حتى تحظى بتجربة لعب مريحة",
+        "rooms.storage_tip":
+            "للتحكم في مساحة التطبيق يرجى زيارة صفحة سجل الغرف ومسح كل الغرف القديمة حتى تحظى بتجربة لعب مريحة",
 
         // create.html
         "create.page_title": "محكمة الأدوار - غرفة الانتظار",
@@ -196,7 +201,8 @@ export const translations = {
         "judge.btn_start_inquiry": "بدء الاستجواب",
         "judge.improv_modal_title": "🎭 استجواب ارتجالي",
         "judge.improv_hint": "اطرح سؤالك شفهياً وباشر استجواب المتهم الآن",
-        "judge.interrogate_first_warning": "🔒 اختر لاعباً للاستجواب أولاً بالضغط على زر 'استجواب لاعب' قبل استخدام الأسئلة.",
+        "judge.interrogate_first_warning":
+            "🔒 اختر لاعباً للاستجواب أولاً بالضغط على زر 'استجواب لاعب' قبل استخدام الأسئلة.",
         "judge.revoke_speaker_bar": "🎙️ المتحدث الآن:",
         "judge.btn_revoke_speech": "سحب الكلمة فوراً",
         "judge.speak_req_title": "🎙️ {name} يطلب الكلمة",
@@ -238,7 +244,8 @@ export const translations = {
         "verdict.btn_acquit": "براءة المتهم",
         "verdict.confirm_prompt": "سيادة القاضي، حدد حكم المحكمة النهائي والقطعي بحق المتهم الرئيسي الآن:",
         "verdict.forced_end_title": "إنهاء المحاكمة قسرياً",
-        "verdict.forced_end_confirm": "هل أنت متأكد من رغبتك في إنهاء المحكمة الحالية فوراً؟ سيتم إعادة جميع اللاعبين إلى موسوعة القضايا.",
+        "verdict.forced_end_confirm":
+            "هل أنت متأكد من رغبتك في إنهاء المحكمة الحالية فوراً؟ سيتم إعادة جميع اللاعبين إلى موسوعة القضايا.",
         "verdict.lawyer_ruling_title": "🚨 حسم قضائي من محامي المحكمة",
 
         // Voice Controls
@@ -256,10 +263,12 @@ export const translations = {
         // Ticker Messages
         "ticker.msg1": "اجتمع مع أصدقائك أو أحبابك لتحظى بتجربة لعب مميزة",
         "ticker.msg2": "محكمة الأدوار لعبة لا تمت للواقع بصلة و نكن جميع الاحترام لسلطة القضاء",
-        "ticker.msg3": "نظراً لعدم توفر المايك في الوقت الحالي يمكنك إجراء مكالمة جماعية ويلعب كل لاعب من بيته في الوضع الأونلاين",
+        "ticker.msg3":
+            "نظراً لعدم توفر المايك في الوقت الحالي يمكنك إجراء مكالمة جماعية ويلعب كل لاعب من بيته في الوضع الأونلاين",
         "ticker.msg4": "ماذا تنتظر؟ أنشئ غرفة وادعو أصدقائك أو العب مود الأوفلاين",
         "ticker.msg5": "لتعرف المزيد عن اللعبة وكيفية الإستمتاع بها يرجى زيارة صفحة دليل المستخدم",
-        "ticker.msg6": "للتحكم في مساحة التطبيق يرجى زيارة صفحة سجل الغرف ومسح كل الغرف القديمة حتى تحظى بتجربة لعب مريحة",
+        "ticker.msg6":
+            "للتحكم في مساحة التطبيق يرجى زيارة صفحة سجل الغرف ومسح كل الغرف القديمة حتى تحظى بتجربة لعب مريحة",
 
         // results.html
         "results.page_title": "محكمة الأدوار - النطق بالحكم والنتائج",
@@ -279,20 +288,27 @@ export const translations = {
         "guide.page_title": "محكمة الأدوار - دليل المستخدم",
         "guide.header_title": "دليل المستخدم",
         "guide.subtitle": "اضغط على أي سؤال لقراءة القوانين والميكانيكيات التفصيلية وكيفية اللعب",
-        "guide.q1": "ما هي فكرة لعبة \"محكمة الأدوار\" وكيف تبدأ؟",
-        "guide.a1": "اللعبة تعتمد على التحقيق واستنباط الأسرار النفسية وتضارب المصالح. تبدأ الجولة بتجميع اللاعبين في غرفة جولة أونلاين بكود دخول غرفة صديقك. الحد الأدنى البرمجي لبدء أي قضية هو 3 لاعبين، وتدعم اللعبة حتى 10 لاعبين كحد أقصى في الغرفة الواحدة لضمان مواجهات تفاعلية متوازنة.",
+        "guide.q1": 'ما هي فكرة لعبة "محكمة الأدوار" وكيف تبدأ؟',
+        "guide.a1":
+            "اللعبة تعتمد على التحقيق واستنباط الأسرار النفسية وتضارب المصالح. تبدأ الجولة بتجميع اللاعبين في غرفة جولة أونلاين بكود دخول غرفة صديقك. الحد الأدنى البرمجي لبدء أي قضية هو 3 لاعبين، وتدعم اللعبة حتى 10 لاعبين كحد أقصى في الغرفة الواحدة لضمان مواجهات تفاعلية متوازنة.",
         "guide.q2": "كيف يتم توزيع الأدوار والبطاقات على اللاعبين؟",
-        "guide.a2": "عند الضغط على بدء اللعبة، يقوم المحرك البرمجي بخلط الأدوار وتوزيع الكروت سرياً. ينقسم اللاعبون إلى: قاضٍ محقق (يدير الجلسة ويستجوب)، ومحامين، ومتهمين يحمي كل منهم \"سراً مصلحياً\" يخفيه عن البقية. يتم إجبار القاضي والمحامين تلقائياً على أن يكونوا أبرياء تماماً من الجريمة لضمان نزاهة المحاكمة الشرعية.",
-        "guide.q3": "ما هي ميكانيكية \"القطع المفقودة وتضارب المصالح\"؟",
-        "guide.a3": "كل لاعب يحصل على قصة علنية يشهد بها أمام المحكمة، ولكن لديه \"مصلحة سرية\" أو جريمة جانبية يخفيها (مثل تزوير، رشوة، أو سرقة مستندات). اللعبة لا تعتمد على البحث الجنائي الميداني، بل على استجواب اللاعبين لبعضهم البعض لكشف التناقضات ومحاولة تلفيق أو إثبات التهمة بناءً على تضارب الأسرار.",
-        "guide.q4": "كيف يعمل نظام حساب النقاط وخطر \"الحكم المبكر\"؟",
-        "guide.a4": "يتفعل زر الحكم للقاضي، وزر الاتهام لمحامي الادعاء، بعد إكمال استجوابين. الحكم المبكر (عند الاستجواب 2 أو 3) له نقاط أعلى: الحكم الصحيح يمنح القاضي +20 عند الاستجواب 2 و+17 عند الثالث، والخاطئ يخصم منه -15 و-12 على الترتيب. بعد ذلك تصبح المرحلة العامة: +10 للحكم الصحيح و-10 للخاطئ.",
+        "guide.a2":
+            'عند الضغط على بدء اللعبة، يقوم المحرك البرمجي بخلط الأدوار وتوزيع الكروت سرياً. ينقسم اللاعبون إلى: قاضٍ محقق (يدير الجلسة ويستجوب)، ومحامين، ومتهمين يحمي كل منهم "سراً مصلحياً" يخفيه عن البقية. يتم إجبار القاضي والمحامين تلقائياً على أن يكونوا أبرياء تماماً من الجريمة لضمان نزاهة المحاكمة الشرعية.',
+        "guide.q3": 'ما هي ميكانيكية "القطع المفقودة وتضارب المصالح"؟',
+        "guide.a3":
+            'كل لاعب يحصل على قصة علنية يشهد بها أمام المحكمة، ولكن لديه "مصلحة سرية" أو جريمة جانبية يخفيها (مثل تزوير، رشوة، أو سرقة مستندات). اللعبة لا تعتمد على البحث الجنائي الميداني، بل على استجواب اللاعبين لبعضهم البعض لكشف التناقضات ومحاولة تلفيق أو إثبات التهمة بناءً على تضارب الأسرار.',
+        "guide.q4": 'كيف يعمل نظام حساب النقاط وخطر "الحكم المبكر"؟',
+        "guide.a4":
+            "يتفعل زر الحكم للقاضي، وزر الاتهام لمحامي الادعاء، بعد إكمال استجوابين. الحكم المبكر (عند الاستجواب 2 أو 3) له نقاط أعلى: الحكم الصحيح يمنح القاضي +20 عند الاستجواب 2 و+17 عند الثالث، والخاطئ يخصم منه -15 و-12 على الترتيب. بعد ذلك تصبح المرحلة العامة: +10 للحكم الصحيح و-10 للخاطئ.",
         "guide.q5": "كم عدد القضايا المتاحة وما هي القضية المثبتة في الأعلى؟",
-        "guide.a5": "الموسوعة تحتوي على 11 قضية محبوكة بدقة (مثل سرقة الخاتم، اختراق الخادم، الخطف في سوق الجمعة، واختطاف المليونير من البرج). تم نقل قضية \"القاتل المتسلسل وفوضى تجميع 6 لاعبين\" لتكون القضية رقم 1 المثبتة إجبارياً في أعلى الواجهة كطعم تشويقي لحث اللاعبين على دعوة أصدقائهم.",
-        "guide.q6": "كيف تنتهي اللعبة وما هي ميكانيكية \"الاعتراف النهائي وسرد القصة\"؟",
-        "guide.a6": "بعد صدور الحكم، يتم تشغيل دالة الكشف (Reveal). إذا كُشف الجاني، يظهر أمامه نص إجباري يقرأه بصوت عالٍ يعترف فيه بجريمته ويكشف ديناميكياً عن مكان إخفاء الضحية. وإذا أفلت الجاني وخسر القاضي، يظهر النص الذهبي للجاني ليفضح ذكائه ويسخر من المحكمة ويكشف أين خبأ الضحية بعد أن أصبح في أمان تماماً!",
+        "guide.a5":
+            'الموسوعة تحتوي على 11 قضية محبوكة بدقة (مثل سرقة الخاتم، اختراق الخادم، الخطف في سوق الجمعة، واختطاف المليونير من البرج). تم نقل قضية "القاتل المتسلسل وفوضى تجميع 6 لاعبين" لتكون القضية رقم 1 المثبتة إجبارياً في أعلى الواجهة كطعم تشويقي لحث اللاعبين على دعوة أصدقائهم.',
+        "guide.q6": 'كيف تنتهي اللعبة وما هي ميكانيكية "الاعتراف النهائي وسرد القصة"؟',
+        "guide.a6":
+            "بعد صدور الحكم، يتم تشغيل دالة الكشف (Reveal). إذا كُشف الجاني، يظهر أمامه نص إجباري يقرأه بصوت عالٍ يعترف فيه بجريمته ويكشف ديناميكياً عن مكان إخفاء الضحية. وإذا أفلت الجاني وخسر القاضي، يظهر النص الذهبي للجاني ليفضح ذكائه ويسخر من المحكمة ويكشف أين خبأ الضحية بعد أن أصبح في أمان تماماً!",
         "guide.q7": "من هو مطور اللعبة و اخر اعماله",
-        "guide.a7": "اعرفكم بنفسي انا مطور المواقع Ahmed|Web و قررت انشاء هذه اللعبة كاملا لتنال اعجابكوا كفكرة و كتصميم و اعمل اصلا في مجال برمجة المواقع و لكني اخترت ان اصمم اللعبة حتى تستمتع باحدث الأفكار و متعة الغموض و الاثارة اما ان كنت تريد فهذا موقع يعرض جميع اعمالي",
+        "guide.a7":
+            "اعرفكم بنفسي انا مطور المواقع Ahmed|Web و قررت انشاء هذه اللعبة كاملا لتنال اعجابكوا كفكرة و كتصميم و اعمل اصلا في مجال برمجة المواقع و لكني اخترت ان اصمم اللعبة حتى تستمتع باحدث الأفكار و متعة الغموض و الاثارة اما ان كنت تريد فهذا موقع يعرض جميع اعمالي",
         "guide.btn_visit_portfolio": "زر موقعي",
 
         // admin.html
@@ -327,7 +343,8 @@ export const translations = {
         "offline.pin_hint": "🔒 أدخل اسم كل لاعب مع رمز PIN سري مكون من 4 أرقام لحماية دوره عند تمرير الجهاز:",
         "offline.btn_start_offline": "⚖️ توزيع الأدوار وبدء الجلسة",
         "offline.court_hub_title": "🏛️ قاعة المحاكمة (Pass & Play)",
-        "offline.hub_desc": "📱 طريقة اللعب: مرّر الجهاز لكل لاعب على حدة ليضغط على اسمه ويدخل الـ PIN الخاص به للاطلاع على دوره والمصلحة السرية، ثم يضغط إخفاء وقفل لتسليمه للّاعب التالي!",
+        "offline.hub_desc":
+            "📱 طريقة اللعب: مرّر الجهاز لكل لاعب على حدة ليضغط على اسمه ويدخل الـ PIN الخاص به للاطلاع على دوره والمصلحة السرية، ثم يضغط إخفاء وقفل لتسليمه للّاعب التالي!",
         "offline.judge_panel_title": "🔨 لوحة القاضي (الاستجواب)",
         "offline.defense_panel_title": "🛡️ أدلة الدفاع",
         "offline.verdict_panel_title": "⚖️ إصدار الحكم النهائي وإسدال الستار",
@@ -372,14 +389,17 @@ export const translations = {
         "btn.refresh": "Refresh",
         "status.loading": "Loading...",
         "status.processing": "Processing data...",
-        "custom_alert_title": "Judicial Notice",
-        "personal_score_label": "Your Score",
+        custom_alert_title: "Judicial Notice",
+        personal_score_label: "Your Score",
 
         // First time offline modal & alerts
         "offline.first_time_title": "First Visit Notice",
-        "offline.first_time_msg": "Dear player, welcome to Court of Roles! To begin your first visit, please turn on internet connectivity so you can enjoy offline play anytime later. Thank you for your patience.",
-        "offline.online_required_msg": "Creating or joining a room requires an internet connection.\nPlease enable internet and try again.",
-        "offline.notice_banner": "⚠️ Offline mode active: Local games available immediately, while online multiplayer requires network connection.",
+        "offline.first_time_msg":
+            "Dear player, welcome to Court of Roles! To begin your first visit, please turn on internet connectivity so you can enjoy offline play anytime later. Thank you for your patience.",
+        "offline.online_required_msg":
+            "Creating or joining a room requires an internet connection.\nPlease enable internet and try again.",
+        "offline.notice_banner":
+            "⚠️ Offline mode active: Local games available immediately, while online multiplayer requires network connection.",
         "offline.redirect_alert": "You have been redirected to offline mode due to loss of internet connection.",
 
         // index.html (Splash)
@@ -398,8 +418,9 @@ export const translations = {
         "rooms.user_guide": "User Guide",
         "rooms.rooms_log": "Rooms Registry",
         "rooms.translation_notice_title": "Translation Notice",
-        "rooms.translation_notice_body": "Translation is still in progress and does not yet cover all game texts, especially case stories and role details. Stay tuned for upcoming updates to get the complete translation!",
-        "rooms.download_game": "📥 Download Game",
+        "rooms.translation_notice_body":
+            "Translation is still in progress and does not yet cover all game texts, especially case stories and role details. Stay tuned for upcoming updates to get the complete translation!",
+        "rooms.download_game": "Download Game",
         "rooms.download_note": "My game link, don't forget to download it for a more enjoyable playing experience",
         "rooms.foyer_badge": "Cases & Trials Foyer",
         "rooms.foyer_title": "Court of Roles",
@@ -422,7 +443,8 @@ export const translations = {
         "rooms.feat_single_device": "Single Device",
         "rooms.feat_secret_pin": "Secret PIN",
         "rooms.feat_no_net": "No Network Needed",
-        "rooms.storage_tip": "To manage app storage, please visit the Rooms Registry and clear old rooms for a smoother experience.",
+        "rooms.storage_tip":
+            "To manage app storage, please visit the Rooms Registry and clear old rooms for a smoother experience.",
 
         // create.html
         "create.page_title": "Court of Roles - Waiting Room",
@@ -542,7 +564,8 @@ export const translations = {
         "judge.btn_start_inquiry": "Commence Examination",
         "judge.improv_modal_title": "🎭 Freeform Interrogation",
         "judge.improv_hint": "Ask your question aloud and examine the suspect now",
-        "judge.interrogate_first_warning": "🔒 Please select a player by clicking 'Interrogate Player' before using questions.",
+        "judge.interrogate_first_warning":
+            "🔒 Please select a player by clicking 'Interrogate Player' before using questions.",
         "judge.revoke_speaker_bar": "🎙️ Current Speaker:",
         "judge.btn_revoke_speech": "Revoke Speech Now",
         "judge.speak_req_title": "🎙️ {name} requests to speak",
@@ -584,7 +607,8 @@ export const translations = {
         "verdict.btn_acquit": "Acquit Defendant",
         "verdict.confirm_prompt": "Chief Judge, deliver the final and binding verdict on the primary suspect now:",
         "verdict.forced_end_title": "Forced Courtroom Closure",
-        "verdict.forced_end_confirm": "Are you sure you want to forcibly terminate the trial? All players will be returned to the archive.",
+        "verdict.forced_end_confirm":
+            "Are you sure you want to forcibly terminate the trial? All players will be returned to the archive.",
         "verdict.lawyer_ruling_title": "🚨 Judicial Ruling from Court Lawyer",
 
         // Voice Controls
@@ -625,20 +649,27 @@ export const translations = {
         "guide.page_title": "Court of Roles - User Guide",
         "guide.header_title": "User Guide",
         "guide.subtitle": "Click any question to view detailed rules, mechanics, and gameplay strategies",
-        "guide.q1": "What is the concept of \"Court of Roles\" and how does it start?",
-        "guide.a1": "The game relies on investigation, uncovering psychological secrets, and conflicting interests. The round begins by gathering players in an online room using your friend's room entry code. The system minimum to start any case is 3 players, and the game supports up to 10 players maximum per room to ensure balanced, interactive showdowns.",
+        "guide.q1": 'What is the concept of "Court of Roles" and how does it start?',
+        "guide.a1":
+            "The game relies on investigation, uncovering psychological secrets, and conflicting interests. The round begins by gathering players in an online room using your friend's room entry code. The system minimum to start any case is 3 players, and the game supports up to 10 players maximum per room to ensure balanced, interactive showdowns.",
         "guide.q2": "How are roles and secret cards distributed to players?",
-        "guide.a2": "When Start Game is clicked, the engine shuffles roles and secretly deals cards. Players are divided into: an Investigating Judge (who manages the session and interrogates), Lawyers, and Suspects, each guarding a \"vested secret\" hidden from the rest. The Judge and Lawyers are automatically enforced to be completely innocent of the crime to preserve the integrity of the judicial trial.",
-        "guide.q3": "What is the \"Missing Pieces & Conflict of Interest\" mechanic?",
-        "guide.a3": "Every player receives a public story to testify before the court, but also possesses a \"secret motive\" or secondary crime they hide (such as forgery, bribery, or document theft). The game does not rely on physical forensic search, but on players cross-examining each other to uncover contradictions and frame or prove charges based on clashing secrets.",
-        "guide.q4": "How does the scoring system and the risk of \"Early Verdict\" work?",
-        "guide.a4": "The Judge's verdict button and the Prosecution's indictment button activate after completing two interrogations. An early verdict (at interrogation 2 or 3) carries higher stakes: a correct verdict awards the Judge +20 points at interrogation 2 and +17 at the 3rd, while an incorrect verdict deducts -15 and -12 points respectively. Afterward, standard scoring applies: +10 for correct and -10 for incorrect.",
+        "guide.a2":
+            'When Start Game is clicked, the engine shuffles roles and secretly deals cards. Players are divided into: an Investigating Judge (who manages the session and interrogates), Lawyers, and Suspects, each guarding a "vested secret" hidden from the rest. The Judge and Lawyers are automatically enforced to be completely innocent of the crime to preserve the integrity of the judicial trial.',
+        "guide.q3": 'What is the "Missing Pieces & Conflict of Interest" mechanic?',
+        "guide.a3":
+            'Every player receives a public story to testify before the court, but also possesses a "secret motive" or secondary crime they hide (such as forgery, bribery, or document theft). The game does not rely on physical forensic search, but on players cross-examining each other to uncover contradictions and frame or prove charges based on clashing secrets.',
+        "guide.q4": 'How does the scoring system and the risk of "Early Verdict" work?',
+        "guide.a4":
+            "The Judge's verdict button and the Prosecution's indictment button activate after completing two interrogations. An early verdict (at interrogation 2 or 3) carries higher stakes: a correct verdict awards the Judge +20 points at interrogation 2 and +17 at the 3rd, while an incorrect verdict deducts -15 and -12 points respectively. Afterward, standard scoring applies: +10 for correct and -10 for incorrect.",
         "guide.q5": "How many cases are available and which case is pinned at the top?",
-        "guide.a5": "The compendium features 11 meticulously crafted cases (including The Ring Theft, Server Breach, Friday Market Kidnapping, and The Tower Tycoon Kidnapping). Case #1 \"The Serial Killer & 6-Player Chaos\" is pinned at the very top as an enticing hook encouraging players to invite their friends.",
-        "guide.q6": "How does the game end and what is the \"Final Confession & Story Reveal\" mechanic?",
-        "guide.a6": "After the verdict is pronounced, the Reveal engine runs. If the culprit is exposed, they must read aloud a mandatory confession text admitting their crime and dynamically revealing where the victim was hidden. If the culprit escapes and the Judge fails, a golden triumph text appears for the culprit mocking the court and revealing where the victim was hidden now that they are completely safe!",
+        "guide.a5":
+            'The compendium features 11 meticulously crafted cases (including The Ring Theft, Server Breach, Friday Market Kidnapping, and The Tower Tycoon Kidnapping). Case #1 "The Serial Killer & 6-Player Chaos" is pinned at the very top as an enticing hook encouraging players to invite their friends.',
+        "guide.q6": 'How does the game end and what is the "Final Confession & Story Reveal" mechanic?',
+        "guide.a6":
+            "After the verdict is pronounced, the Reveal engine runs. If the culprit is exposed, they must read aloud a mandatory confession text admitting their crime and dynamically revealing where the victim was hidden. If the culprit escapes and the Judge fails, a golden triumph text appears for the culprit mocking the court and revealing where the victim was hidden now that they are completely safe!",
         "guide.q7": "Who is the developer of the game and what are their latest projects?",
-        "guide.a7": "Allow me to introduce myself: I am web developer Ahmed|Web. I created this entire game hoping you will love both its concept and design. I specialize in web programming, and crafted this game so you can enjoy fresh ideas, mystery, and suspense. You can explore all my works on my portfolio website.",
+        "guide.a7":
+            "Allow me to introduce myself: I am web developer Ahmed|Web. I created this entire game hoping you will love both its concept and design. I specialize in web programming, and crafted this game so you can enjoy fresh ideas, mystery, and suspense. You can explore all my works on my portfolio website.",
         "guide.btn_visit_portfolio": "Visit My Portfolio",
 
         // admin.html
@@ -670,10 +701,12 @@ export const translations = {
         "offline.players_count_label": "Number of Players:",
         "offline.mode_scripted": "📜 Scripted Mode",
         "offline.mode_improv": "🎭 Improv Trial Mode",
-        "offline.pin_hint": "🔒 Enter each player's name and a secret 4-digit PIN to secure their role when passing the device:",
+        "offline.pin_hint":
+            "🔒 Enter each player's name and a secret 4-digit PIN to secure their role when passing the device:",
         "offline.btn_start_offline": "⚖️ Distribute Roles & Start Session",
         "offline.court_hub_title": "🏛️ Courtroom (Pass & Play)",
-        "offline.hub_desc": "📱 How to play: Pass device to each player to tap their name and enter their PIN to view their role and secret agenda, then lock it for the next player!",
+        "offline.hub_desc":
+            "📱 How to play: Pass device to each player to tap their name and enter their PIN to view their role and secret agenda, then lock it for the next player!",
         "offline.judge_panel_title": "🔨 Judge Bench (Interrogation)",
         "offline.defense_panel_title": "🛡️ Defense Evidence",
         "offline.verdict_panel_title": "⚖️ Issue Final Verdict & Conclude",
@@ -706,57 +739,68 @@ export const caseTranslations = {
     1: {
         title_ar: "قاتل متسلسل",
         title_en: "Serial Killer",
-        desc_en: "Behind the dense fog on the outskirts of the city lies the abandoned valley farm, a quiet haven concealing dark crimes..."
+        desc_en:
+            "Behind the dense fog on the outskirts of the city lies the abandoned valley farm, a quiet haven concealing dark crimes..."
     },
     2: {
         title_ar: "لغز الشقة الصامتة",
         title_en: "The Silent Apartment Mystery",
-        desc_en: "Behind the elegant walls of the quiet Jasmine quarter, a mysterious crime shook the residential complex..."
+        desc_en:
+            "Behind the elegant walls of the quiet Jasmine quarter, a mysterious crime shook the residential complex..."
     },
     3: {
         title_ar: "شفرة المخابرات.. تسريب شاشات الظلام",
         title_en: "Intelligence Cipher: Dark Screen Leak",
-        desc_en: "In the heart of the capital within the most fortified security facility, the Falcon Digital System suffered a critical breach..."
+        desc_en:
+            "In the heart of the capital within the most fortified security facility, the Falcon Digital System suffered a critical breach..."
     },
     4: {
         title_ar: "شبح السيدة عائشة.. اختفاء في سوق الجمعة",
         title_en: "Ghost of Sayeda Aisha: Friday Market Disappearance",
-        desc_en: "On a bustling Friday amidst the suffocating crowds of the famous Sayeda Aisha market, a chilling disappearance unfolded..."
+        desc_en:
+            "On a bustling Friday amidst the suffocating crowds of the famous Sayeda Aisha market, a chilling disappearance unfolded..."
     },
     5: {
         title_ar: "سقوط الأقنعة.. جريمة في فيلا التجمع",
         title_en: "Fallen Masks: Crime at the Tagamoa Villa",
-        desc_en: "On a lavish night inside an upscale Fifth Settlement villa, renowned creators gathered, until a deadly shot shattered the party..."
+        desc_en:
+            "On a lavish night inside an upscale Fifth Settlement villa, renowned creators gathered, until a deadly shot shattered the party..."
     },
     6: {
         title_ar: "اللحن الأخير.. خدعة الطابق العاشر",
         title_en: "The Final Melody: 10th Floor Deception",
-        desc_en: "On a quiet winter night at the Sadeem Tower in Maadi, the body of the young virtuoso musician was found..."
+        desc_en:
+            "On a quiet winter night at the Sadeem Tower in Maadi, the body of the young virtuoso musician was found..."
     },
     7: {
         title_ar: "شفرة النسيان.. الخدعة البنكية الصامتة",
         title_en: "Cipher of Oblivion: The Silent Bank Heist",
-        desc_en: "In the serenity of historic Garden City inside the estate of the retired tycoon, a silent digital theft occurred..."
+        desc_en:
+            "In the serenity of historic Garden City inside the estate of the retired tycoon, a silent digital theft occurred..."
     },
     8: {
         title_ar: "العشوائية المرسومة.. جثة خلف الحاوية",
         title_en: "Calculated Chaos: Body Behind the Container",
-        desc_en: "In an obscure corner of an alley in Downtown where waste containers pile high, a mysterious body was found..."
+        desc_en:
+            "In an obscure corner of an alley in Downtown where waste containers pile high, a mysterious body was found..."
     },
     9: {
         title_ar: "اللوحة الباكية.. خدعة المزاد المغلق",
         title_en: "The Crying Portrait: Closed Auction Fraud",
-        desc_en: "On the top floor of the Orient Louvre auction hall, a private auction showcased a masterpiece, until a shocking deceit was revealed..."
+        desc_en:
+            "On the top floor of the Orient Louvre auction hall, a private auction showcased a masterpiece, until a shocking deceit was revealed..."
     },
     10: {
         title_ar: "سراب الواحة.. جريمة الفندق المعزول",
         title_en: "Oasis Mirage: Crime at the Isolated Hotel",
-        desc_en: "Deep in the Siwa desert inside a heritage hotel trapped by a violent sandstorm cutting all communications, a murder took place..."
+        desc_en:
+            "Deep in the Siwa desert inside a heritage hotel trapped by a violent sandstorm cutting all communications, a murder took place..."
     },
     11: {
         title_ar: "ساعة الصفر.. الرمز الموقوت",
         title_en: "Zero Hour: The Timed Cipher",
-        desc_en: "Inside safety locker #14 at the Central Train Station, a briefcase containing a sophisticated timed explosive was discovered..."
+        desc_en:
+            "Inside safety locker #14 at the Central Train Station, a briefcase containing a sophisticated timed explosive was discovered..."
     }
 };
 
@@ -784,9 +828,9 @@ export const phraseMap = {
     "إنشاء غرفة": "Create Room",
     "انضمام لغرفة": "Join Room",
     "انضمام الى غرفة": "Join Room",
-    "انضمام": "Join",
+    انضمام: "Join",
     "لعب اوف لاين": "Play Offline",
-    "حسناً": "OK",
+    حسناً: "OK",
     "حسناً، فهمت": "Understood",
     "تراجع، البقاء": "Cancel, Stay",
     "نعم، مغادرة": "Yes, Leave",
@@ -802,8 +846,8 @@ export const phraseMap = {
     "نعم، حذف نهائي": "Yes, Permanently Delete",
     "حذف نهائي": "Delete",
     "حذف جميع الغرف": "Delete All Rooms",
-    "تحديث": "Refresh",
-    "إغلاق": "Close",
+    تحديث: "Refresh",
+    إغلاق: "Close",
     "طلب الكلمة": "Request Speech",
     "اعتراض قسري": "Forced Objection",
     "استجواب لاعب": "Interrogate Player",
@@ -824,11 +868,11 @@ export const phraseMap = {
     "‹ قائمة الغرف": "‹ Rooms List",
     "‹ عودة لصفحة الغرف": "‹ Back to Rooms",
     "‹ رجوع": "‹ Back",
-    "الرئيسية": "Home",
-    "مسح": "Clear",
-    "إلغاء": "Cancel",
-    "تأكيد": "Confirm",
-    "متابعة": "Continue",
+    الرئيسية: "Home",
+    مسح: "Clear",
+    إلغاء: "Cancel",
+    تأكيد: "Confirm",
+    متابعة: "Continue",
     "القارئ الذاتي": "Auto Reader",
     "القارئ الصوتي الذاتي": "Auto Voice Reader",
     "فتح القارئ الصوتي الذاتي": "Open Auto Voice Reader",
@@ -841,34 +885,45 @@ export const phraseMap = {
     "سرعة القراءة:": "Reading Speed:",
     "صوت المتحدث:": "Speaker Voice:",
     "صوت النظام الافتراضي (Web Speech)": "Default System Voice (Web Speech)",
-    "تم تفعيل القارئ الذاتي، ستجده أسفل الشاشة ويمكنك سحبه.": "Auto Reader enabled. You can find it at the bottom of the screen and drag it.",
+    "تم تفعيل القارئ الذاتي، ستجده أسفل الشاشة ويمكنك سحبه.":
+        "Auto Reader enabled. You can find it at the bottom of the screen and drag it.",
     "تم إلغاء القارئ الذاتي.": "Auto Reader disabled.",
     "تنبيه الترجمة": "Translation Notice",
-    "الترجمة لا تزال قيد الإنجاز ولم تكتمل بعد على جميع نصوص اللعبة، بالأخص نصوص القضايا وتفاصيل الأدوار. ترقبوا آخر التحديثات حتى تحصلوا على الترجمة كاملة!": "Translation is still in progress and does not yet cover all game texts, especially case stories and role details. Stay tuned for upcoming updates to get the complete translation!",
-    "📥 تحميل اللعبة": "📥 Download Game",
+    "الترجمة لا تزال قيد الإنجاز ولم تكتمل بعد على جميع نصوص اللعبة، بالأخص نصوص القضايا وتفاصيل الأدوار. ترقبوا آخر التحديثات حتى تحصلوا على الترجمة كاملة!":
+        "Translation is still in progress and does not yet cover all game texts, especially case stories and role details. Stay tuned for upcoming updates to get the complete translation!",
     "تحميل اللعبة": "Download Game",
-    "رابط لعبتي لا تنسى تحميله لتحظى بتجربة لعب امتع": "My game link, don't forget to download it for a more enjoyable playing experience",
+
+    "رابط لعبتي لا تنسى تحميله لتحظى بتجربة لعب امتع":
+        "My game link, don't forget to download it for a more enjoyable playing experience",
 
     // System notifications and alerts
     "انتظر الأدمن ليختار القضية وتبدأ اللعبة.": "Waiting for the Host to choose a case and begin the game.",
-    "مرحباً بك! انتظر الأدمن ليختار القضية المناسبة لبدء جولة المحاكمة.": "Welcome! Waiting for the Host to select a suitable case to begin the trial.",
-    "هل أنت متأكد من رغبتك في إنهاء المحكمة الحالية فوراً؟ سيتم إعادة جميع اللاعبين إلى موسوعة القضايا.": "Are you sure you want to terminate the current court immediately? All players will be returned to the cases archive.",
+    "مرحباً بك! انتظر الأدمن ليختار القضية المناسبة لبدء جولة المحاكمة.":
+        "Welcome! Waiting for the Host to select a suitable case to begin the trial.",
+    "هل أنت متأكد من رغبتك في إنهاء المحكمة الحالية فوراً؟ سيتم إعادة جميع اللاعبين إلى موسوعة القضايا.":
+        "Are you sure you want to terminate the current court immediately? All players will be returned to the cases archive.",
     "عذراً، المغادرة محظورة تماماً!": "Sorry, departure is strictly prohibited!",
-    "لا يمكنك مغادرة الجلسة القضائية الحية الحالية إلا بإذن منشئ الغرفة (المشرف). يرجى الانتظار حتى يقوم المسؤول بإنهاء المحاكمة بنفسه وسحبك للخارج.": "You cannot leave this live trial session without permission from the room host. Please wait until the host ends the trial.",
-    "🔒 اختر لاعباً للاستجواب أولاً بالضغط على زر 'استجواب لاعب' قبل استخدام الأسئلة.": "🔒 Please select a player by clicking 'Interrogate Player' before using questions.",
-    "🔒 يجب طلب الكلمة أو استخدام الاعتراض القسري أولاً، والحصول على فرصة التحدث من القاضي.": "🔒 You must request to speak or use a forced objection first, and be granted permission by the Judge.",
-    "سيادة قضائية نزيهة: أنت مبرأ تماماً من أي تهمة أو مصلحة سرية في هذه الجلسة.": "Integrity of the Bench: You are completely free of any charges or secret malice in this session.",
+    "لا يمكنك مغادرة الجلسة القضائية الحية الحالية إلا بإذن منشئ الغرفة (المشرف). يرجى الانتظار حتى يقوم المسؤول بإنهاء المحاكمة بنفسه وسحبك للخارج.":
+        "You cannot leave this live trial session without permission from the room host. Please wait until the host ends the trial.",
+    "🔒 اختر لاعباً للاستجواب أولاً بالضغط على زر 'استجواب لاعب' قبل استخدام الأسئلة.":
+        "🔒 Please select a player by clicking 'Interrogate Player' before using questions.",
+    "🔒 يجب طلب الكلمة أو استخدام الاعتراض القسري أولاً، والحصول على فرصة التحدث من القاضي.":
+        "🔒 You must request to speak or use a forced objection first, and be granted permission by the Judge.",
+    "سيادة قضائية نزيهة: أنت مبرأ تماماً من أي تهمة أو مصلحة سرية في هذه الجلسة.":
+        "Integrity of the Bench: You are completely free of any charges or secret malice in this session.",
     "مرسوم السيادة القضائية النزيهة:": "Decree of Judicial Integrity:",
-    "أنت مبرأ تماماً من أي تهمة أو مصلحة سرية خبيثة in هذه الجلسة. مصلحتك هي نصرة ميزان العدالة.": "You are completely free of any charges or ulterior motives in this session. Your sole interest is upholding justice.",
+    "أنت مبرأ تماماً من أي تهمة أو مصلحة سرية خبيثة in هذه الجلسة. مصلحتك هي نصرة ميزان العدالة.":
+        "You are completely free of any charges or ulterior motives in this session. Your sole interest is upholding justice.",
     "روايتك العلنية أمام الحضور:": "Your public testimony before the court:",
     "جريمتك المخفاة عن الكل 🤫:": "Your hidden secret crime 🤫:",
-    "🔒 المصلحة السرية لا تُقرأ صوتياً حفاظاً على سرية اللعبة.": "🔒 Secret agendas are not read aloud to maintain game confidentiality.",
+    "🔒 المصلحة السرية لا تُقرأ صوتياً حفاظاً على سرية اللعبة.":
+        "🔒 Secret agendas are not read aloud to maintain game confidentiality.",
     "⚠️ تنبيه قضائي: اقرأ تفاصيل القضية جيداً!": "⚠️ Judicial Notice: Read the case details carefully!",
     "تفاصيل ومجريات القصة:": "Case Story & Events:",
     "ميزان العدالة": "Scales of Justice",
-    "الاستجوابات": "Interrogations",
+    الاستجوابات: "Interrogations",
     "كروت الدفاع": "Defense Cards",
-    "رصيدك": "Your Score",
+    رصيدك: "Your Score",
     "؟ نقاط": "Pts",
     "كود الغرفة": "Room Code",
     "غرفة الانتظار": "Waiting Room",
@@ -996,8 +1051,8 @@ export function translateRoleTitle(roleName) {
         "مشتبه به غامض": "Mysterious Suspect",
         "الجاني الحقيقي": "True Culprit",
         "مشتبه به": "Suspect",
-        "بريء": "Innocent",
-        "محامٍ": "Lawyer",
+        بريء: "Innocent",
+        محامٍ: "Lawyer",
         "أحد المحامين": "One of the Lawyers",
         "أحد أطراف المحكمة": "Court Party Member"
     };
@@ -1082,14 +1137,18 @@ export function applyTranslations(root = document) {
     root.querySelectorAll("[data-i18n-case-id]").forEach((el) => {
         const caseId = el.getAttribute("data-i18n-case-id");
         if (caseId && caseTranslations[caseId]) {
-            el.textContent = isEn ? `${caseId}. ${caseTranslations[caseId].title_en}` : `${caseId}. ${caseTranslations[caseId].title_ar}`;
+            el.textContent = isEn
+                ? `${caseId}. ${caseTranslations[caseId].title_en}`
+                : `${caseId}. ${caseTranslations[caseId].title_ar}`;
         }
     });
 
     // Dynamic translation scan for known phrases when in English mode
     if (isEn) {
         // Buttons, sidebar links, labels, and status tags with known phrases
-        root.querySelectorAll("button, .btn-main, .sidebar-link, .sidebar-radio-title span, .radio-status-tag, #sidebar-tts-label, #sidebar-tts-tag, .sidebar-download-btn, .sidebar-download-note").forEach((btn) => {
+        root.querySelectorAll(
+            "button, .btn-main, .sidebar-link, .sidebar-radio-title span, .radio-status-tag, #sidebar-tts-label, #sidebar-tts-tag, .sidebar-download-btn, .sidebar-download-note"
+        ).forEach((btn) => {
             if (btn.classList.contains("btn-lang")) return;
             const text = btn.textContent.trim();
             if (phraseMap[text]) {

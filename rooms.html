@@ -152,14 +152,14 @@
                 justify-content: center;
                 gap: 8px;
                 width: 100%;
-                padding: 10px 14px;
+                padding: 6px 6px;
                 background: linear-gradient(135deg, rgba(213, 167, 92, 0.22) 0%, rgba(138, 98, 38, 0.32) 100%);
                 border: 1.5px solid var(--gold-glow, #d5a75c);
                 border-radius: 8px;
                 color: #f7e5be;
                 font-family: "Alexandria", system-ui, sans-serif;
                 font-weight: 700;
-                font-size: 0.95rem;
+                font-size: 0.7rem;
                 text-decoration: none;
                 text-align: center;
                 box-sizing: border-box;
@@ -181,7 +181,7 @@
             }
             body.rm-body .sidebar-download-note {
                 font-family: "Harmattan", system-ui, sans-serif;
-                font-size: 1rem;
+                font-size: 0.7rem;
                 font-weight: 600;
                 line-height: 1.45;
                 color: #d6cbbe;
@@ -191,7 +191,10 @@
             }
             html[dir="ltr"] body.rm-body .sidebar-download-note,
             html[lang="en"] body.rm-body .sidebar-download-note {
-                font-family: system-ui, -apple-system, sans-serif;
+                font-family:
+                    system-ui,
+                    -apple-system,
+                    sans-serif;
                 font-size: 0.8rem;
                 line-height: 1.4;
             }
@@ -235,7 +238,10 @@
             }
             html[dir="ltr"] body.rm-body .stn-body,
             html[lang="en"] body.rm-body .stn-body {
-                font-family: system-ui, -apple-system, sans-serif;
+                font-family:
+                    system-ui,
+                    -apple-system,
+                    sans-serif;
                 font-size: 0.78rem;
                 line-height: 1.45;
             }
@@ -487,28 +493,57 @@
                         </span>
                         <span data-i18n="rooms.radio_title">مشغل الراديو</span>
                     </span>
-                    <span id="sidebar-radio-tag" class="radio-status-tag is-stopped" data-i18n="rooms.radio_stopped">إيقاف</span>
+                    <span id="sidebar-radio-tag" class="radio-status-tag is-stopped" data-i18n="rooms.radio_stopped"
+                        >إيقاف</span
+                    >
                 </button>
                 <button id="btn-sidebar-tts" class="sidebar-link btn-sidebar-radio" type="button">
                     <span class="sidebar-radio-title">
                         <span class="sidebar-radio-icon">
-                            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 5 6 9H3v6h3l5 4V5Z"/><path d="M15.5 8.5a5 5 0 0 1 0 7"/><path d="M18.5 5.5a9 9 0 0 1 0 13"/></svg>
+                            <svg
+                                viewBox="0 0 24 24"
+                                width="18"
+                                height="18"
+                                fill="none"
+                                stroke="currentColor"
+                                stroke-width="2"
+                                stroke-linecap="round"
+                                stroke-linejoin="round">
+                                <path d="M11 5 6 9H3v6h3l5 4V5Z" />
+                                <path d="M15.5 8.5a5 5 0 0 1 0 7" />
+                                <path d="M18.5 5.5a9 9 0 0 1 0 13" />
+                            </svg>
                         </span>
                         <span id="sidebar-tts-label" data-i18n="tts.auto_reader">القارئ الذاتي</span>
                     </span>
-                    <span id="sidebar-tts-tag" class="radio-status-tag is-stopped" data-i18n="tts.status_stopped">متوقف</span>
+                    <span id="sidebar-tts-tag" class="radio-status-tag is-stopped" data-i18n="tts.status_stopped"
+                        >متوقف</span
+                    >
                 </button>
-                <a href="guide.html" id="link-user-guide" class="sidebar-link" data-i18n="rooms.user_guide">دليل المستخدم</a>
-                <a href="admin.html" class="sidebar-link" data-i18n="rooms.rooms_log" style="color: white; font-weight: bold">سجل الغرف</a>
+                <a href="guide.html" id="link-user-guide" class="sidebar-link" data-i18n="rooms.user_guide"
+                    >دليل المستخدم</a
+                >
+                <a
+                    href="admin.html"
+                    class="sidebar-link"
+                    data-i18n="rooms.rooms_log"
+                    style="color: white; font-weight: bold"
+                    >سجل الغرف</a
+                >
 
                 <!-- قسم تحميل اللعبة للأندرويد -->
                 <div class="sidebar-download-section">
-                    <a id="btn-sidebar-download"
-                       href="https://drive.google.com/uc?export=download&id=1jpU6rKR4EfjaLQ1GOVPhS2DOMdp6Q0V_"
-                       download="app-release (1).apk.zip"
-                       class="sidebar-download-btn"
-                       data-i18n="rooms.download_game">📥 تحميل اللعبة</a>
-                    <p class="sidebar-download-note" data-i18n="rooms.download_note">رابط لعبتي لا تنسى تحميله لتحظى بتجربة لعب امتع</p>
+                    <a
+                        id="btn-sidebar-download"
+                        href="https://drive.google.com/uc?export=download&id=1jpU6rKR4EfjaLQ1GOVPhS2DOMdp6Q0V_"
+                        download="app-release (1).apk.zip"
+                        class="sidebar-download-btn"
+                        data-i18n="rooms.download_game"
+                        >تحميل اللعبة</a
+                    >
+                    <p class="sidebar-download-note" data-i18n="rooms.download_note">
+                        رابط لعبتي لا تنسى تحميله لتحظى بتجربة لعب امتع
+                    </p>
                 </div>
 
                 <!-- صندوق تنبيه اكتمال الترجمة في قاع قائمة الإعدادات -->
@@ -518,7 +553,8 @@
                         <span class="stn-title" data-i18n="rooms.translation_notice_title">تنبيه الترجمة</span>
                     </div>
                     <p class="stn-body" data-i18n="rooms.translation_notice_body">
-                        الترجمة لا تزال قيد الإنجاز ولم تكتمل بعد على جميع نصوص اللعبة، بالأخص نصوص القضايا وتفاصيل الأدوار. ترقبوا آخر التحديثات حتى تحصلوا على الترجمة كاملة!
+                        الترجمة لا تزال قيد الإنجاز ولم تكتمل بعد على جميع نصوص اللعبة، بالأخص نصوص القضايا وتفاصيل
+                        الأدوار. ترقبوا آخر التحديثات حتى تحصلوا على الترجمة كاملة!
                     </p>
                 </div>
             </div>
@@ -550,7 +586,9 @@
             </header>
 
             <main class="rm-main">
-                <p class="rm-subtitle" data-i18n="rooms.foyer_subtitle">اختر إنشاء جولة جديدة أو انضم لغرفة أصدقائك لبدء المحاكمة</p>
+                <p class="rm-subtitle" data-i18n="rooms.foyer_subtitle">
+                    اختر إنشاء جولة جديدة أو انضم لغرفة أصدقائك لبدء المحاكمة
+                </p>
                 <!-- تنبيه وضع الأوفلاين الخفيف -->
                 <div
                     id="rooms-offline-notice"
@@ -577,7 +615,9 @@
                             <line x1="12" y1="20" x2="12.01" y2="20"></line>
                         </svg>
                     </span>
-                    <span class="offline-notice-text" data-i18n="offline.notice_banner">أنت الآن في وضع بلا إنترنت، فليست جميع المميزات متاحة.</span>
+                    <span class="offline-notice-text" data-i18n="offline.notice_banner"
+                        >أنت الآن في وضع بلا إنترنت، فليست جميع المميزات متاحة.</span
+                    >
                 </div>
 
                 <div class="rm-list">
@@ -586,7 +626,9 @@
                         <div class="rm-thumb"><img src="img/create.jpg" alt="إنشاء غرفة" /></div>
                         <div class="rm-card-body">
                             <span class="rm-card-title" data-i18n="rooms.card_create_title">إنشاء غرفة</span>
-                            <span class="rm-card-desc" data-i18n="rooms.card_create_desc">ابدأ محاكمة جديدة وشارك كود الغرفة مع أصدقائك.</span>
+                            <span class="rm-card-desc" data-i18n="rooms.card_create_desc"
+                                >ابدأ محاكمة جديدة وشارك كود الغرفة مع أصدقائك.</span
+                            >
                         </div>
                         <span class="rm-chevron" aria-hidden="true">‹</span>
                     </div>
@@ -597,7 +639,9 @@
                             <div class="rm-thumb"><img src="img/join.jpg" alt="انضمام لغرفة" /></div>
                             <div class="rm-card-body">
                                 <span class="rm-card-title" data-i18n="rooms.card_join_title">انضمام لغرفة</span>
-                                <span class="rm-card-desc" data-i18n="rooms.card_join_desc">أدخل كود صديقك وادخل الجلسة.</span>
+                                <span class="rm-card-desc" data-i18n="rooms.card_join_desc"
+                                    >أدخل كود صديقك وادخل الجلسة.</span
+                                >
                             </div>
                         </div>
 
@@ -637,20 +681,40 @@
             <div class="ticker-text-wrapper">
                 <div class="ticker-marquee">
                     <span data-i18n="ticker.msg1">اجتمع مع أصدقائك أو أحبابك لتحظى بتجربة لعب مميزة</span>
-                    <span data-i18n="ticker.msg2">محكمة الأدوار لعبة لا تمت للواقع بصلة و نكن جميع الاحترام لسلطة القضاء</span>
-                    <span data-i18n="ticker.msg3">نظراً لعدم توفر المايك في الوقت الحالي يمكنك إجراء مكالمة جماعية ويلعب كل لاعب من بيته في الوضع الأونلاين</span>
+                    <span data-i18n="ticker.msg2"
+                        >محكمة الأدوار لعبة لا تمت للواقع بصلة و نكن جميع الاحترام لسلطة القضاء</span
+                    >
+                    <span data-i18n="ticker.msg3"
+                        >نظراً لعدم توفر المايك في الوقت الحالي يمكنك إجراء مكالمة جماعية ويلعب كل لاعب من بيته في الوضع
+                        الأونلاين</span
+                    >
                     <span data-i18n="ticker.msg4">ماذا تنتظر؟ أنشئ غرفة وادعو أصدقائك أو العب مود الأوفلاين</span>
-                    <span data-i18n="ticker.msg5">لتعرف المزيد عن اللعبة وكيفية الإستمتاع بها يرجى زيارة صفحة دليل المستخدم</span>
-                    <span data-i18n="ticker.msg6">للتحكم في مساحة التطبيق يرجى زيارة صفحة سجل الغرف ومسح كل الغرف القديمة حتى تحظى بتجربة لعب مريحة</span>
+                    <span data-i18n="ticker.msg5"
+                        >لتعرف المزيد عن اللعبة وكيفية الإستمتاع بها يرجى زيارة صفحة دليل المستخدم</span
+                    >
+                    <span data-i18n="ticker.msg6"
+                        >للتحكم في مساحة التطبيق يرجى زيارة صفحة سجل الغرف ومسح كل الغرف القديمة حتى تحظى بتجربة لعب
+                        مريحة</span
+                    >
                 </div>
                 <!-- تكرار نفس الكتلة لملء الفراغ ومنع اختفاء الشريط -->
                 <div class="ticker-marquee">
                     <span data-i18n="ticker.msg1">اجتمع مع أصدقائك أو أحبابك لتحظى بتجربة لعب مميزة</span>
-                    <span data-i18n="ticker.msg2">محكمة الأدوار لعبة لا تمت للواقع بصلة و نكن جميع الاحترام لسلطة القضاء</span>
-                    <span data-i18n="ticker.msg3">نظراً لعدم توفر المايك في الوقت الحالي يمكنك إجراء مكالمة جماعية ويلعب كل لاعب من بيته في الوضع الأونلاين</span>
+                    <span data-i18n="ticker.msg2"
+                        >محكمة الأدوار لعبة لا تمت للواقع بصلة و نكن جميع الاحترام لسلطة القضاء</span
+                    >
+                    <span data-i18n="ticker.msg3"
+                        >نظراً لعدم توفر المايك في الوقت الحالي يمكنك إجراء مكالمة جماعية ويلعب كل لاعب من بيته في الوضع
+                        الأونلاين</span
+                    >
                     <span data-i18n="ticker.msg4">ماذا تنتظر؟ أنشئ غرفة وادعو أصدقائك أو العب مود الأوفلاين</span>
-                    <span data-i18n="ticker.msg5">لتعرف المزيد عن اللعبة وكيفية الإستمتاع بها يرجى زيارة صفحة دليل المستخدم</span>
-                    <span data-i18n="ticker.msg6">للتحكم في مساحة التطبيق يرجى زيارة صفحة سجل الغرف ومسح كل الغرف القديمة حتى تحظى بتجربة لعب مريحة</span>
+                    <span data-i18n="ticker.msg5"
+                        >لتعرف المزيد عن اللعبة وكيفية الإستمتاع بها يرجى زيارة صفحة دليل المستخدم</span
+                    >
+                    <span data-i18n="ticker.msg6"
+                        >للتحكم في مساحة التطبيق يرجى زيارة صفحة سجل الغرف ومسح كل الغرف القديمة حتى تحظى بتجربة لعب
+                        مريحة</span
+                    >
                 </div>
             </div>
         </div>
