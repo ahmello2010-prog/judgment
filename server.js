@@ -1,6 +1,7 @@
 import express from "express";
 import http from "http";
 import path from "path";
+import fs from "fs";
 import { fileURLToPath } from "url";
 import { MsEdgeTTS, OUTPUT_FORMAT } from "msedge-tts";
 import { WebSocketServer } from "ws";
@@ -101,12 +102,27 @@ app.all("/getLiveKitToken", (req, res) => livekitTokenHandler(req, res));
 app.use("/vendor/livekit", express.static(path.join(__dirname, "node_modules/livekit-client/dist")));
 
 // مسار تنزيل ملف لعبة محكمة الأدوار مباشرة لهواتف الأندرويد (.apk)
-app.get(["/download/role-court.apk", "/downloads/role-court.apk"], (req, res) => {
-    const apkPath = path.join(__dirname, "public/downloads/role-court.apk");
-    res.setHeader("Content-Type", "application/vnd.android.package-archive");
-    res.setHeader("Content-Disposition", 'attachment; filename="role-court.apk"');
-    return res.sendFile(apkPath);
-});
+app.get(
+    [
+        "/download/role-court.apk",
+        "/downloads/role-court.apk",
+        "/download/app-release.apk",
+        "/downloads/app-release.apk",
+        "/role-court.apk",
+        "/app-release.apk",
+        "/download",
+        "/downloads"
+    ],
+    (req, res) => {
+        const apkPath = path.join(__dirname, "public/downloads/role-court.apk");
+        if (!fs.existsSync(apkPath)) {
+            return res.status(404).send("الملف جارٍ تجهيزه أو غير موجود حالياً.");
+        }
+        res.setHeader("Content-Type", "application/vnd.android.package-archive");
+        res.setHeader("Content-Disposition", 'attachment; filename="role-court.apk"');
+        return res.sendFile(apkPath);
+    }
+);
 
 // Serve static assets from project root
 app.use(

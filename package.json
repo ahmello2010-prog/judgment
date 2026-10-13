@@ -7,7 +7,8 @@
   "scripts": {
     "dev": "node server.js",
     "start": "node server.js",
-    "build": "echo 'Build complete'"
+    "build": "echo 'Build complete'",
+    "lint": "node --check server.js api/livekit-token.js api/speak.js"
   },
   "dependencies": {
     "express": "^4.21.2",
