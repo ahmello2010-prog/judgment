@@ -965,12 +965,14 @@ export function initGlobalTextReader() {
     if (!HAS_DOM || document.getElementById("tts-global-root") || !canOwnReader()) return;
     injectReaderStyles();
 
+    const isEn = typeof window !== "undefined" && localStorage.getItem("court_ui_lang") === "en";
+
     const root = document.createElement("div");
     root.id = "tts-global-root";
     root.className = "tts-floating-container";
     root.innerHTML = `
-        <button type="button" id="tts-fab-toggle" class="tts-fab-btn" aria-label="فتح القارئ الصوتي الذاتي" style="touch-action: none !important;">
-         <span>القارئ الذاتي</span>
+        <button type="button" id="tts-fab-toggle" class="tts-fab-btn" aria-label="${isEn ? "Open Auto Voice Reader" : "فتح القارئ الصوتي الذاتي"}" data-i18n-aria="tts.fab_aria" style="touch-action: none !important;">
+         <span data-i18n="tts.auto_reader">${isEn ? "Auto Reader" : "القارئ الذاتي"}</span>
          <span class="tts-fab-icon" aria-hidden="true">
               <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 5 6 9H3v6h3l5 4V5Z"/><path d="M15.5 8.5a5 5 0 0 1 0 7"/><path d="M18.5 5.5a9 9 0 0 1 0 13"/></svg>
           </span>
@@ -982,59 +984,59 @@ export function initGlobalTextReader() {
                     <span aria-hidden="true">
                         <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0"/><path d="M12 18v3"/><path d="M8 21h8"/></svg>
                     </span>
-                    <span>القارئ الصوتي الذاتي</span>
+                    <span data-i18n="tts.dock_title">${isEn ? "Auto Voice Reader" : "القارئ الصوتي الذاتي"}</span>
                 </h4>
                 <button type="button" id="tts-dock-close" class="tts-dock-close" aria-label="إغلاق">&times;</button>
             </div>
 
-            <div id="tts-dock-status" class="tts-dock-status">جاهز للاستماع</div>
+            <div id="tts-dock-status" class="tts-dock-status" data-i18n="tts.ready">${isEn ? "Ready to listen" : "جاهز للاستماع"}</div>
 
             <div class="tts-dock-actions">
-                <button type="button" id="tts-dock-playpause" class="tts-dock-btn" title="قراءة محتوى الصفحة">
+                <button type="button" id="tts-dock-playpause" class="tts-dock-btn" title="${isEn ? "Read Page" : "قراءة محتوى الصفحة"}">
                     <span aria-hidden="true">
                         <svg viewBox="0 0 24 24" width="17" height="17" fill="currentColor"><path d="M8 5.2v13.6c0 .9 1 1.45 1.8.98l10.2-6.8a1.18 1.18 0 0 0 0-1.96L9.8 4.22C9 3.75 8 4.3 8 5.2Z"/></svg>
                     </span>
-                    <span>قراءة الصفحة</span>
+                    <span data-i18n="tts.read_page">${isEn ? "Read Page" : "قراءة الصفحة"}</span>
                 </button>
-                <button type="button" id="tts-dock-stop" class="tts-dock-btn" title="إيقاف القراءة">
+                <button type="button" id="tts-dock-stop" class="tts-dock-btn" title="${isEn ? "Stop Reading" : "إيقاف القراءة"}">
                     <span aria-hidden="true">
                         <svg viewBox="0 0 24 24" width="17" height="17" fill="currentColor"><rect x="6" y="6" width="12" height="12" rx="1.5"/></svg>
                     </span>
-                    <span>إيقاف</span>
+                    <span data-i18n="tts.stop">${isEn ? "Stop" : "إيقاف"}</span>
                 </button>
             </div>
 
             <div class="tts-dock-actions">
-                <button type="button" id="tts-dock-clickread" class="tts-dock-btn" title="انقر على أي فقرة أو سؤال لسماعه">
+                <button type="button" id="tts-dock-clickread" class="tts-dock-btn" title="${isEn ? "Click to Read" : "انقر على أي فقرة أو سؤال لسماعه"}">
                     <span aria-hidden="true">
                         <svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M9.5 11V6.8a1.7 1.7 0 0 1 3.4 0v5.1"/><path d="M12.9 10.2V8.7a1.6 1.6 0 0 1 3.2 0v3.6"/><path d="M16.1 11V9.9a1.5 1.5 0 0 1 3 0v4.2c0 4-2.6 6.6-6.2 6.6h-.7c-2.4 0-4.4-1.1-5.6-3.1l-1.8-3a1.6 1.6 0 0 1 2.8-1.6l1.9 2.4V11a1.5 1.5 0 0 1 3 0Z"/></svg>
                     </span>
-                    <span>انقر للقراءة</span>
+                    <span data-i18n="tts.click_to_read">${isEn ? "Click to Read" : "انقر للقراءة"}</span>
                 </button>
             </div>
 
             <div class="tts-dock-speed-row">
-                <span>سرعة القراءة:</span>
+                <span data-i18n="tts.speed">${isEn ? "Reading Speed:" : "سرعة القراءة:"}</span>
                 <div class="tts-speed-btns">
                     <button type="button" class="tts-speed-chip" data-speed="0.8">0.8x</button>
-                    <button type="button" class="tts-speed-chip active" data-speed="1.0">عادي</button>
+                    <button type="button" class="tts-speed-chip active" data-speed="1.0" data-i18n="tts.speed_normal">${isEn ? "Normal" : "عادي"}</button>
                     <button type="button" class="tts-speed-chip" data-speed="1.25">1.25x</button>
                 </div>
             </div>
 
             <div class="tts-dock-voice-row" style="display:flex;align-items:center;justify-content:space-between;padding-top:6px;border-top:1px solid rgba(255,255,255,0.08);font-size:0.72rem;color:#cbd5e1;">
-                <span>صوت المتحدث:</span>
+                <span data-i18n="tts.voice">${isEn ? "Speaker Voice:" : "صوت المتحدث:"}</span>
                 <select id="tts-voice-select" style="background:#0a1118;border:1px solid rgba(213,167,92,0.5);color:var(--gold-glow,#d5a75c);border-radius:6px;padding:3px 6px;font-family:inherit;font-size:0.68rem;cursor:pointer;outline:none;max-width:180px;">
-                    <option value="__device_auto__" selected>صوت النظام الافتراضي (Web Speech)</option>
+                    <option value="__device_auto__" selected data-i18n="tts.default_voice">${isEn ? "Default System Voice (Web Speech)" : "صوت النظام الافتراضي (Web Speech)"}</option>
                 </select>
             </div>
 
             <div class="tts-dock-actions" style="margin-top:6px;">
-                <button type="button" id="tts-dock-test" class="tts-dock-btn" style="border-color:#4ade80;color:#4ade80;" title="فحص نطق الصوت في متصفحك">
+                <button type="button" id="tts-dock-test" class="tts-dock-btn" style="border-color:#4ade80;color:#4ade80;" title="${isEn ? "Test Audio on Device" : "فحص نطق الصوت في متصفحك"}">
                     <span aria-hidden="true">
                         <svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 3 6 0"/><path d="M10 3v6.2L5.5 17a3 3 0 0 0 2.6 4.5h7.8a3 3 0 0 0 2.6-4.5L14 9.2V3"/><path d="M8 15h8"/></svg>
                     </span>
-                    <span>فحص الصوت في جهازك</span>
+                    <span data-i18n="tts.test_voice">${isEn ? "Test Audio on Device" : "فحص الصوت في جهازك"}</span>
                 </button>
             </div>
         </div>
@@ -1043,7 +1045,7 @@ export function initGlobalTextReader() {
             <span aria-hidden="true">
                 <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 5 6 9H3v6h3l5 4V5Z"/><path d="M15.5 8.5a5 5 0 0 1 0 7"/><path d="M18.5 5.5a9 9 0 0 1 0 13"/></svg>
             </span>
-            <span>استمع للمحدد</span>
+            <span data-i18n="tts.read_selection">${isEn ? "Read Selection" : "استمع للمحدد"}</span>
         </button>
     `;
 
@@ -1532,29 +1534,78 @@ export function setGlobalTextReaderEnabled(enabled) {
     } catch (e) {
         // تجاهل
     }
+    const isEn = typeof window !== "undefined" && localStorage.getItem("court_ui_lang") === "en";
     if (enabled) {
         initGlobalTextReader();
-        showReaderToast("تم تفعيل القارئ الذاتي، ستجده أسفل الشاشة ويمكنك سحبه.");
+        showReaderToast(isEn ? "Auto Reader enabled. You can find it at the bottom of the screen and drag it." : "تم تفعيل القارئ الذاتي، ستجده أسفل الشاشة ويمكنك سحبه.");
     } else {
         if (readerTeardown) readerTeardown();
-        showReaderToast("تم إلغاء القارئ الذاتي.");
+        showReaderToast(isEn ? "Auto Reader disabled." : "تم إلغاء القارئ الذاتي.");
     }
     updateReaderSidebarUi();
 }
 
+export function updateReaderUiTexts() {
+    if (!HAS_DOM) return;
+    const isEn = typeof window !== "undefined" && localStorage.getItem("court_ui_lang") === "en";
+    const root = document.getElementById("tts-global-root");
+    if (root) {
+        const fabBtn = root.querySelector("#tts-fab-toggle");
+        if (fabBtn) {
+            fabBtn.setAttribute("aria-label", isEn ? "Open Auto Voice Reader" : "فتح القارئ الصوتي الذاتي");
+            const span = fabBtn.querySelector("span:not(.tts-fab-icon)");
+            if (span) span.textContent = isEn ? "Auto Reader" : "القارئ الذاتي";
+        }
+        const dockTitle = root.querySelector(".tts-dock-title > span:last-child");
+        if (dockTitle) dockTitle.textContent = isEn ? "Auto Voice Reader" : "القارئ الصوتي الذاتي";
+        const playBtnSpan = root.querySelector("#tts-dock-playpause > span:last-child");
+        if (playBtnSpan) playBtnSpan.textContent = isEn ? "Read Page" : "قراءة الصفحة";
+        const stopBtnSpan = root.querySelector("#tts-dock-stop > span:last-child");
+        if (stopBtnSpan) stopBtnSpan.textContent = isEn ? "Stop" : "إيقاف";
+        const clickBtnSpan = root.querySelector("#tts-dock-clickread > span:last-child");
+        if (clickBtnSpan) clickBtnSpan.textContent = isEn ? "Click to Read" : "انقر للقراءة";
+        const speedRowSpan = root.querySelector(".tts-dock-speed-row > span:first-child");
+        if (speedRowSpan) speedRowSpan.textContent = isEn ? "Reading Speed:" : "سرعة القراءة:";
+        const normalChip = root.querySelector('.tts-speed-chip[data-speed="1.0"]');
+        if (normalChip) normalChip.textContent = isEn ? "Normal" : "عادي";
+        const voiceRowSpan = root.querySelector(".tts-dock-voice-row > span:first-child");
+        if (voiceRowSpan) voiceRowSpan.textContent = isEn ? "Speaker Voice:" : "صوت المتحدث:";
+        const defOpt = root.querySelector('#tts-voice-select option[value="__device_auto__"]');
+        if (defOpt) defOpt.textContent = isEn ? "Default System Voice (Web Speech)" : "صوت النظام الافتراضي (Web Speech)";
+        const testBtnSpan = root.querySelector("#tts-dock-test > span:last-child");
+        if (testBtnSpan) testBtnSpan.textContent = isEn ? "Test Audio on Device" : "فحص الصوت في جهازك";
+        const pillSpan = root.querySelector("#tts-selection-pill > span:last-child");
+        if (pillSpan) pillSpan.textContent = isEn ? "Read Selection" : "استمع للمحدد";
+        const statusEl = document.getElementById("tts-dock-status");
+        if (statusEl) {
+            const cur = statusEl.textContent.trim();
+            if (cur === "جاهز للاستماع" || cur === "Ready to listen") {
+                statusEl.textContent = isEn ? "Ready to listen" : "جاهز للاستماع";
+            }
+        }
+    }
+}
+
 function updateReaderSidebarUi() {
     const on = isReaderEnabled();
+    const isEn = typeof window !== "undefined" && localStorage.getItem("court_ui_lang") === "en";
     const tag = document.getElementById("sidebar-tts-tag");
     const btn = document.getElementById("btn-sidebar-tts");
+    const lbl = document.getElementById("sidebar-tts-label");
+    if (lbl) {
+        lbl.textContent = isEn ? "Auto Reader" : "القارئ الذاتي";
+    }
     if (tag) {
-        tag.textContent = on ? "مفعّل" : "متوقف";
+        tag.textContent = on ? (isEn ? "Active" : "مفعّل") : (isEn ? "Off" : "متوقف");
         tag.className = "radio-status-tag " + (on ? "is-playing" : "is-stopped");
+        tag.setAttribute("data-i18n", on ? "tts.status_active" : "tts.status_stopped");
     }
     if (btn) btn.setAttribute("aria-pressed", String(on));
 }
 
 export function attachReaderSidebarToggle() {
     if (!HAS_DOM) return;
+    const isEn = typeof window !== "undefined" && localStorage.getItem("court_ui_lang") === "en";
     document.querySelectorAll("#sidebar-drawer .sidebar-content").forEach((content) => {
         let btn = content.querySelector("#btn-sidebar-tts");
         if (!btn) {
@@ -1567,9 +1618,9 @@ export function attachReaderSidebarToggle() {
                     <span class="sidebar-radio-icon">
                         <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 5 6 9H3v6h3l5 4V5Z"/><path d="M15.5 8.5a5 5 0 0 1 0 7"/><path d="M18.5 5.5a9 9 0 0 1 0 13"/></svg>
                     </span>
-                    <span>القارئ الذاتي</span>
+                    <span id="sidebar-tts-label" data-i18n="tts.auto_reader">${isEn ? "Auto Reader" : "القارئ الذاتي"}</span>
                 </span>
-                <span id="sidebar-tts-tag" class="radio-status-tag is-stopped">متوقف</span>
+                <span id="sidebar-tts-tag" class="radio-status-tag is-stopped" data-i18n="tts.status_stopped">${isEn ? "Off" : "متوقف"}</span>
             `;
             const radioBtn = content.querySelector("#btn-sidebar-radio");
             if (radioBtn) radioBtn.after(btn);
@@ -1605,6 +1656,12 @@ if (HAS_DOM) {
     };
     window.addEventListener("court-viewport-change", syncReaderOwnership);
     window.addEventListener("pageshow", syncReaderOwnership);
+
+    // تحديث النصوص عند تغيير لغة الموقع
+    window.addEventListener("court_language_changed", () => {
+        updateReaderSidebarUi();
+        updateReaderUiTexts();
+    });
 
     // لو غيّر اللاعب الحالة من تبويب آخر مفتوح للموقع
     window.addEventListener("storage", (e) => {

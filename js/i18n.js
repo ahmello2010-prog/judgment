@@ -275,6 +275,21 @@ export const translations = {
         "guide.page_title": "محكمة الأدوار - دليل المستخدم",
         "guide.header_title": "دليل المستخدم",
         "guide.subtitle": "اضغط على أي سؤال لقراءة القوانين والميكانيكيات التفصيلية وكيفية اللعب",
+        "guide.q1": "ما هي فكرة لعبة \"محكمة الأدوار\" وكيف تبدأ؟",
+        "guide.a1": "اللعبة تعتمد على التحقيق واستنباط الأسرار النفسية وتضارب المصالح. تبدأ الجولة بتجميع اللاعبين في غرفة جولة أونلاين بكود دخول غرفة صديقك. الحد الأدنى البرمجي لبدء أي قضية هو 3 لاعبين، وتدعم اللعبة حتى 10 لاعبين كحد أقصى في الغرفة الواحدة لضمان مواجهات تفاعلية متوازنة.",
+        "guide.q2": "كيف يتم توزيع الأدوار والبطاقات على اللاعبين؟",
+        "guide.a2": "عند الضغط على بدء اللعبة، يقوم المحرك البرمجي بخلط الأدوار وتوزيع الكروت سرياً. ينقسم اللاعبون إلى: قاضٍ محقق (يدير الجلسة ويستجوب)، ومحامين، ومتهمين يحمي كل منهم \"سراً مصلحياً\" يخفيه عن البقية. يتم إجبار القاضي والمحامين تلقائياً على أن يكونوا أبرياء تماماً من الجريمة لضمان نزاهة المحاكمة الشرعية.",
+        "guide.q3": "ما هي ميكانيكية \"القطع المفقودة وتضارب المصالح\"؟",
+        "guide.a3": "كل لاعب يحصل على قصة علنية يشهد بها أمام المحكمة، ولكن لديه \"مصلحة سرية\" أو جريمة جانبية يخفيها (مثل تزوير، رشوة، أو سرقة مستندات). اللعبة لا تعتمد على البحث الجنائي الميداني، بل على استجواب اللاعبين لبعضهم البعض لكشف التناقضات ومحاولة تلفيق أو إثبات التهمة بناءً على تضارب الأسرار.",
+        "guide.q4": "كيف يعمل نظام حساب النقاط وخطر \"الحكم المبكر\"؟",
+        "guide.a4": "يتفعل زر الحكم للقاضي، وزر الاتهام لمحامي الادعاء، بعد إكمال استجوابين. الحكم المبكر (عند الاستجواب 2 أو 3) له نقاط أعلى: الحكم الصحيح يمنح القاضي +20 عند الاستجواب 2 و+17 عند الثالث، والخاطئ يخصم منه -15 و-12 على الترتيب. بعد ذلك تصبح المرحلة العامة: +10 للحكم الصحيح و-10 للخاطئ.",
+        "guide.q5": "كم عدد القضايا المتاحة وما هي القضية المثبتة في الأعلى؟",
+        "guide.a5": "الموسوعة تحتوي على 11 قضية محبوكة بدقة (مثل سرقة الخاتم، اختراق الخادم، الخطف في سوق الجمعة، واختطاف المليونير من البرج). تم نقل قضية \"القاتل المتسلسل وفوضى تجميع 6 لاعبين\" لتكون القضية رقم 1 المثبتة إجبارياً في أعلى الواجهة كطعم تشويقي لحث اللاعبين على دعوة أصدقائهم.",
+        "guide.q6": "كيف تنتهي اللعبة وما هي ميكانيكية \"الاعتراف النهائي وسرد القصة\"؟",
+        "guide.a6": "بعد صدور الحكم، يتم تشغيل دالة الكشف (Reveal). إذا كُشف الجاني، يظهر أمامه نص إجباري يقرأه بصوت عالٍ يعترف فيه بجريمته ويكشف ديناميكياً عن مكان إخفاء الضحية. وإذا أفلت الجاني وخسر القاضي، يظهر النص الذهبي للجاني ليفضح ذكائه ويسخر من المحكمة ويكشف أين خبأ الضحية بعد أن أصبح في أمان تماماً!",
+        "guide.q7": "من هو مطور اللعبة و اخر اعماله",
+        "guide.a7": "اعرفكم بنفسي انا مطور المواقع Ahmed|Web و قررت انشاء هذه اللعبة كاملا لتنال اعجابكوا كفكرة و كتصميم و اعمل اصلا في مجال برمجة المواقع و لكني اخترت ان اصمم اللعبة حتى تستمتع باحدث الأفكار و متعة الغموض و الاثارة اما ان كنت تريد فهذا موقع يعرض جميع اعمالي",
+        "guide.btn_visit_portfolio": "زر موقعي",
 
         // admin.html
         "admin.page_title": "محكمة الأدوار - سجل الغرف",
@@ -313,7 +328,26 @@ export const translations = {
         "offline.defense_panel_title": "🛡️ أدلة الدفاع",
         "offline.verdict_panel_title": "⚖️ إصدار الحكم النهائي وإسدال الستار",
         "offline.btn_new_round": "🔄 جولة جديدة",
-        "offline.btn_home": "الرئيسية"
+        "offline.btn_home": "الرئيسية",
+
+        // Auto Reader / TTS
+        "tts.auto_reader": "القارئ الذاتي",
+        "tts.dock_title": "القارئ الصوتي الذاتي",
+        "tts.fab_aria": "فتح القارئ الصوتي الذاتي",
+        "tts.ready": "جاهز للاستماع",
+        "tts.read_page": "قراءة الصفحة",
+        "tts.stop": "إيقاف",
+        "tts.click_to_read": "انقر للقراءة",
+        "tts.speed": "سرعة القراءة:",
+        "tts.speed_normal": "عادي",
+        "tts.voice": "صوت المتحدث:",
+        "tts.default_voice": "صوت النظام الافتراضي (Web Speech)",
+        "tts.test_voice": "فحص الصوت في جهازك",
+        "tts.read_selection": "استمع للمحدد",
+        "tts.status_active": "مفعّل",
+        "tts.status_stopped": "متوقف",
+        "tts.toast_enabled": "تم تفعيل القارئ الذاتي، ستجده أسفل الشاشة ويمكنك سحبه.",
+        "tts.toast_disabled": "تم إلغاء القارئ الذاتي."
     },
     en: {
         // App branding & General
@@ -583,6 +617,21 @@ export const translations = {
         "guide.page_title": "Court of Roles - User Guide",
         "guide.header_title": "User Guide",
         "guide.subtitle": "Click any question to view detailed rules, mechanics, and gameplay strategies",
+        "guide.q1": "What is the concept of \"Court of Roles\" and how does it start?",
+        "guide.a1": "The game relies on investigation, uncovering psychological secrets, and conflicting interests. The round begins by gathering players in an online room using your friend's room entry code. The system minimum to start any case is 3 players, and the game supports up to 10 players maximum per room to ensure balanced, interactive showdowns.",
+        "guide.q2": "How are roles and secret cards distributed to players?",
+        "guide.a2": "When Start Game is clicked, the engine shuffles roles and secretly deals cards. Players are divided into: an Investigating Judge (who manages the session and interrogates), Lawyers, and Suspects, each guarding a \"vested secret\" hidden from the rest. The Judge and Lawyers are automatically enforced to be completely innocent of the crime to preserve the integrity of the judicial trial.",
+        "guide.q3": "What is the \"Missing Pieces & Conflict of Interest\" mechanic?",
+        "guide.a3": "Every player receives a public story to testify before the court, but also possesses a \"secret motive\" or secondary crime they hide (such as forgery, bribery, or document theft). The game does not rely on physical forensic search, but on players cross-examining each other to uncover contradictions and frame or prove charges based on clashing secrets.",
+        "guide.q4": "How does the scoring system and the risk of \"Early Verdict\" work?",
+        "guide.a4": "The Judge's verdict button and the Prosecution's indictment button activate after completing two interrogations. An early verdict (at interrogation 2 or 3) carries higher stakes: a correct verdict awards the Judge +20 points at interrogation 2 and +17 at the 3rd, while an incorrect verdict deducts -15 and -12 points respectively. Afterward, standard scoring applies: +10 for correct and -10 for incorrect.",
+        "guide.q5": "How many cases are available and which case is pinned at the top?",
+        "guide.a5": "The compendium features 11 meticulously crafted cases (including The Ring Theft, Server Breach, Friday Market Kidnapping, and The Tower Tycoon Kidnapping). Case #1 \"The Serial Killer & 6-Player Chaos\" is pinned at the very top as an enticing hook encouraging players to invite their friends.",
+        "guide.q6": "How does the game end and what is the \"Final Confession & Story Reveal\" mechanic?",
+        "guide.a6": "After the verdict is pronounced, the Reveal engine runs. If the culprit is exposed, they must read aloud a mandatory confession text admitting their crime and dynamically revealing where the victim was hidden. If the culprit escapes and the Judge fails, a golden triumph text appears for the culprit mocking the court and revealing where the victim was hidden now that they are completely safe!",
+        "guide.q7": "Who is the developer of the game and what are their latest projects?",
+        "guide.a7": "Allow me to introduce myself: I am web developer Ahmed|Web. I created this entire game hoping you will love both its concept and design. I specialize in web programming, and crafted this game so you can enjoy fresh ideas, mystery, and suspense. You can explore all my works on my portfolio website.",
+        "guide.btn_visit_portfolio": "Visit My Portfolio",
 
         // admin.html
         "admin.page_title": "Court of Roles - Rooms Registry",
@@ -621,7 +670,26 @@ export const translations = {
         "offline.defense_panel_title": "🛡️ Defense Evidence",
         "offline.verdict_panel_title": "⚖️ Issue Final Verdict & Conclude",
         "offline.btn_new_round": "🔄 New Round",
-        "offline.btn_home": "Home"
+        "offline.btn_home": "Home",
+
+        // Auto Reader / TTS
+        "tts.auto_reader": "Auto Reader",
+        "tts.dock_title": "Auto Voice Reader",
+        "tts.fab_aria": "Open Auto Voice Reader",
+        "tts.ready": "Ready to listen",
+        "tts.read_page": "Read Page",
+        "tts.stop": "Stop",
+        "tts.click_to_read": "Click to Read",
+        "tts.speed": "Reading Speed:",
+        "tts.speed_normal": "Normal",
+        "tts.voice": "Speaker Voice:",
+        "tts.default_voice": "Default System Voice (Web Speech)",
+        "tts.test_voice": "Test Audio on Device",
+        "tts.read_selection": "Read Selection",
+        "tts.status_active": "Active",
+        "tts.status_stopped": "Off",
+        "tts.toast_enabled": "Auto Reader enabled. You can find it at the bottom of the screen and drag it.",
+        "tts.toast_disabled": "Auto Reader disabled."
     }
 };
 
@@ -753,6 +821,20 @@ export const phraseMap = {
     "إلغاء": "Cancel",
     "تأكيد": "Confirm",
     "متابعة": "Continue",
+    "القارئ الذاتي": "Auto Reader",
+    "القارئ الصوتي الذاتي": "Auto Voice Reader",
+    "فتح القارئ الصوتي الذاتي": "Open Auto Voice Reader",
+    "جاهز للاستماع": "Ready to listen",
+    "قراءة الصفحة": "Read Page",
+    "إيقاف القراءة": "Stop Reading",
+    "انقر للقراءة": "Click to Read",
+    "استمع للمحدد": "Read Selection",
+    "فحص الصوت في جهازك": "Test Audio on Device",
+    "سرعة القراءة:": "Reading Speed:",
+    "صوت المتحدث:": "Speaker Voice:",
+    "صوت النظام الافتراضي (Web Speech)": "Default System Voice (Web Speech)",
+    "تم تفعيل القارئ الذاتي، ستجده أسفل الشاشة ويمكنك سحبه.": "Auto Reader enabled. You can find it at the bottom of the screen and drag it.",
+    "تم إلغاء القارئ الذاتي.": "Auto Reader disabled.",
 
     // System notifications and alerts
     "انتظر الأدمن ليختار القضية وتبدأ اللعبة.": "Waiting for the Host to choose a case and begin the game.",
@@ -941,7 +1023,10 @@ export function applyTranslations(root = document) {
     root.querySelectorAll("[data-i18n]").forEach((el) => {
         const key = el.getAttribute("data-i18n");
         if (key) {
-            el.textContent = t(key);
+            const val = t(key);
+            if (val && val !== key) {
+                el.textContent = val;
+            }
         }
     });
 
@@ -949,7 +1034,10 @@ export function applyTranslations(root = document) {
     root.querySelectorAll("[data-i18n-html]").forEach((el) => {
         const key = el.getAttribute("data-i18n-html");
         if (key) {
-            el.innerHTML = t(key);
+            const val = t(key);
+            if (val && val !== key) {
+                el.innerHTML = val;
+            }
         }
     });
 
@@ -987,8 +1075,8 @@ export function applyTranslations(root = document) {
 
     // Dynamic translation scan for known phrases when in English mode
     if (isEn) {
-        // Buttons with known phrases
-        root.querySelectorAll("button, .btn-main, .sidebar-link").forEach((btn) => {
+        // Buttons, sidebar links, labels, and status tags with known phrases
+        root.querySelectorAll("button, .btn-main, .sidebar-link, .sidebar-radio-title span, .radio-status-tag, #sidebar-tts-label, #sidebar-tts-tag").forEach((btn) => {
             if (btn.classList.contains("btn-lang")) return;
             const text = btn.textContent.trim();
             if (phraseMap[text]) {

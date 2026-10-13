@@ -498,9 +498,11 @@ function updateRadioUI() {
 
     const sidebarTag = document.getElementById("sidebar-radio-tag");
     const sidebarBtn = document.getElementById("btn-sidebar-radio");
+    const isEn = typeof window !== "undefined" && localStorage.getItem("court_ui_lang") === "en";
     if (sidebarTag) {
-        sidebarTag.textContent = isRadioPowerOn ? "يعمل" : "إيقاف";
+        sidebarTag.textContent = isRadioPowerOn ? (isEn ? "Playing" : "يعمل") : (isEn ? "Off" : "إيقاف");
         sidebarTag.className = `radio-status-tag ${isRadioPowerOn ? "is-playing" : "is-stopped"}`;
+        sidebarTag.setAttribute("data-i18n", isRadioPowerOn ? "rooms.radio_playing" : "rooms.radio_stopped");
     }
     if (sidebarBtn) {
         sidebarBtn.classList.toggle("radio-is-playing", isRadioPowerOn);
@@ -555,4 +557,7 @@ if (typeof document !== "undefined") {
     } else {
         initCourtRadio();
     }
+    window.addEventListener("court_language_changed", () => {
+        updateRadioUI();
+    });
 }
