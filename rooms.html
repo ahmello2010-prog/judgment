@@ -4,7 +4,7 @@
         <meta charset="UTF-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
         <meta name="theme-color" content="#6b5236" />
-        <title>محكمة الأدوار - إدارة الغرف</title>
+        <title data-i18n="rooms.page_title">محكمة الأدوار - إدارة الغرف</title>
         <!-- الخطوط والقائمة الجانبية والمودال والشريط المتحرك تأتي من style.css ويُعاد تنسيقها هنا بشكل مسطّح -->
         <link rel="stylesheet" href="css/style.css" />
         <link rel="icon" type="image/png" href="/favicon-96x96.png" sizes="96x96" />
@@ -361,8 +361,8 @@
         <!-- القائمة الجانبية المنزلقة (نفس المسميات الأصلية) -->
         <div id="sidebar-drawer" class="sidebar-drawer-hidden">
             <div class="sidebar-content">
-                <h3 id="sidebar-title">قائمة الإعدادات</h3>
-                <button id="btn-lang-toggle" class="btn-lang">EN</button>
+                <h3 id="sidebar-title" data-i18n="rooms.sidebar_title">قائمة الإعدادات</h3>
+                <button id="btn-lang-toggle" class="btn-lang" type="button">EN</button>
                 <button id="btn-sidebar-radio" class="sidebar-link btn-sidebar-radio" type="button">
                     <span class="sidebar-radio-title">
                         <span class="sidebar-radio-icon">
@@ -382,12 +382,12 @@
                                 <line x1="6" y1="16" x2="10" y2="16"></line>
                             </svg>
                         </span>
-                        <span>مشغل الراديو</span>
+                        <span data-i18n="rooms.radio_title">مشغل الراديو</span>
                     </span>
-                    <span id="sidebar-radio-tag" class="radio-status-tag is-stopped">إيقاف</span>
+                    <span id="sidebar-radio-tag" class="radio-status-tag is-stopped" data-i18n="rooms.radio_stopped">إيقاف</span>
                 </button>
-                <a href="guide.html" id="link-user-guide" class="sidebar-link">دليل المستخدم</a>
-                <a href="admin.html" class="sidebar-link" style="color: white; font-weight: bold">سجل الغرف</a>
+                <a href="guide.html" id="link-user-guide" class="sidebar-link" data-i18n="rooms.user_guide">دليل المستخدم</a>
+                <a href="admin.html" class="sidebar-link" data-i18n="rooms.rooms_log" style="color: white; font-weight: bold">سجل الغرف</a>
             </div>
         </div>
 
@@ -412,12 +412,13 @@
                     </svg>
                 </button>
 
-                <h1 class="rm-title">محكمة الأدوار</h1>
-                <a href="guide.html" class="rm-help" aria-label="دليل المستخدم">?</a>
+                <h1 class="rm-title" data-i18n="rooms.foyer_title">محكمة الأدوار</h1>
+                <button class="btn-lang btn-header-lang" type="button" aria-label="Switch Language">EN</button>
+                <a href="guide.html" class="rm-help" data-i18n-aria="rooms.user_guide" aria-label="دليل المستخدم">?</a>
             </header>
 
             <main class="rm-main">
-                <p class="rm-subtitle">اختر إنشاء جولة جديدة أو انضم لغرفة أصدقائك لبدء المحاكمة</p>
+                <p class="rm-subtitle" data-i18n="rooms.foyer_subtitle">اختر إنشاء جولة جديدة أو انضم لغرفة أصدقائك لبدء المحاكمة</p>
                 <!-- تنبيه وضع الأوفلاين الخفيف -->
                 <div
                     id="rooms-offline-notice"
@@ -444,7 +445,7 @@
                             <line x1="12" y1="20" x2="12.01" y2="20"></line>
                         </svg>
                     </span>
-                    <span class="offline-notice-text">أنت الآن في وضع بلا إنترنت، فليست جميع المميزات متاحة.</span>
+                    <span class="offline-notice-text" data-i18n="offline.notice_banner">أنت الآن في وضع بلا إنترنت، فليست جميع المميزات متاحة.</span>
                 </div>
 
                 <div class="rm-list">
@@ -452,8 +453,8 @@
                     <div class="rm-card rm-card--primary" id="card-create-room" role="button" tabindex="0">
                         <div class="rm-thumb"><img src="img/create.jpg" alt="إنشاء غرفة" /></div>
                         <div class="rm-card-body">
-                            <span class="rm-card-title">إنشاء غرفة</span>
-                            <span class="rm-card-desc">ابدأ محاكمة جديدة وشارك كود الغرفة مع أصدقائك.</span>
+                            <span class="rm-card-title" data-i18n="rooms.card_create_title">إنشاء غرفة</span>
+                            <span class="rm-card-desc" data-i18n="rooms.card_create_desc">ابدأ محاكمة جديدة وشارك كود الغرفة مع أصدقائك.</span>
                         </div>
                         <span class="rm-chevron" aria-hidden="true">‹</span>
                     </div>
@@ -463,8 +464,8 @@
                         <div class="rm-card rm-card--tile" id="card-join-room" role="button" tabindex="0">
                             <div class="rm-thumb"><img src="img/join.jpg" alt="انضمام لغرفة" /></div>
                             <div class="rm-card-body">
-                                <span class="rm-card-title">انضمام لغرفة</span>
-                                <span class="rm-card-desc">أدخل كود صديقك وادخل الجلسة.</span>
+                                <span class="rm-card-title" data-i18n="rooms.card_join_title">انضمام لغرفة</span>
+                                <span class="rm-card-desc" data-i18n="rooms.card_join_desc">أدخل كود صديقك وادخل الجلسة.</span>
                             </div>
                         </div>
 
@@ -472,9 +473,10 @@
                         <div class="rm-card rm-card--tile" id="card-offline-play" role="button" tabindex="0">
                             <div class="rm-thumb rm-thumb--contain"><img src="img/off.png" alt="لعب أوف لاين" /></div>
                             <div class="rm-card-body">
-                                <span class="rm-card-title">لعب اوف لاين</span>
+                                <span class="rm-card-title" data-i18n="rooms.card_offline_title">لعب اوف لاين</span>
                                 <span
                                     class="rm-badge"
+                                    data-i18n="rooms.card_offline_desc"
                                     style="
                                         background: rgba(182, 161, 47, 0.3);
                                         color: rgb(193, 175, 5);
@@ -492,9 +494,9 @@
         <!-- نافذة الإنذارات والمودال الموحد (نفس الـ ID المعتمد في السكريبت) -->
         <div id="custom-alert-modal" class="modal-overlay-hidden">
             <div class="modal-alert-box">
-                <h3 id="modal-alert-title">تنبيه قضائي</h3>
+                <h3 id="modal-alert-title" data-i18n="custom_alert_title">تنبيه قضائي</h3>
                 <p id="modal-alert-message">برجاء مراجعة شروط الغرفة والعدد قبل البدء.</p>
-                <button id="btn-modal-close">حسناً</button>
+                <button id="btn-modal-close" data-i18n="btn.ok">حسناً</button>
             </div>
         </div>
 
@@ -502,34 +504,21 @@
         <div class="cinematic-ticker-container">
             <div class="ticker-text-wrapper">
                 <div class="ticker-marquee">
-                    <span>اجتمع مع أصدقائك أو أحبابك لتحظى بتجربة لعب مميزة</span>
-                    <span>محكمة الأدوار لعبة لا تمت للواقع بصلة و نكن جميع الاحترام لسلطة القضاء</span>
-                    <span
-                        >نظراً لعدم توفر المايك في الوقت الحالي يمكنك إجراء مكالمة جماعية ويلعب كل لاعب من بيته في الوضع
-                        الأونلاين</span
-                    >
-                    <span>ماذا تنتظر؟ أنشئ غرفة وادعو أصدقائك أو العب مود الأوفلاين</span>
-                    <span>لتعرف المزيد عن اللعبة وكيفية الإستمتاع بها يرجى زيارة صفحة دليل المستخدم</span>
-                    <span
-                        >للتحكم في مساحة التطبيق يرجى زيارة صفحة سجل الغرف ومسح كل الغرف القديمة حتى تحظى بتجربة لعب
-                        مريحة</span
-                    >
+                    <span data-i18n="ticker.msg1">اجتمع مع أصدقائك أو أحبابك لتحظى بتجربة لعب مميزة</span>
+                    <span data-i18n="ticker.msg2">محكمة الأدوار لعبة لا تمت للواقع بصلة و نكن جميع الاحترام لسلطة القضاء</span>
+                    <span data-i18n="ticker.msg3">نظراً لعدم توفر المايك في الوقت الحالي يمكنك إجراء مكالمة جماعية ويلعب كل لاعب من بيته في الوضع الأونلاين</span>
+                    <span data-i18n="ticker.msg4">ماذا تنتظر؟ أنشئ غرفة وادعو أصدقائك أو العب مود الأوفلاين</span>
+                    <span data-i18n="ticker.msg5">لتعرف المزيد عن اللعبة وكيفية الإستمتاع بها يرجى زيارة صفحة دليل المستخدم</span>
+                    <span data-i18n="ticker.msg6">للتحكم في مساحة التطبيق يرجى زيارة صفحة سجل الغرف ومسح كل الغرف القديمة حتى تحظى بتجربة لعب مريحة</span>
                 </div>
                 <!-- تكرار نفس الكتلة لملء الفراغ ومنع اختفاء الشريط -->
                 <div class="ticker-marquee">
-                    <span>اجتمع مع أصدقائك أو أحبابك لتحظى بتجربة لعب مميزة</span>
-                    <span>محكمة الأدوار لعبة لا تمت للواقع بصلة و نكن جميع الاحترام لسلطة القضاء</span>
-
-                    <span
-                        >نظراً لعدم توفر المايك في الوقت الحالي يمكنك إجراء مكالمة جماعية ويلعب كل لاعب من بيته في الوضع
-                        الأونلاين</span
-                    >
-                    <span>ماذا تنتظر؟ أنشئ غرفة وادعو أصدقائك أو العب مود الأوفلاين</span>
-                    <span>لتعرف المزيد عن اللعبة وكيفية الإستمتاع بها يرجى زيارة صفحة دليل المستخدم</span>
-                    <span
-                        >للتحكم في مساحة التطبيق يرجى زيارة صفحة سجل الغرف ومسح كل الغرف القديمة حتى تحظى بتجربة لعب
-                        مريحة</span
-                    >
+                    <span data-i18n="ticker.msg1">اجتمع مع أصدقائك أو أحبابك لتحظى بتجربة لعب مميزة</span>
+                    <span data-i18n="ticker.msg2">محكمة الأدوار لعبة لا تمت للواقع بصلة و نكن جميع الاحترام لسلطة القضاء</span>
+                    <span data-i18n="ticker.msg3">نظراً لعدم توفر المايك في الوقت الحالي يمكنك إجراء مكالمة جماعية ويلعب كل لاعب من بيته في الوضع الأونلاين</span>
+                    <span data-i18n="ticker.msg4">ماذا تنتظر؟ أنشئ غرفة وادعو أصدقائك أو العب مود الأوفلاين</span>
+                    <span data-i18n="ticker.msg5">لتعرف المزيد عن اللعبة وكيفية الإستمتاع بها يرجى زيارة صفحة دليل المستخدم</span>
+                    <span data-i18n="ticker.msg6">للتحكم في مساحة التطبيق يرجى زيارة صفحة سجل الغرف ومسح كل الغرف القديمة حتى تحظى بتجربة لعب مريحة</span>
                 </div>
             </div>
         </div>
@@ -591,6 +580,9 @@
                 }
             })();
         </script>
+
+        <!-- محرك الترجمة الشامل الموحد -->
+        <script type="module" src="js/i18n.js"></script>
 
         <!-- مدير الجاهزية ووضع الأوفلاين -->
         <script type="module" src="js/offline-manager.js"></script>

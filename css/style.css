@@ -2929,3 +2929,132 @@ body.cinematic-fade-ready {
     background: rgba(10, 17, 24, 0.75);
     accent-color: var(--gold-glow, #d5a75c);
 }
+
+/* ==========================================================================
+   🌍 أنظمة وتنسيقات الترجمة الشاملة والاتجاه الإنجليزي (i18n & LTR Styles)
+   ========================================================================== */
+.btn-lang {
+    padding: 6px 14px;
+    font-family: "Alexandria", system-ui, sans-serif;
+    font-weight: 700;
+    font-size: 0.85rem;
+    color: var(--gold-glow, #d5a75c);
+    background: rgba(13, 21, 35, 0.75);
+    border: 1.5px solid var(--gold-glow, #d5a75c);
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    user-select: none;
+    -webkit-tap-highlight-color: transparent;
+}
+
+.btn-lang:hover {
+    background: rgba(213, 167, 92, 0.2);
+    box-shadow: 0 0 10px rgba(213, 167, 92, 0.35);
+    transform: translateY(-1px);
+}
+
+.btn-lang:active {
+    background: var(--gold-glow, #d5a75c);
+    color: var(--shadow-black, #050a18);
+    transform: scale(0.96);
+}
+
+.btn-header-lang {
+    margin: 0 8px;
+    height: 36px;
+    min-width: 44px;
+}
+
+.btn-lang-floating {
+    position: fixed;
+    top: 16px;
+    left: 16px;
+    z-index: 9999999;
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.6);
+}
+
+html[dir="ltr"] .btn-lang-floating {
+    left: auto;
+    right: 16px;
+}
+
+/* التنسيقات عند تفعيل الإنجليزية LTR */
+html[dir="ltr"],
+html[dir="ltr"] body,
+body.lang-en {
+    direction: ltr !important;
+    text-align: left;
+}
+
+html[dir="ltr"] .splash-container,
+html[dir="ltr"] #welcome-component {
+    text-align: center;
+}
+
+html[dir="ltr"] .rm-header,
+html[dir="ltr"] .jn-header,
+html[dir="ltr"] .gc-header,
+html[dir="ltr"] .gd-header,
+html[dir="ltr"] .offline-header {
+    flex-direction: row;
+}
+
+html[dir="ltr"] .jn-back svg,
+html[dir="ltr"] .gd-exit-btn svg {
+    transform: scaleX(-1);
+}
+
+html[dir="ltr"] .modal-alert-box,
+html[dir="ltr"] .confirm-alert-box,
+html[dir="ltr"] .judge-card-wrapper,
+html[dir="ltr"] .rm-card,
+html[dir="ltr"] .jn-card {
+    direction: ltr;
+    text-align: left;
+}
+
+html[dir="ltr"] #modal-alert-title,
+html[dir="ltr"] .modal-title {
+    text-align: center;
+}
+
+html[dir="ltr"] input,
+html[dir="ltr"] select,
+html[dir="ltr"] textarea {
+    direction: ltr;
+    text-align: left;
+}
+
+html[dir="ltr"] .delete-all-input {
+    text-align: center;
+}
+
+html[dir="ltr"] #sidebar-drawer {
+    right: auto;
+    left: 0;
+    transform: translateX(-100%);
+}
+
+html[dir="ltr"] #sidebar-drawer.sidebar-drawer-active {
+    transform: translateX(0);
+}
+
+html[dir="ltr"] #judge-speak-requests-container {
+    right: auto;
+    left: 4%;
+    direction: ltr;
+}
+
+html[dir="ltr"] .judge-speak-request-card {
+    border-right: 1.5px solid var(--gold-glow, #d5a75c);
+    border-left: 4px solid #34d399;
+}
+
+html[dir="ltr"] .ticker-marquee {
+    animation-direction: reverse;
+}
+

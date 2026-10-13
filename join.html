@@ -4,7 +4,7 @@
         <meta charset="UTF-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
         <meta name="theme-color" content="#6e5030" />
-        <title>محكمة الأدوار - الانضمام للمحاكمة</title>
+        <title data-i18n="join.page_title">محكمة الأدوار - الانضمام للمحاكمة</title>
         <link rel="icon" type="image/png" href="/favicon-96x96.png" sizes="96x96" />
         <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
         <link rel="shortcut icon" href="/favicon.ico" />
@@ -395,7 +395,7 @@
         <div class="jn-app">
             <!-- الشريط العلوي: رجوع - اسم اللعبة - مساعدة -->
             <header class="jn-header">
-                <a href="rooms.html" class="jn-back" aria-label="رجوع">
+                <a href="rooms.html" class="jn-back" data-i18n-aria="btn.back" aria-label="رجوع">
                     <svg
                         viewBox="0 0 24 24"
                         fill="none"
@@ -408,16 +408,17 @@
                         <path d="M11 6l-6 6 6 6" />
                     </svg>
                 </a>
-                <h1 class="jn-header-title">محكمة الأدوار</h1>
-                <a href="guide.html" class="jn-help" aria-label="دليل المستخدم">?</a>
+                <h1 class="jn-header-title" data-i18n="join.header_title">محكمة الأدوار</h1>
+                <button class="btn-lang btn-header-lang" type="button" aria-label="Switch Language">EN</button>
+                <a href="guide.html" class="jn-help" data-i18n-aria="rooms.user_guide" aria-label="دليل المستخدم">?</a>
             </header>
 
             <main class="jn-main">
                 <section class="jn-card">
-                    <h2 class="jn-card-title">انضمام الى غرفة</h2>
+                    <h2 class="jn-card-title" data-i18n="rooms.card_join_title">انضمام الى غرفة</h2>
 
                     <div class="jn-code-box">
-                        <label class="jn-code-label" for="room-code-search"
+                        <label class="jn-code-label" for="room-code-search" data-i18n="join.code_label"
                             >أدخل كود الغرفة<br />المكون من 4 أرقام</label
                         >
 
@@ -439,6 +440,7 @@
                                 autocomplete="off"
                                 autocorrect="off"
                                 spellcheck="false"
+                                data-i18n-aria="join.code_label"
                                 aria-label="كود الغرفة المكون من 4 أرقام" />
                         </div>
                     </div>
@@ -449,7 +451,7 @@
             </main>
 
             <footer class="jn-footer">
-                <button id="btn-search-join" type="button" disabled>انضمام</button>
+                <button id="btn-search-join" type="button" data-i18n="join.btn_submit" disabled>انضمام</button>
             </footer>
 
             <!-- الاسم اختياري: يبقى الحقل موجوداً لـ app.js (يُعيَّن اسم "لاعب N" تلقائياً ويمكن تعديله داخل الغرفة) -->
@@ -515,6 +517,9 @@
                 render();
             })();
         </script>
+
+        <!-- محرك الترجمة الشامل الموحد -->
+        <script type="module" src="js/i18n.js"></script>
 
         <!-- مدير الجاهزية والاتصال لوضع الأوفلاين -->
         <script type="module" src="js/offline-manager.js"></script>

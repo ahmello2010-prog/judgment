@@ -29,6 +29,15 @@ import "./soundtrack.js";
 import "./radio.js";
 import "./transitions.js";
 import {
+    t,
+    getLanguage,
+    translateRoleTitle,
+    translateCaseTitle,
+    translateCaseDesc,
+    translatePhrase,
+    caseTranslations
+} from "./i18n.js";
+import {
     isVerdictUnlocked,
     earlyVerdictPoints,
     prosecutorMirrorDelta,
@@ -594,7 +603,7 @@ async function loadAndDisplayCases() {
                 </div>
 
                 <!-- عنوان القضية متموضع بالكامل في المنتصف بدون وصف -->
-                <h3 style="font-family: 'Alexandria', sans-serif; font-weight: ${item.is_pinned ? "800" : "700"}; font-size: ${item.is_pinned ? "1.15rem" : "1.1rem"}; color: var(--gold-glow); margin: 0; line-height: 1.4;">${item.id}. ${item.title}</h3>
+                <h3 data-i18n-case-id="${item.id}" style="font-family: 'Alexandria', sans-serif; font-weight: ${item.is_pinned ? "800" : "700"}; font-size: ${item.is_pinned ? "1.15rem" : "1.1rem"}; color: var(--gold-glow); margin: 0; line-height: 1.4;">${item.id}. ${translateCaseTitle(item.id, item.title)}</h3>
             `;
 
             caseBox.innerHTML = innerHTML;
@@ -975,7 +984,9 @@ function activateCasesClickEngine() {
 function showAdminOnlyAlert() {
     const m = document.getElementById("custom-alert-modal");
     if (m) {
-        document.getElementById("modal-alert-message").textContent = "انتظر الأدمن ليختار القضية وتبدأ اللعبة.";
+        const titleEl = document.getElementById("modal-alert-title");
+        if (titleEl) titleEl.textContent = t("custom_alert_title");
+        document.getElementById("modal-alert-message").textContent = translatePhrase("انتظر الأدمن ليختار القضية وتبدأ اللعبة.");
         m.className = "modal-overlay-active";
     }
 }
@@ -983,8 +994,11 @@ function showAdminOnlyAlert() {
 function showInitialWaitingModal() {
     const m = document.getElementById("custom-alert-modal");
     if (m) {
-        document.getElementById("modal-alert-message").textContent =
-            "مرحباً بك! انتظر الأدمن ليختار القضية المناسبة لبدء جولة المحاكمة.";
+        const titleEl = document.getElementById("modal-alert-title");
+        if (titleEl) titleEl.textContent = t("custom_alert_title");
+        document.getElementById("modal-alert-message").textContent = translatePhrase(
+            "مرحباً بك! انتظر الأدمن ليختار القضية المناسبة لبدء جولة المحاكمة."
+        );
         m.className = "modal-overlay-active";
     }
 }
@@ -1952,12 +1966,14 @@ function renderCircularSeats(playersList, assignments, gameState) {
     transition: transform 0.3s cubic-bezier(0.25, 1, 0.5, 1), border-color 0.3s ease, box-shadow 0.3s ease;
 `;
 
+                const isEnSeat = getLanguage() === "en";
                 const isMeLabel =
                     player.id === mySecretUID
-                        ? '<span style="color:var(--gold-glow); font-size:0.65rem;">(أنت)</span>'
+                        ? `<span style="color:var(--gold-glow); font-size:0.65rem;">${isEnSeat ? "(You)" : "(أنت)"}</span>`
                         : "";
                 // جعل المسمى الوظيفي للدور علنياً ومكشوفاً للجميع على كراسي قاعة المحكمة
-                const cardNameLabel = roleCard ? roleCard.role_name : "جاري الاستلام...";
+                const rawCardName = roleCard ? roleCard.role_name : (isEnSeat ? "Receiving..." : "جاري الاستلام...");
+                const cardNameLabel = isEnSeat ? translateRoleTitle(rawCardName) : rawCardName;
 
                 let seatHTML = `
                     <div style="font-family:'Alexandria'; font-size:${fontSizeName}; color:#fff; font-weight:700; text-align:center; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; width:100%; padding:0 4px;">${player.name} ${isMeLabel}</div>
@@ -4323,6 +4339,9 @@ function showLocalToast(message) {
     const old = document.getElementById("local-floating-toast");
     if (old) old.remove();
 
+    const isEn = getLanguage() === "en";
+    const localizedMessage = isEn ? translatePhrase(message) : message;
+
     const toast = document.createElement("div");
     toast.id = "local-floating-toast";
     toast.style.cssText = `
@@ -4330,9 +4349,9 @@ function showLocalToast(message) {
         max-width: 88% !important; z-index: 2147483600 !important; background: rgba(5, 10, 18, 0.96) !important;
         border: 2px solid var(--gold-glow, #d5a75c) !important; color: #fff !important; font-family: 'Alexandria', sans-serif !important;
         font-size: 0.8rem !important; font-weight: 600 !important; line-height: 1.7 !important; padding: 10px 16px !important;
-        border-radius: 10px !important; text-align: center !important; direction: rtl !important; box-shadow: 0 6px 24px rgba(0,0,0,0.6) !important;
+        border-radius: 10px !important; text-align: center !important; direction: ${isEn ? "ltr" : "rtl"} !important; box-shadow: 0 6px 24px rgba(0,0,0,0.6) !important;
     `;
-    toast.textContent = message;
+    toast.textContent = localizedMessage;
     document.body.appendChild(toast);
     setTimeout(() => toast.remove(), 3800);
 }
@@ -5892,23 +5911,28 @@ function openCaseStoryFirstModal(roleCard, activeCase, defenseClientName) {
         globalCloseBtn.style.setProperty("display", "none", "important");
     }
 
-    document.getElementById("modal-alert-title").textContent = `ملف القضية: ${activeCase.title}`;
+    const isEnModal = getLanguage() === "en";
+    const localizedCaseTitle = translateCaseTitle(activeCase.id, activeCase.title);
+    const localizedCaseDesc = isEnModal ? translateCaseDesc(activeCase.id, activeCase.description) : activeCase.description;
 
-    // الالتزام بنصوصك وتعديلاتك وأحجام خطوطك بدقة 100% مع زيادة الحد الأقصى للتمرير لـ 260px لضمان عدم الاختناق
+    document.getElementById("modal-alert-title").textContent = isEnModal
+        ? `Case File: ${localizedCaseTitle}`
+        : `ملف القضية: ${activeCase.title}`;
+
     let modalHTML = `
-        <div style="text-align: right; font-family: 'Alexandria', sans-serif; direction: rtl;">
-            <span style="color: #52ff7d; font-weight: bold; font-size: 0.85rem; letter-spacing: 0.5px;">تفاصيل ومجريات القصة:</span>
+        <div style="text-align: ${isEnModal ? "left" : "right"}; font-family: 'Alexandria', sans-serif; direction: ${isEnModal ? "ltr" : "rtl"};">
+            <span style="color: #52ff7d; font-weight: bold; font-size: 0.85rem; letter-spacing: 0.5px;">${isEnModal ? "Case Story & Events:" : "تفاصيل ومجريات القصة:"}</span>
 
-            <p id="case-description-text" style="background: rgba(5, 10, 18, 0.6); padding: 15px; border-radius: 8px; color: #fff; font-family: 'Harmattan'; font-size: 1.2rem; line-height: 1.6; margin-top: 8px; margin-bottom: 20px; border-right: 4px solid #52ff7d; max-height: 260px; overflow-y: auto !important; box-shadow: inset 0 0 10px rgba(0,0,0,0.5);">
-                ${activeCase.description}
+            <p id="case-description-text" style="background: rgba(5, 10, 18, 0.6); padding: 15px; border-radius: 8px; color: #fff; font-family: 'Harmattan'; font-size: 1.2rem; line-height: 1.6; margin-top: 8px; margin-bottom: 20px; border-${isEnModal ? "left" : "right"}: 4px solid #52ff7d; max-height: 260px; overflow-y: auto !important; box-shadow: inset 0 0 10px rgba(0,0,0,0.5);">
+                ${localizedCaseDesc}
             </p>
 
             <div style="margin-bottom: 15px; background: rgba(213, 167, 92, 0.1); padding: 8px 12px; border-radius: 6px; border: 1px solid rgba(213, 167, 92, 0.2); font-size: 0.7rem; color: var(--gold-glow); text-align: center; font-weight: 600;">
-                ⚠️ تنبيه قضائي: اقرأ تفاصيل القضية جيداً!
+                ${isEnModal ? "⚠️ Judicial Notice: Read the case details carefully!" : "⚠️ تنبيه قضائي: اقرأ تفاصيل القضية جيداً!"}
             </div>
 
             <button id="btn-next-to-secret-role" style="width: 100%; padding: 13px 0; background: linear-gradient(135deg, var(--gold-glow, #d5a75c) 0%, #b89149 100%); color: #050a18; font-family: 'Alexandria'; font-weight: 800; font-size: 0.8rem; border: none; border-radius: 8px; cursor: pointer; box-shadow: 0 4px 15px rgba(213, 167, 92, 0.3); transition: all 0.2s ease; text-align: center; -webkit-tap-highlight-color: transparent;">
-            إكشف دوري السري
+            ${isEnModal ? "Reveal My Secret Role" : "إكشف دوري السري"}
             </button>
         </div>
     `;
@@ -5968,10 +5992,11 @@ function openSecretRoleSecondModal(roleCard, defenseClientName) {
         modalBox.style.setProperty("padding", "25px 20px", "important");
     }
 
+    const isEnRole = getLanguage() === "en";
     const globalCloseBtn = document.getElementById("btn-modal-close");
     if (globalCloseBtn) {
         globalCloseBtn.style.setProperty("display", "block", "important");
-        globalCloseBtn.textContent = "إغلاق";
+        globalCloseBtn.textContent = isEnRole ? "Close" : "إغلاق";
 
         globalCloseBtn.onclick = function () {
             stopSpeech();
@@ -5988,19 +6013,18 @@ function openSecretRoleSecondModal(roleCard, defenseClientName) {
         };
     }
 
-    document.getElementById("modal-alert-title").textContent = roleCard.role_name;
+    document.getElementById("modal-alert-title").textContent = translateRoleTitle(roleCard.role_name);
 
-    // الالتزام بنصوصك وتعديلاتك وأحجام خطوطك المقترحة (1rem و 0.85rem و 0.7rem) بدقة 100%
     let modalHTML = `
-        <div style="text-align: right; font-family: 'Alexandria', sans-serif; direction: rtl;">
+        <div style="text-align: ${isEnRole ? "left" : "right"}; font-family: 'Alexandria', sans-serif; direction: ${isEnRole ? "ltr" : "rtl"};">
             ${
                 defenseClientName
                     ? `<div style="background: rgba(213, 167, 92, 0.12); border: 1px solid var(--gold-glow); border-radius: 6px; padding: 10px 12px; margin-bottom: 14px; text-align: center;">
-                    <span style="color: var(--gold-glow); font-weight: 800; font-size: 0.9rem;">🛡️ موكلك الذي ستدافع عنه: (${defenseClientName})</span>
+                    <span style="color: var(--gold-glow); font-weight: 800; font-size: 0.9rem;">${isEnRole ? `🛡️ Your client to defend: (${defenseClientName})` : `🛡️ موكلك الذي ستدافع عنه: (${defenseClientName})`}</span>
                    </div>`
                     : ""
             }
-            <span style="color: var(--gold-glow); font-weight: bold; font-size: 0.85rem;">روايتك العلنية أمام الحضور:</span>
+            <span style="color: var(--gold-glow); font-weight: bold; font-size: 0.85rem;">${isEnRole ? "Your public cover story before the court:" : "روايتك العلنية أمام الحضور:"}</span>
             <p id="public-story-text" style="background: #161c26; padding: 12px; border-radius: 6px; color: #fff; font-family: 'Harmattan'; font-size: 1rem; line-height: 1.5; margin-top: 6px; margin-bottom: 18px; border: 1px solid rgba(213, 167, 92, 0.15);">
                 ${displayedPublicStory}
             </p>
@@ -6008,11 +6032,11 @@ function openSecretRoleSecondModal(roleCard, defenseClientName) {
 
     if (roleCard.role_type !== "judge" && roleCard.role_type !== "lawyer") {
         modalHTML += `
-            <span style="color: #ff5252; font-weight: bold; font-size: 0.85rem;">جريمتك المخفاة عن الكل 🤫:</span>
+            <span style="color: #ff5252; font-weight: bold; font-size: 0.85rem;">${isEnRole ? "Your hidden secret crime 🤫:" : "جريمتك المخفاة عن الكل 🤫:"}</span>
             <p data-tts-block="secret" style="background: #1e1315; padding: 12px; border-radius: 6px; border: 1px dashed #ff5252; color: #fff; font-family: 'Harmattan'; font-size: 1rem; line-height: 1.5; margin-top: 6px; box-shadow: inset 0 0 8px rgba(255,82,82,0.05);">
                 ${roleCard.secret_interest}
             </p>
-            <p style="color: #8d99a8; font-family: 'Alexandria'; font-size: 0.68rem; margin: 6px 0 0;">🔒 المصلحة السرية لا تُقرأ صوتياً حفاظاً على سرية اللعبة.</p>
+            <p style="color: #8d99a8; font-family: 'Alexandria'; font-size: 0.68rem; margin: 6px 0 0;">${isEnRole ? "🔒 Secret agendas are not read aloud to maintain game confidentiality." : "🔒 المصلحة السرية لا تُقرأ صوتياً حفاظاً على سرية اللعبة."}</p>
         `;
 
         // 🌟 [شبكة المعرفة]: قسم إضافي نادر يظهر فقط لمن يملك معرفة سرية عن لاعب آخر حقيقي في هذه الجولة
@@ -6023,24 +6047,23 @@ function openSecretRoleSecondModal(roleCard, defenseClientName) {
             const alreadyUsed = sessionStorage.getItem(usedKey) === "true";
             modalHTML += `
                 <div id="network-link-box">
-                <span style="color: #6ee7a0; font-weight: bold; font-size: 0.85rem; display: block; margin-top: 16px;">🤝 معرفة خاصة (${escapeHtml(link.link_type || "")}):</span>
+                <span style="color: #6ee7a0; font-weight: bold; font-size: 0.85rem; display: block; margin-top: 16px;">${isEnRole ? `🤝 Special Insight (${escapeHtml(link.link_type || "")}):` : `🤝 معرفة خاصة (${escapeHtml(link.link_type || "")}):`}</span>
                 <p data-tts-block="secret" style="background: #10231b; padding: 12px; border-radius: 6px; border: 1px dashed #6ee7a0; color: #fff; font-family: 'Harmattan'; font-size: 1rem; line-height: 1.5; margin-top: 6px;">
                     ${escapeHtml(link.link_hint || "")}
                 </p>
-                <p style="color: #8d99a8; font-family: 'Alexandria'; font-size: 0.68rem; margin: 6px 0 10px;">🔒 هذه المعرفة سرية أيضاً ولا تُقرأ صوتياً.</p>
+                <p style="color: #8d99a8; font-family: 'Alexandria'; font-size: 0.68rem; margin: 6px 0 10px;">${isEnRole ? "🔒 This insight is also confidential and not read aloud." : "🔒 هذه المعرفة سرية أيضاً ولا تُقرأ صوتياً."}</p>
                 <div style="display: flex; gap: 8px;">
-                    <button id="btn-network-whisper" ${alreadyUsed ? "disabled" : ""} style="flex: 1; padding: 10px 4px; background: rgba(255,255,255,0.05); border: 1px solid #6ee7a0; color: #6ee7a0; font-family: 'Alexandria', sans-serif; font-weight: 700; font-size: 0.78rem; border-radius: 8px; cursor: ${alreadyUsed ? "not-allowed" : "pointer"}; opacity: ${alreadyUsed ? "0.4" : "1"};">🤝 تواصل سري</button>
-                    <button id="btn-network-cancel" style="flex: 1; padding: 10px 4px; background: rgba(255,255,255,0.05); border: 1px solid #8d99a8; color: #cfd8e3; font-family: 'Alexandria', sans-serif; font-weight: 700; font-size: 0.78rem; border-radius: 8px; cursor: pointer;">✖ إلغاء الصندوق والعب</button>
+                    <button id="btn-network-whisper" ${alreadyUsed ? "disabled" : ""} style="flex: 1; padding: 10px 4px; background: rgba(255,255,255,0.05); border: 1px solid #6ee7a0; color: #6ee7a0; font-family: 'Alexandria', sans-serif; font-weight: 700; font-size: 0.78rem; border-radius: 8px; cursor: ${alreadyUsed ? "not-allowed" : "pointer"}; opacity: ${alreadyUsed ? "0.4" : "1"};">${isEnRole ? "🤝 Secret Whisper" : "🤝 تواصل سري"}</button>
+                    <button id="btn-network-cancel" style="flex: 1; padding: 10px 4px; background: rgba(255,255,255,0.05); border: 1px solid #8d99a8; color: #cfd8e3; font-family: 'Alexandria', sans-serif; font-weight: 700; font-size: 0.78rem; border-radius: 8px; cursor: pointer;">${isEnRole ? "✖ Dismiss & Play" : "✖ إلغاء الصندوق والعب"}</button>
                 </div>
-                <p id="network-link-status" style="color: #ffe9b3; font-size: 0.72rem; text-align: center; margin: 8px 0 0; min-height: 16px;">${alreadyUsed ? "✅ سبق استخدام هذه المعرفة." : ""}</p>
+                <p id="network-link-status" style="color: #ffe9b3; font-size: 0.72rem; text-align: center; margin: 8px 0 0; min-height: 16px;">${alreadyUsed ? (isEnRole ? "✅ This insight was already used." : "✅ سبق استخدام هذه المعرفة.") : ""}</p>
                 </div>
             `;
         }
     } else {
         modalHTML += `
             <div style="background: rgba(213, 167, 92, 0.1); padding: 14px; border-radius: 6px; border: 1px solid var(--gold-glow); color: var(--gold-glow); text-align: center; font-size: 0.85rem; font-weight: 700; margin-top: 10px; box-shadow: inset 0 0 10px rgba(213, 167, 92, 0.15); line-height: 1.4;">
-                مرسوم السيادة القضائية النزيهة:<br>
-                <span style="font-weight:500; font-size:0.7rem; color:#aaa;">أنت مبرأ تماماً من أي تهمة أو مصلحة سرية خبيثة in هذه الجلسة. مصلحتك هي نصرة ميزان العدالة.</span>
+                ${isEnRole ? "Decree of Judicial Integrity:<br><span style='font-weight:500; font-size:0.7rem; color:#aaa;'>You are completely free of any charges or secret malice in this session. Your sole interest is upholding justice.</span>" : "مرسوم السيادة القضائية النزيهة:<br><span style='font-weight:500; font-size:0.7rem; color:#aaa;'>أنت مبرأ تماماً من أي تهمة أو مصلحة سرية خبيثة in هذه الجلسة. مصلحتك هي نصرة ميزان العدالة.</span>"}
             </div>
         `;
     }

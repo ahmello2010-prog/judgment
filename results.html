@@ -3,7 +3,7 @@
     <head>
         <meta charset="UTF-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-        <title>محكمة الأدوار - شاشة النتائج الكبرى</title>
+        <title data-i18n="results.page_title">محكمة الأدوار - شاشة النتائج الكبرى</title>
         <link rel="stylesheet" href="css/style.css" />
         <link rel="icon" type="image/png" href="/favicon-96x96.png" sizes="96x96" />
         <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
@@ -383,41 +383,44 @@
             </div>
 
             <div class="results-header">
-                <h1>⚖️ شاشة النتائج الكبرى</h1>
-                <h2 id="results-case-title">جاري استرجاع أرشيف القضية...</h2>
+                <h1 data-i18n="results.header_title">⚖️ شاشة النتائج الكبرى</h1>
+                <button class="btn-lang btn-header-lang" type="button" aria-label="Switch Language">EN</button>
+                <h2 id="results-case-title" data-i18n="results.loading_case">جاري استرجاع أرشيف القضية...</h2>
             </div>
 
             <div class="results-table-wrapper">
                 <table class="results-table">
                     <thead>
                         <tr>
-                            <th>اللاعب</th>
-                            <th>الدور السري الحقيقي</th>
-                            <th>نقاط هذه الجولة</th>
-                            <th>الرصيد التراكمي</th>
+                            <th data-i18n="results.col_player">اللاعب</th>
+                            <th data-i18n="results.col_secret_role">الدور السري الحقيقي</th>
+                            <th data-i18n="results.col_round_points">نقاط هذه الجولة</th>
+                            <th data-i18n="results.col_total_points">الرصيد التراكمي</th>
                         </tr>
                     </thead>
                     <tbody id="results-table-body">
                         <tr>
-                            <td colspan="4" class="results-loading-placeholder">جاري تحميل بيانات اللاعبين...</td>
+                            <td colspan="4" class="results-loading-placeholder" data-i18n="results.loading_players">جاري تحميل بيانات اللاعبين...</td>
                         </tr>
                     </tbody>
                 </table>
             </div>
 
             <div class="results-narrative-box">
-                <h3>📜 سرد أحداث القضية</h3>
-                <p id="results-narrative-text">جاري كتابة الفصل الأخير من هذه القضية الجنائية...</p>
+                <h3 data-i18n="results.narrative_box_title">📜 سرد أحداث القضية</h3>
+                <p id="results-narrative-text" data-i18n="results.narrative_loading">جاري كتابة الفصل الأخير من هذه القضية الجنائية...</p>
             </div>
 
-            <p class="results-waiting-note" id="results-waiting-note">
+            <p class="results-waiting-note" id="results-waiting-note" data-i18n="results.waiting_admin">
                 في انتظار الأدمن للعودة بالجميع لموسوعة القضايا...
             </p>
         </div>
 
-        <button id="btn-return-to-encyclopedia" class="floating-host-return-btn">🏛️ العودة لموسوعة القضايا</button>
+        <button id="btn-return-to-encyclopedia" class="floating-host-return-btn" data-i18n="results.btn_return">🏛️ العودة لموسوعة القضايا</button>
 
+        <script type="module" src="js/i18n.js"></script>
         <script type="module">
+            import { t, getLanguage, translateRoleTitle, translateCaseTitle } from "./js/i18n.js";
             import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
             import {
                 getDatabase,
@@ -462,55 +465,50 @@
             // 🌟 محرك بناء فقرة السرد القصصي للقضية بناءً على نتيجة الحكم الفعلية المخزنة سحابياً
             // ==========================================================================
             function buildCaseNarrative(activeCase, assignments, outcome) {
+                const isEn = getLanguage() === "en";
                 if (!activeCase) {
-                    return "تعذر استرجاع أرشيف هذه القضية من موسوعة المحكمة، لكن العدالة - أو غيابها - قد كُتبت بالفعل في سجلات الغرفة.";
+                    return isEn
+                        ? "Unable to retrieve this case from the court archive, but justice - or the lack thereof - has already been recorded in the room ledger."
+                        : "تعذر استرجاع أرشيف هذه القضية من موسوعة المحكمة، لكن العدالة - أو غيابها - قد كُتبت بالفعل في سجلات الغرفة.";
                 }
 
-                const caseTitle = activeCase.title || "القضية المجهولة";
+                const caseTitle = isEn ? translateCaseTitle(activeCase.id, activeCase.title) : (activeCase.title || "القضية المجهولة");
                 const realGuiltyInfo =
                     activeCase.roles_pool && activeCase.roles_pool.real_guilty ? activeCase.roles_pool.real_guilty : {};
-                const realGuiltyRoleName = realGuiltyInfo.role_name || "الجاني الحقيقي";
+                const realGuiltyRoleName = isEn ? translateRoleTitle(realGuiltyInfo.role_name || "True Culprit") : (realGuiltyInfo.role_name || "الجاني الحقيقي");
                 const guiltyStorySnippet = realGuiltyInfo.secret_interest || "";
 
                 if (!outcome || outcome.ended_reason === "forced_no_verdict") {
-                    return (
-                        `انتهت جلسة "${caseTitle}" قسرياً دون أن يصدر القاضي أي حكم نهائي في الوقت المحدد. ` +
-                        `غادر الجميع القاعة وسط تساؤلات معلقة بلا إجابة، بينما ظل ${realGuiltyRoleName} يحمل سره الثقيل دون أن يكتشفه أحد: ${guiltyStorySnippet}`
-                    );
+                    return isEn
+                        ? `The session for "${caseTitle}" ended prematurely without a final verdict issued by the Judge. Everyone departed leaving unresolved questions, while ${realGuiltyRoleName} held their heavy secret undiscovered: ${guiltyStorySnippet}`
+                        : `انتهت جلسة "${caseTitle}" قسرياً دون أن يصدر القاضي أي حكم نهائي في الوقت المحدد. غادر الجميع القاعة وسط تساؤلات معلقة بلا إجابة، بينما ظل ${realGuiltyRoleName} يحمل سره الثقيل دون أن يكتشفه أحد: ${guiltyStorySnippet}`;
                 }
 
                 let targetInfo = null;
                 if (outcome.target_uid && assignments[outcome.target_uid]) {
                     targetInfo = assignments[outcome.target_uid];
                 }
-                const targetRoleName = targetInfo ? targetInfo.role_name : "أحد الحاضرين";
-                const actionVerb = outcome.action === "convict" ? "بإدانة" : "بتبرئة";
+                const targetRoleName = targetInfo ? (isEn ? translateRoleTitle(targetInfo.role_name) : targetInfo.role_name) : (isEn ? "One of the Attendees" : "أحد الحاضرين");
 
                 if (outcome.judge_won) {
                     if (outcome.action === "convict") {
-                        return (
-                            `في ختام جلسة "${caseTitle}" المشحونة بالتوتر، أصدر القاضي حكمه ${actionVerb} من كان يتقمص شخصية (${targetRoleName}) - ` +
-                            `وكان هذا الاختيار صحيحاً بامتياز! فقد كشفت التحقيقات أن الحقيقة الكاملة كانت: ${guiltyStorySnippet} ` +
-                            `وهكذا انتصرت العدالة، وسُجّلت هذه القضية في أرشيف المحكمة كواحدة من أنصع الانتصارات القضائية.`
-                        );
+                        return isEn
+                            ? `At the conclusion of the tense "${caseTitle}" session, the Judge delivered a verdict convicting (${targetRoleName}) - and this choice was completely correct! Investigation revealed the full truth: ${guiltyStorySnippet}. Justice prevailed, marking this case as a resounding triumph in the court archives.`
+                            : `في ختام جلسة "${caseTitle}" المشحونة بالتوتر، أصدر القاضي حكمه بإدانة من كان يتقمص شخصية (${targetRoleName}) - وكان هذا الاختيار صحيحاً بامتياز! فقد كشفت التحقيقات أن الحقيقة الكاملة كانت: ${guiltyStorySnippet} وهكذا انتصرت العدالة، وسُجّلت هذه القضية في أرشيف المحكمة كواحدة من أنصع الانتصارات القضائية.`;
                     }
-                    return (
-                        `أظهر القاضي حنكة استثنائية في جلسة "${caseTitle}"، حين قرر ${actionVerb} (${targetRoleName}) بعد أن تيقن من براءته الكاملة، ` +
-                        `تاركاً القضية مفتوحة أمام المحققين لتعقب الجاني الحقيقي (${realGuiltyRoleName}) الذي لا يزال بيننا يحمل سره الثقيل: ${guiltyStorySnippet}`
-                    );
+                    return isEn
+                        ? `The Judge displayed exceptional prudence in the "${caseTitle}" trial by acquitting (${targetRoleName}) upon recognizing total innocence, leaving the hunt open for the true culprit (${realGuiltyRoleName}): ${guiltyStorySnippet}`
+                        : `أظهر القاضي حنكة استثنائية في جلسة "${caseTitle}"، حين قرر بتبرئة (${targetRoleName}) بعد أن تيقن من براءته الكاملة، تاركاً القضية مفتوحة أمام المحققين لتعقب الجاني الحقيقي (${realGuiltyRoleName}) الذي لا يزال بيننا يحمل سره الثقيل: ${guiltyStorySnippet}`;
                 }
 
                 if (outcome.action === "convict") {
-                    return (
-                        `ارتكبت المحكمة خطأً قضائياً فادحاً في جلسة "${caseTitle}"! أصدر القاضي حكمه ${actionVerb} (${targetRoleName}) البريء ظناً منه أنه الفاعل، ` +
-                        `بينما نجا الجاني الحقيقي (${realGuiltyRoleName}) بجريمته الكاملة دون أن يشعر به أحد. والحقيقة المروعة التي غابت عن الجميع: ${guiltyStorySnippet} ` +
-                        `لتُطوى هذه القضية في سجلات المحكمة تحت عنوان "العدالة المُغيَّبة".`
-                    );
+                    return isEn
+                        ? `The court committed a grave judicial error in "${caseTitle}"! The Judge convicted innocent (${targetRoleName}) believing them to be the perpetrator, while the true culprit (${realGuiltyRoleName}) escaped completely undetected. The shocking truth: ${guiltyStorySnippet}.`
+                        : `ارتكبت المحكمة خطأً قضائياً فادحاً في جلسة "${caseTitle}"! أصدر القاضي حكمه بإدانة (${targetRoleName}) البريء ظناً منه أنه الفاعل، بينما نجا الجاني الحقيقي (${realGuiltyRoleName}) بجريمته الكاملة دون أن يشعر به أحد. والحقيقة المروعة التي غابت عن الجميع: ${guiltyStorySnippet} لتُطوى هذه القضية في سجلات المحكمة تحت عنوان "العدالة المُغيَّبة".`;
                 }
-                return (
-                    `وقعت المحكمة في الفخ الأخطر خلال جلسة "${caseTitle}"! أصدر القاضي حكمه ${actionVerb} الجاني الحقيقي بنفسه دون أن يدري، ` +
-                    `تاركاً الحقيقة مطموسة للأبد: ${guiltyStorySnippet} لينجو الجاني بجريمته وسط تصفيق محاميه المنتصر بمكافأة التضليل الكبرى.`
-                );
+                return isEn
+                    ? `The court walked into the deadliest trap during "${caseTitle}"! The Judge mistakenly acquitted the real culprit themselves, burying the truth forever: ${guiltyStorySnippet}. The perpetrator walked away free while their defense counsel celebrated the grand deception award.`
+                    : `وقعت المحكمة في الفخ الأخطر خلال جلسة "${caseTitle}"! أصدر القاضي حكمه بتبرئة الجاني الحقيقي بنفسه دون أن يدري، تاركاً الحقيقة مطموسة للأبد: ${guiltyStorySnippet} لينجو الجاني بجريمته وسط تصفيق محاميه المنتصر بمكافأة التضليل الكبرى.`;
             }
 
             // 🌟 [تطهير احتياطي فوري]: مسح أي أثر متبقٍ من جولة سابقة بمجرد الوصول لشاشة النتائج،
@@ -569,11 +567,12 @@
                 }
 
                 const titleEl = document.getElementById("results-case-title");
-                if (titleEl) titleEl.textContent = activeCase ? activeCase.title : "قضية من أرشيف المحكمة المفقود";
+                if (titleEl) titleEl.textContent = activeCase ? translateCaseTitle(activeCase.id, activeCase.title) : t("results.loading_case");
 
                 // 1️⃣ بناء جدول اللاعبين والأدوار والنقاط
-                const tbody = document.getElementById("results-table-body");
-                if (tbody) {
+                function renderResultsTable() {
+                    const tbody = document.getElementById("results-table-body");
+                    if (!tbody) return;
                     tbody.innerHTML = "";
                     Object.keys(playersData).forEach((key) => {
                         const p = playersData[key];
@@ -589,9 +588,9 @@
 
                         const row = document.createElement("tr");
                         const tdName = document.createElement("td");
-                        tdName.textContent = p.name || "لاعب مجهول";
+                        tdName.textContent = p.name || (getLanguage() === "en" ? "Unknown Player" : "لاعب مجهول");
                         const tdRole = document.createElement("td");
-                        tdRole.textContent = (card.role_name || "—") + guiltyMark;
+                        tdRole.textContent = (card.role_name ? translateRoleTitle(card.role_name) : "—") + guiltyMark;
                         const tdDelta = document.createElement("td");
                         tdDelta.className = deltaClass;
                         tdDelta.textContent = deltaText;
@@ -605,6 +604,18 @@
                         tbody.appendChild(row);
                     });
                 }
+
+                renderResultsTable();
+
+                window.addEventListener("court_language_changed", () => {
+                    if (titleEl && activeCase) {
+                        titleEl.textContent = translateCaseTitle(activeCase.id, activeCase.title);
+                    }
+                    renderResultsTable();
+                    if (narrativeEl) {
+                        narrativeEl.textContent = buildCaseNarrative(activeCase, assignments, outcome);
+                    }
+                });
 
                 // 2️⃣ حقن فقرة السرد القصصي المولّدة بناءً على نتيجة الحكم الفعلية
                 const narrativeEl = document.getElementById("results-narrative-text");

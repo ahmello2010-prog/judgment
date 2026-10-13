@@ -3,7 +3,7 @@
     <head>
         <meta charset="UTF-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-        <title>قاعة المحاكمة - محكمة الأدوار</title>
+        <title data-i18n="lobby.page_title">قاعة المحاكمة - محكمة الأدوار</title>
         <!-- استدعاء الخطوط المعتمدة بمشروعك لتنسيق النصوص -->
         <link rel="preconnect" href="https://googleapis.com" />
         <link rel="preconnect" href="https://gstatic.com" crossorigin />
@@ -375,7 +375,8 @@
         <nav class="court-sovereign-navbar">
             <!-- الجهة اليسرى: الأزرار التنفيذية (المايك يمين زر إنهاء المحاكمة ليكون أمامه برمجياً جهة اليسار) -->
             <div class="court-top-actions-group">
-                <button id="btn-end-trial" style="display: none" class="your-admin-button-style">إنهاء المحكمة</button>
+                <button class="btn-lang btn-header-lang" type="button" aria-label="Switch Language">EN</button>
+                <button id="btn-end-trial" style="display: none" class="your-admin-button-style" data-i18n="verdict.forced_end_title">إنهاء المحكمة</button>
             </div>
         </nav>
         <!-- شاشة التحميل السينمائية لساحة اللعب: ظاهرة من أول رسم وتُخفى فقط عند اكتمال تهيئة اللوبي فعلياً (انظر runLobbyLoadingEngine في app.js) -->
@@ -545,10 +546,12 @@
                 <div id="modal-alert-message">نص الإنذار يظهر هنا برمجياً</div>
 
                 <!-- زر الإغلاق الموحد لإرجاع اللاعب للوبي بنعومة UX -->
-                <button id="btn-modal-close" class="btn-secondary">حسناً</button>
+                <button id="btn-modal-close" class="btn-secondary" data-i18n="btn.ok">حسناً</button>
             </div>
         </div>
 
+        <!-- محرك الترجمة الشامل الموحد -->
+        <script type="module" src="js/i18n.js"></script>
         <script type="module" src="js/app.js"></script>
         <script>
             // صمام أمان: لو لم يبدأ محرك التحميل (فشل تحميل app.js مثلاً) لا تبقى الشاشة للأبد

@@ -3,7 +3,7 @@
     <head>
         <meta charset="UTF-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-        <title>محكمة الأدوار - محاكمة محلية أوفلاين</title>
+        <title data-i18n="offline.page_title">محكمة الأدوار - محاكمة محلية أوفلاين</title>
         <meta name="description" content="محكمة الأدوار - وضع اللعب المحلي بدون إنترنت بنظام Pass & Play" />
         <link rel="stylesheet" href="css/style.css" />
         <link rel="icon" type="image/png" href="/favicon-96x96.png" sizes="96x96" />
@@ -416,28 +416,28 @@
         <div class="offline-container">
             <!-- الشريط العلوي -->
             <header class="offline-header">
-                <a href="rooms.html" class="btn-back-rooms">‹ قائمة الغرف</a>
+                <a href="rooms.html" class="btn-back-rooms" data-i18n="offline.back_rooms">‹ قائمة الغرف</a>
                 <h1 class="offline-title">
-                    <span>محكمة الأدوار</span>
+                    <span data-i18n="offline.header_title">محكمة الأدوار</span>
                 </h1>
-                <div style="width: 70px"></div>
+                <button class="btn-lang btn-header-lang" type="button" aria-label="Switch Language">EN</button>
             </header>
 
             <!-- الشاشة 1: اختيار القضية -->
             <div id="step-choose-case" class="step-card">
-                <h2 class="step-title">📁 اختيار القضية</h2>
-                <p class="step-desc">اختر القضية الجنائية التي ستُدار حولها جلسة المحاكمة اليوم:</p>
+                <h2 class="step-title" data-i18n="offline.step_choose_case">📁 اختيار القضية</h2>
+                <p class="step-desc" data-i18n="offline.choose_case_desc">اختر القضية الجنائية التي ستُدار حولها جلسة المحاكمة اليوم:</p>
                 <div id="cases-list-container" class="cases-scroll-grid">
-                    <p style="text-align: center; color: var(--gold-glow)">جاري تحميل القضايا المحلية...</p>
+                    <p style="text-align: center; color: var(--gold-glow)" data-i18n="offline.loading_local_cases">جاري تحميل القضايا المحلية...</p>
                 </div>
-                <button id="btn-confirm-case" class="btn-action-gold" disabled>المتابعة وتحديد اللاعبين</button>
+                <button id="btn-confirm-case" class="btn-action-gold" data-i18n="offline.btn_confirm_case" disabled>المتابعة وتحديد اللاعبين</button>
             </div>
 
             <!-- الشاشة 2: إعداد اللاعبين والـ PIN (مخفية افتراضياً) -->
             <div id="step-setup-players" class="step-card" style="display: none">
-                <h2 class="step-title">👥 إعداد اللاعبين ورمز الحماية (PIN)</h2>
+                <h2 class="step-title" data-i18n="offline.step_setup_players">👥 إعداد اللاعبين ورمز الحماية (PIN)</h2>
                 <p class="step-desc">
-                    القضية المختارة: <strong id="selected-case-name" style="color: var(--gold-glow)"></strong>
+                    <span data-i18n="offline.selected_case_label">القضية المختارة:</span> <strong id="selected-case-name" style="color: var(--gold-glow)"></strong>
                 </p>
 
                 <div
@@ -449,7 +449,7 @@
                         padding: 8px 12px;
                         border-radius: 10px;
                     ">
-                    <span style="font-size: 0.85rem; font-weight: 700">عدد اللاعبين:</span>
+                    <span style="font-size: 0.85rem; font-weight: 700" data-i18n="offline.players_count_label">عدد اللاعبين:</span>
                     <div style="display: flex; align-items: center; gap: 8px">
                         <button
                             type="button"
@@ -979,6 +979,9 @@
                 </button>
             </div>
         </div>
+
+        <!-- محرك الترجمة الشامل الموحد -->
+        <script type="module" src="js/i18n.js"></script>
 
         <!-- مدير الجاهزية كسكريبت مستقل: يعمل ويعرض المودال حتى لو فشل استيراد ملف آخر (مثل offline-engine.js) -->
         <script type="module" src="js/offline-manager.js"></script>

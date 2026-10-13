@@ -4,7 +4,7 @@
         <meta charset="UTF-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
         <meta name="theme-color" content="#6b5236" />
-        <title>محكمة الأدوار - دليل المستخدم</title>
+        <title data-i18n="guide.page_title">محكمة الأدوار - دليل المستخدم</title>
         <link rel="stylesheet" href="css/style.css" />
         <link rel="icon" type="image/png" href="/favicon-96x96.png" sizes="96x96" />
         <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
@@ -209,6 +209,7 @@
                     href="rooms.html"
                     id="btn-guide-exit"
                     class="gd-exit-btn"
+                    data-i18n-aria="btn.back"
                     aria-label="خروج والعودة للشاشة الرئيسية"
                     title="خروج">
                     <svg
@@ -225,12 +226,12 @@
                         <line x1="21" y1="12" x2="9" y2="12"></line>
                     </svg>
                 </a>
-                <h1 class="gd-header-title">دليل المستخدم</h1>
-                <span class="gd-header-spacer" aria-hidden="true"></span>
+                <h1 class="gd-header-title" data-i18n="guide.header_title">دليل المستخدم</h1>
+                <button class="btn-lang btn-header-lang" type="button" aria-label="Switch Language">EN</button>
             </header>
 
             <main class="gd-main">
-                <p id="guide-main-subtitle" class="gd-subtitle">
+                <p id="guide-main-subtitle" class="gd-subtitle" data-i18n="guide.subtitle">
                     اضغط على أي سؤال لقراءة القوانين والميكانيكيات التفصيلية وكيفية اللعب
                 </p>
 
@@ -238,11 +239,11 @@
                     <!-- المربع 1: فكرة اللعبة الأساسية والحد الأدنى -->
                     <div class="accordion-item">
                         <button class="accordion-trigger">
-                            <span>ما هي فكرة لعبة "محكمة الأدوار" وكيف تبدأ؟</span>
+                            <span data-i18n="guide.q1">ما هي فكرة لعبة "محكمة الأدوار" وكيف تبدأ؟</span>
                             <span class="arrow"></span>
                         </button>
                         <div class="accordion-panel">
-                            <p class="guide-text">
+                            <p class="guide-text" data-i18n="guide.a1">
                                 اللعبة تعتمد على التحقيق واستنباط الأسرار النفسية وتضارب المصالح. تبدأ الجولة بتجميع
                                 اللاعبين في غرفة جولة أونلاين بكود دخول غرفة صديقك. الحد الأدنى البرمجي لبدء أي قضية هو
                                 3 لاعبين، وتدعم اللعبة حتى 10 لاعبين كحد أقصى في الغرفة الواحدة لضمان مواجهات تفاعلية
@@ -254,11 +255,11 @@
                     <!-- المربع 2: توزيع الأدوار والبطاقات السرية -->
                     <div class="accordion-item">
                         <button class="accordion-trigger">
-                            <span>كيف يتم توزيع الأدوار والبطاقات على اللاعبين؟</span>
+                            <span data-i18n="guide.q2">كيف يتم توزيع الأدوار والبطاقات على اللاعبين؟</span>
                             <span class="arrow"></span>
                         </button>
                         <div class="accordion-panel">
-                            <p class="guide-text">
+                            <p class="guide-text" data-i18n="guide.a2">
                                 عند الضغط على بدء اللعبة، يقوم المحرك البرمجي بخلط الأدوار وتوزيع الكروت سرياً. ينقسم
                                 اللاعبون إلى: قاضٍ محقق (يدير الجلسة ويستجوب)، ومحامين، ومتهمين يحمي كل منهم "سراً
                                 مصلحياً" يخفيه عن البقية. يتم إجبار القاضي والمحامين تلقائياً على أن يكونوا أبرياء
@@ -270,11 +271,11 @@
                     <!-- المربع 3: ميكانيكية القطع المفقودة وتضارب المصالح -->
                     <div class="accordion-item">
                         <button class="accordion-trigger">
-                            <span>ما هي ميكانيكية "القطع المفقودة وتضارب المصالح"؟</span>
+                            <span data-i18n="guide.q3">ما هي ميكانيكية "القطع المفقودة وتضارب المصالح"؟</span>
                             <span class="arrow"></span>
                         </button>
                         <div class="accordion-panel">
-                            <p class="guide-text">
+                            <p class="guide-text" data-i18n="guide.a3">
                                 كل لاعب يحصل على قصة علنية يشهد بها أمام المحكمة، ولكن لديه "مصلحة سرية" أو جريمة جانبية
                                 يخفيها (مثل تزوير، رشوة، أو سرقة مستندات). اللعبة لا تعتمد على البحث الجنائي الميداني،
                                 بل على استجواب اللاعبين لبعضهم البعض لكشف التناقضات ومحاولة تلفيق أو إثبات التهمة بناءً
@@ -286,21 +287,12 @@
                     <!-- المربع 4: نظام النقاط وخطر الحكم المبكر -->
                     <div class="accordion-item">
                         <button class="accordion-trigger">
-                            <span>كيف يعمل نظام حساب النقاط وخطر "الحكم المبكر"؟</span>
+                            <span data-i18n="guide.q4">كيف يعمل نظام حساب النقاط وخطر "الحكم المبكر"؟</span>
                             <span class="arrow"></span>
                         </button>
                         <div class="accordion-panel">
-                            <p class="guide-text">
-                                يتفعل زر الحكم للقاضي، وزر الاتهام لمحامي الادعاء، بعد إكمال <strong>استجوابين</strong>.
-                                الحكم المبكر (عند الاستجواب 2 أو 3) له نقاط أعلى: الحكم الصحيح يمنح القاضي +20 عند
-                                الاستجواب 2 و+17 عند الثالث، والخاطئ يخصم منه -15 و-12 على الترتيب. بعد ذلك تصبح المرحلة
-                                العامة: +10 للحكم الصحيح و-10 للخاطئ.
-                            </p>
-                            <p class="guide-text">
-                                عندما يقدّم محامي الادعاء اتهاماً ويعتمده القاضي يحصل الاثنان على نفس النقاط بالضبط.
-                                وعند استخدام كاشف الشبهة: القرار الصحيح يمنح القاضي +5 ومحامي الادعاء +10 لنفسه فقط،
-                                والقرار الخاطئ لا يمنح ولا يخصم شيئاً. وإذا لم يستخدم محامي الادعاء كاشف الشبهة أو منصة
-                                الاتهام (أو لم يستخدم أياً منهما) يُخصم منه -10 نقاط مرة واحدة فقط في نهاية الجولة.
+                            <p class="guide-text" data-i18n="guide.a4">
+                                يتفعل زر الحكم للقاضي، وزر الاتهام لمحامي الادعاء، بعد إكمال استجوابين. الحكم المبكر (عند الاستجواب 2 أو 3) له نقاط أعلى: الحكم الصحيح يمنح القاضي +20 عند الاستجواب 2 و+17 عند الثالث، والخاطئ يخصم منه -15 و-12 على الترتيب. بعد ذلك تصبح المرحلة العامة: +10 للحكم الصحيح و-10 للخاطئ.
                             </p>
                         </div>
                     </div>
@@ -308,15 +300,14 @@
                     <!-- المربع 5: القضايا الـ 11 المعتمدة ومكانة القضية الأولى -->
                     <div class="accordion-item">
                         <button class="accordion-trigger">
-                            <span>كم عدد القضايا المتاحة وما هي القضية المثبتة في الأعلى؟</span>
+                            <span data-i18n="guide.q5">كم عدد القضايا المتاحة وما هي القضية المثبتة في الأعلى؟</span>
                             <span class="arrow"></span>
                         </button>
                         <div class="accordion-panel">
-                            <p class="guide-text">
+                            <p class="guide-text" data-i18n="guide.a5">
                                 الموسوعة تحتوي على 11 قضية محبوكة بدقة (مثل سرقة الخاتم، اختراق الخادم، الخطف في سوق
                                 الجمعة، واختطاف المليونير من البرج). تم نقل قضية "القاتل المتسلسل وفوضى تجميع 6 لاعبين"
-                                (ظلال الصياد والرمز المفقود) لتكون القضية رقم 1 المثبتة إجبارياً في أعلى الواجهة كطعم
-                                تشويقي (Hook) لحث اللاعبين على دعوة أصدقائهم لتجميع العدد.
+                                لتكون القضية رقم 1 المثبتة إجبارياً في أعلى الواجهة كطعم تشويقي لحث اللاعبين على دعوة أصدقائهم.
                             </p>
                         </div>
                     </div>
@@ -324,14 +315,13 @@
                     <!-- المربع 6: ميكانيكية الكشف والاعتراف النهائي وعلاقته بالخطف -->
                     <div class="accordion-item">
                         <button class="accordion-trigger">
-                            <span>كيف تنتهي اللعبة وما هي ميكانيكية "الاعتراف النهائي وسرد القصة"؟</span>
+                            <span data-i18n="guide.q6">كيف تنتهي اللعبة وما هي ميكانيكية "الاعتراف النهائي وسرد القصة"؟</span>
                             <span class="arrow"></span>
                         </button>
                         <div class="accordion-panel">
-                            <p class="guide-text">
+                            <p class="guide-text" data-i18n="guide.a6">
                                 بعد صدور الحكم، يتم تشغيل دالة الكشف (Reveal). إذا كُشف الجاني، يظهر أمامه نص إجباري
-                                يقرأه بصوت عالٍ يعترف فيه بجريمته ويكشف ديناميكياً عن مكان إخفاء الضحية (مثل مكان الطفلة
-                                المخطوفة في سوق الجمعة، أو مكان المليونير صالح). وإذا أفلت الجاني وخسر القاضي، يظهر النص
+                                يقرأه بصوت عالٍ يعترف فيه بجريمته ويكشف ديناميكياً عن مكان إخفاء الضحية. وإذا أفلت الجاني وخسر القاضي، يظهر النص
                                 الذهبي للجاني ليفضح ذكائه ويسخر من المحكمة ويكشف أين خبأ الضحية بعد أن أصبح في أمان
                                 تماماً!
                             </p>
@@ -340,17 +330,17 @@
 
                     <div class="accordion-item">
                         <button class="accordion-trigger">
-                            <span>من هو مطور اللعبة و اخر اعماله</span>
+                            <span data-i18n="guide.q7">من هو مطور اللعبة و اخر اعماله</span>
                             <span class="arrow"></span>
                         </button>
                         <div class="accordion-panel">
-                            <p class="guide-text">
+                            <p class="guide-text" data-i18n="guide.a7">
                                 اعرفكم بنفسي انا مطور المواقع Ahmed|Web و قررت انشاء هذه اللعبة كاملا لتنال اعجابكوا
                                 كفكرة و كتصميم و اعمل اصلا في مجال برمجة المواقع و لكني اخترت ان اصمم اللعبة حتى تستمتع
                                 باحدث الأفكار و متعة الغموض و الاثارة اما ان كنت تريد فهذا موقع يعرض جميع اعمالي
                             </p>
                             <footer>
-                                <a href="https://ahmello-web.vercel.app/" target="_blank" id="btn-visit-portfolio"
+                                <a href="https://ahmello-web.vercel.app/" target="_blank" id="btn-visit-portfolio" data-i18n="guide.btn_visit_portfolio"
                                     >زر موقعي</a
                                 >
                             </footer>
@@ -360,6 +350,8 @@
             </main>
         </div>
 
+        <!-- محرك الترجمة الشامل الموحد -->
+        <script type="module" src="js/i18n.js"></script>
         <!-- استدعاء ملف الجافا سكريبت الموحد والمخلوط بالكامل -->
         <script type="module" src="js/app.js"></script>
     </body>

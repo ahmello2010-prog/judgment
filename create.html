@@ -4,7 +4,7 @@
         <meta charset="UTF-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
         <meta name="theme-color" content="#6e5030" />
-        <title>محكمة الأدوار - غرفة الانتظار</title>
+        <title data-i18n="create.page_title">محكمة الأدوار - غرفة الانتظار</title>
         <link rel="icon" type="image/png" href="/favicon-96x96.png" sizes="96x96" />
         <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
         <link rel="shortcut icon" href="/favicon.ico" />
@@ -522,7 +522,7 @@
         <div class="jn-app">
             <!-- الشريط العلوي: خروج - اسم اللعبة - مساعدة -->
             <header class="jn-header">
-                <button id="btn-host-destroy-room" class="jn-back" type="button" aria-label="الخروج من الغرفة">
+                <button id="btn-host-destroy-room" class="jn-back" type="button" data-i18n-aria="create.btn_exit_aria" aria-label="الخروج من الغرفة">
                     <svg
                         viewBox="0 0 24 24"
                         fill="none"
@@ -535,28 +535,29 @@
                         <path d="M11 6l-6 6 6 6" />
                     </svg>
                 </button>
-                <h1 class="jn-header-title">محكمة الأدوار</h1>
-                <a href="#" class="jn-help" aria-label="دليل المستخدم"
+                <h1 class="jn-header-title" data-i18n="create.header_title">محكمة الأدوار</h1>
+                <button class="btn-lang btn-header-lang" type="button" aria-label="Switch Language">EN</button>
+                <a href="guide.html" class="jn-help" data-i18n-aria="rooms.user_guide" aria-label="دليل المستخدم"
                     ><img src="img/logo.jpeg" alt="" style="width: 50px; border-radius: 50%"
                 /></a>
             </header>
 
             <main class="jn-main" id="lobby-component">
                 <section class="jn-card">
-                    <h2 class="jn-card-title" id="lobby-main-title">غرفة الانتظار</h2>
+                    <h2 class="jn-card-title" id="lobby-main-title" data-i18n="lobby.chamber_title">غرفة الانتظار</h2>
 
                     <!-- كود الغرفة -->
                     <div class="jn-box">
-                        <span class="jn-label" id="label-code-display">كود الغرفة</span>
+                        <span class="jn-label" id="label-code-display" data-i18n="lobby.room_code_label">كود الغرفة</span>
                         <div class="jn-field">
                             <span id="room-code-number" title="اضغط لنسخ الكود">----</span>
                         </div>
-                        <p class="jn-code-hint" id="code-copy-hint">اضغط على الكود لنسخه ومشاركته مع أصدقائك</p>
+                        <p class="jn-code-hint" id="code-copy-hint" data-i18n="lobby.code_copy_hint">اضغط على الكود لنسخه ومشاركته مع أصدقائك</p>
                     </div>
 
                     <!-- اسم اللاعب -->
                     <div class="jn-box">
-                        <label class="jn-label" id="label-admin-name" for="admin-name-input">إضغط لتعديل إسمك</label>
+                        <label class="jn-label" id="label-admin-name" for="admin-name-input" data-i18n="lobby.label_admin_name">إضغط لتعديل إسمك</label>
                         <div class="jn-field">
                             <input
                                 type="text"
@@ -569,7 +570,7 @@
 
                     <!-- اللاعبون المتواجدون -->
                     <div class="jn-box">
-                        <span class="jn-label" id="label-connected-players">اللاعبون المتواجدون حالياً</span>
+                        <span class="jn-label" id="label-connected-players" data-i18n="lobby.attendees_title">اللاعبون المتواجدون حالياً</span>
                         <ul id="lobby-players-list"></ul>
                     </div>
                 </section>
@@ -577,22 +578,22 @@
 
             <footer class="jn-footer">
                 <!-- الزر مفعّل دائماً برمجياً لاستقبال الضغطات وتفعيل نظام الإنذار -->
-                <button id="btn-start-game" type="button">بدء جولة المحاكمة</button>
+                <button id="btn-start-game" type="button" data-i18n="lobby.btn_start_trial">بدء جولة المحاكمة</button>
             </footer>
         </div>
 
         <!-- المودال المعزول لتأكيد خروج المنشئ (يتفعل للأدمن فقط عند محاولة الخروج) -->
         <div id="host-exit-modal" class="host-overlay-hidden">
             <div class="jn-dialog">
-                <h2 class="jn-dialog-title">تأكيد المغادرة</h2>
-                <div id="exit-modal-custom-text" class="jn-dialog-text">
+                <h2 class="jn-dialog-title" data-i18n="lobby.leave_confirm_title">تأكيد المغادرة</h2>
+                <div id="exit-modal-custom-text" class="jn-dialog-text" data-i18n="lobby.leave_confirm_msg">
                     بصفتك منشئ هذه الغرفة، خروجك الآن سيتسبب في
                     <span style="color: #ff8a8a; font-weight: bold">إلغاء المحاكمة وطرد جميع اللاعبين</span>
                     المتواجدين حالياً. هل أنت متأكد؟
                 </div>
                 <div class="jn-dialog-row">
-                    <button id="btn-host-cancel-exit" class="jn-dbtn jn-dbtn-ghost" type="button">تراجع، البقاء</button>
-                    <button id="btn-host-confirm-exit" class="jn-dbtn jn-dbtn-danger" type="button">نعم، مغادرة</button>
+                    <button id="btn-host-cancel-exit" class="jn-dbtn jn-dbtn-ghost" type="button" data-i18n="lobby.btn_stay">تراجع، البقاء</button>
+                    <button id="btn-host-confirm-exit" class="jn-dbtn jn-dbtn-danger" type="button" data-i18n="lobby.btn_leave_confirm">نعم، مغادرة</button>
                 </div>
             </div>
         </div>
@@ -600,31 +601,31 @@
         <!-- نافذة الإنذارات والمحاكمة المنبثقة الموحدة (Custom Alert Modal) -->
         <div id="custom-alert-modal" class="modal-overlay-hidden">
             <div class="modal-alert-box">
-                <h2 id="modal-alert-title">تنبيه قضائي</h2>
+                <h2 id="modal-alert-title" data-i18n="custom_alert_title">تنبيه قضائي</h2>
                 <div id="modal-alert-message">جاري معالجة البيانات وبناء ساحة العدالة...</div>
-                <button id="btn-modal-close">حسناً</button>
+                <button id="btn-modal-close" data-i18n="btn.ok">حسناً</button>
             </div>
         </div>
 
         <!-- مودال إشعار الطرد للاعب المطرود -->
         <div id="player-kick-modal" class="jn-overlay">
             <div class="jn-dialog">
-                <h2 class="jn-dialog-title">تنبيه قضائي</h2>
-                <div class="jn-dialog-text"><span class="jn-em">جاري تسجيل خروجك من الغرفة</span></div>
+                <h2 class="jn-dialog-title" data-i18n="custom_alert_title">تنبيه قضائي</h2>
+                <div class="jn-dialog-text"><span class="jn-em" data-i18n="lobby.kicked_alert">جاري تسجيل خروجك من الغرفة</span></div>
             </div>
         </div>
 
         <!-- مودال تأكيد طرد لاعب (Kick Player Confirmation Box) -->
         <div id="kick-confirm-modal" class="jn-overlay">
             <div class="jn-dialog">
-                <h2 class="jn-dialog-title">إنذار طرد اللاعب</h2>
+                <h2 class="jn-dialog-title" data-i18n="lobby.kick_confirm_title">إنذار طرد اللاعب</h2>
                 <div id="kick-modal-text" class="jn-dialog-text">
                     هل أنت متأكد من طرد اللاعب
                     <span id="kick-target-name" class="jn-em">----</span> نهائياً من قاعة الانتظار؟
                 </div>
                 <div class="jn-dialog-row">
-                    <button id="btn-kick-cancel" class="jn-dbtn jn-dbtn-ghost" type="button">تراجع، إبقاء</button>
-                    <button id="btn-kick-confirm" class="jn-dbtn jn-dbtn-danger" type="button">نعم، طرد</button>
+                    <button id="btn-kick-cancel" class="jn-dbtn jn-dbtn-ghost" type="button" data-i18n="btn.cancel">تراجع، إبقاء</button>
+                    <button id="btn-kick-confirm" class="jn-dbtn jn-dbtn-danger" type="button" data-i18n="btn.confirm">نعم، طرد</button>
                 </div>
             </div>
         </div>
@@ -661,6 +662,9 @@
                 });
             })();
         </script>
+
+        <!-- محرك الترجمة الشامل الموحد -->
+        <script type="module" src="js/i18n.js"></script>
 
         <!-- مدير الجاهزية والاتصال لوضع الأوفلاين -->
         <script type="module" src="js/offline-manager.js"></script>

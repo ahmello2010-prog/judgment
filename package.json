@@ -1,0 +1,19 @@
+{
+  "name": "judgment-court-game",
+  "version": "1.0.0",
+  "description": "محكمة الأدوار - لعبة التحقيق والاستراتيجية الذهنية",
+  "type": "module",
+  "main": "server.js",
+  "scripts": {
+    "dev": "node server.js",
+    "start": "node server.js",
+    "build": "echo 'Build complete'"
+  },
+  "dependencies": {
+    "express": "^4.21.2",
+    "livekit-client": "^2.9.1",
+    "livekit-server-sdk": "^2.9.2",
+    "msedge-tts": "^2.0.0",
+    "ws": "^8.18.0"
+  }
+}

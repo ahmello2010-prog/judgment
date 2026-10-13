@@ -3,7 +3,7 @@
     <head>
         <meta charset="UTF-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-        <title>محكمة الأدوار - سيادة التحكم</title>
+        <title data-i18n="admin.page_title">محكمة الأدوار - سيادة التحكم</title>
 
         <link rel="icon" type="image/png" href="/favicon-96x96.png" sizes="96x96" />
         <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
@@ -288,12 +288,14 @@
         </style>
     </head>
     <body>
+        <button id="btn-lang-toggle" class="btn-lang btn-lang-floating" type="button" aria-label="Switch Language">EN</button>
         <div class="admin-panel-card">
-            <h1 style="font-family: &quot;Harmattan&quot;; font-weight: 800; font-size: 1.6rem">إدارة الغرف</h1>
-            <p>كل سجلات الغرف المسجلة في السيرفر (غرفك مميّزة بشارة)</p>
+            <h1 data-i18n="admin.header_title" style="font-family: &quot;Harmattan&quot;; font-weight: 800; font-size: 1.6rem">إدارة الغرف</h1>
+            <p data-i18n="admin.rooms_subtitle">كل سجلات الغرف المسجلة في السيرفر (غرفك مميّزة بشارة)</p>
 
             <ul id="admin-rooms-ul" class="rooms-master-list">
                 <li
+                    data-i18n="admin.loading_rooms"
                     style="
                         text-align: center;
                         color: rgba(255, 255, 255, 0.5);
@@ -305,24 +307,24 @@
             </ul>
 
             <!-- حذف شامل لعقدة rooms بالكامل -->
-            <button id="btn-delete-all-rooms" class="btn-delete-all" type="button" disabled>حذف جميع الغرف</button>
+            <button id="btn-delete-all-rooms" class="btn-delete-all" type="button" data-i18n="admin.btn_delete_all" disabled>حذف جميع الغرف</button>
             <p id="admin-status-line" class="admin-status" aria-live="polite"></p>
 
-            <a href="rooms.html" class="btn-back">عودة للصفحة الرئيسية</a>
+            <a href="rooms.html" class="btn-back" data-i18n="admin.back_rooms">عودة للصفحة الرئيسية</a>
         </div>
 
         <!-- المودال الزجاجي المنفصل لإنذار تأكيد الحذف -->
         <div id="delete-confirm-modal" class="modal-overlay">
             <div class="confirm-alert-box">
-                <h2 class="modal-title">إنذار نهائي</h2>
+                <h2 class="modal-title" data-i18n="admin.single_delete_title">إنذار نهائي</h2>
                 <div id="delete-modal-text" class="modal-message">
                     هل أنت متأكد من حذف الغرفة رقم
                     <span id="target-room-span" style="color: var(--gold-glow); font-weight: 900">----</span> نهائياً من
                     خوادم السيرفر؟
                 </div>
                 <div class="modal-buttons-group">
-                    <button id="btn-modal-cancel" class="btn-modal btn-cancel-delete">تراجع، إغلاق</button>
-                    <button id="btn-modal-confirm" class="btn-modal btn-confirm-delete">نعم، حذف نهائي</button>
+                    <button id="btn-modal-cancel" class="btn-modal btn-cancel-delete" data-i18n="btn.cancel">تراجع، إغلاق</button>
+                    <button id="btn-modal-confirm" class="btn-modal btn-confirm-delete" data-i18n="admin.single_delete_confirm">نعم، حذف نهائي</button>
                 </div>
             </div>
         </div>
@@ -335,13 +337,13 @@
             aria-modal="true"
             aria-labelledby="delete-all-title">
             <div class="confirm-alert-box">
-                <h2 id="delete-all-title" class="modal-title" style="color: #ff6b6b">⚠️ حذف شامل لكل الغرف</h2>
+                <h2 id="delete-all-title" class="modal-title" data-i18n="admin.all_delete_title" style="color: #ff6b6b">⚠️ حذف شامل لكل الغرف</h2>
                 <div class="modal-message">
                     سيتم حذف <b id="delete-all-count" style="color: var(--gold-glow)">0</b> غرفة نهائياً من السيرفر، وهي
                     تشمل <b>غرف جميع المنشئين</b> وليست غرفك فقط <span id="delete-all-mine"></span>. سيُطرد كل اللاعبين
                     المتواجدين فيها فوراً، ولا يمكن التراجع عن هذا الإجراء.
                 </div>
-                <label class="delete-all-label" for="delete-all-confirm-input">
+                <label class="delete-all-label" for="delete-all-confirm-input" data-i18n="admin.all_delete_label">
                     للتأكيد اكتب كلمة <b style="color: #ff6b6b">حذف</b> في الخانة:
                 </label>
                 <input
@@ -349,20 +351,23 @@
                     class="delete-all-input"
                     type="text"
                     autocomplete="off"
+                    data-i18n-placeholder="admin.all_delete_placeholder"
                     placeholder="اكتب: حذف" />
                 <p id="delete-all-error" class="delete-all-error" role="alert"></p>
                 <div class="modal-buttons-group">
-                    <button id="btn-delete-all-cancel" class="btn-modal btn-cancel-delete" type="button">
+                    <button id="btn-delete-all-cancel" class="btn-modal btn-cancel-delete" type="button" data-i18n="btn.cancel">
                         تراجع، إغلاق
                     </button>
-                    <button id="btn-delete-all-confirm" class="btn-modal btn-confirm-delete" type="button" disabled>
+                    <button id="btn-delete-all-confirm" class="btn-modal btn-confirm-delete" type="button" data-i18n="admin.all_delete_confirm_btn" disabled>
                         نعم، احذف الكل
                     </button>
                 </div>
             </div>
         </div>
 
+        <script type="module" src="js/i18n.js"></script>
         <script type="module">
+            import { t, getLanguage } from "./js/i18n.js";
             import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
             import {
                 getDatabase,
@@ -578,10 +583,15 @@
                     });
                 }
 
-                // زر الحذف النهائي لا يُفعَّل إلا بعد كتابة كلمة التأكيد بالضبط
+                // زر الحذف النهائي لا يُفعَّل إلا بعد كتابة كلمة التأكيد بالضبط (عربي أو إنجليزي)
+                const isConfirmMatch = (val) => {
+                    const clean = (val || "").trim().toLowerCase();
+                    return clean === "حذف" || clean === "delete";
+                };
+
                 if (deleteAllInput) {
                     deleteAllInput.addEventListener("input", function () {
-                        btnDeleteAllConfirm.disabled = isDeletingAll || deleteAllInput.value.trim() !== CONFIRM_WORD;
+                        btnDeleteAllConfirm.disabled = isDeletingAll || !isConfirmMatch(deleteAllInput.value);
                         deleteAllError.textContent = "";
                     });
                     deleteAllInput.addEventListener("keydown", function (e) {
@@ -603,7 +613,7 @@
 
                 if (btnDeleteAllConfirm) {
                     btnDeleteAllConfirm.addEventListener("click", function () {
-                        if (isDeletingAll || deleteAllInput.value.trim() !== CONFIRM_WORD) return;
+                        if (isDeletingAll || !isConfirmMatch(deleteAllInput.value)) return;
 
                         isDeletingAll = true;
                         const deletedCount = totalRoomsInDb;
