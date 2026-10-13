@@ -51,6 +51,10 @@ export const translations = {
         "rooms.radio_stopped": "إيقاف",
         "rooms.user_guide": "دليل المستخدم",
         "rooms.rooms_log": "سجل الغرف",
+        "rooms.translation_notice_title": "تنبيه الترجمة",
+        "rooms.translation_notice_body": "الترجمة لا تزال قيد الإنجاز ولم تكتمل بعد على جميع نصوص اللعبة، بالأخص نصوص القضايا وتفاصيل الأدوار. ترقبوا آخر التحديثات حتى تحصلوا على الترجمة كاملة!",
+        "rooms.download_game": "📥 تحميل اللعبة",
+        "rooms.download_note": "رابط لعبتي لا تنسى تحميله لتحظى بتجربة لعب امتع",
         "rooms.foyer_badge": "بهو القضايا والتحقيق",
         "rooms.foyer_title": "محكمة الأدوار",
         "rooms.foyer_subtitle": "اختر إنشاء جولة جديدة أو انضم لغرفة أصدقائك لبدء المحاكمة",
@@ -393,6 +397,10 @@ export const translations = {
         "rooms.radio_stopped": "Off",
         "rooms.user_guide": "User Guide",
         "rooms.rooms_log": "Rooms Registry",
+        "rooms.translation_notice_title": "Translation Notice",
+        "rooms.translation_notice_body": "Translation is still in progress and does not yet cover all game texts, especially case stories and role details. Stay tuned for upcoming updates to get the complete translation!",
+        "rooms.download_game": "📥 Download Game",
+        "rooms.download_note": "My game link, don't forget to download it for a more enjoyable playing experience",
         "rooms.foyer_badge": "Cases & Trials Foyer",
         "rooms.foyer_title": "Court of Roles",
         "rooms.foyer_subtitle": "Create a new trial round or join your friends' courtroom to begin",
@@ -835,6 +843,11 @@ export const phraseMap = {
     "صوت النظام الافتراضي (Web Speech)": "Default System Voice (Web Speech)",
     "تم تفعيل القارئ الذاتي، ستجده أسفل الشاشة ويمكنك سحبه.": "Auto Reader enabled. You can find it at the bottom of the screen and drag it.",
     "تم إلغاء القارئ الذاتي.": "Auto Reader disabled.",
+    "تنبيه الترجمة": "Translation Notice",
+    "الترجمة لا تزال قيد الإنجاز ولم تكتمل بعد على جميع نصوص اللعبة، بالأخص نصوص القضايا وتفاصيل الأدوار. ترقبوا آخر التحديثات حتى تحصلوا على الترجمة كاملة!": "Translation is still in progress and does not yet cover all game texts, especially case stories and role details. Stay tuned for upcoming updates to get the complete translation!",
+    "📥 تحميل اللعبة": "📥 Download Game",
+    "تحميل اللعبة": "Download Game",
+    "رابط لعبتي لا تنسى تحميله لتحظى بتجربة لعب امتع": "My game link, don't forget to download it for a more enjoyable playing experience",
 
     // System notifications and alerts
     "انتظر الأدمن ليختار القضية وتبدأ اللعبة.": "Waiting for the Host to choose a case and begin the game.",
@@ -1076,7 +1089,7 @@ export function applyTranslations(root = document) {
     // Dynamic translation scan for known phrases when in English mode
     if (isEn) {
         // Buttons, sidebar links, labels, and status tags with known phrases
-        root.querySelectorAll("button, .btn-main, .sidebar-link, .sidebar-radio-title span, .radio-status-tag, #sidebar-tts-label, #sidebar-tts-tag").forEach((btn) => {
+        root.querySelectorAll("button, .btn-main, .sidebar-link, .sidebar-radio-title span, .radio-status-tag, #sidebar-tts-label, #sidebar-tts-tag, .sidebar-download-btn, .sidebar-download-note").forEach((btn) => {
             if (btn.classList.contains("btn-lang")) return;
             const text = btn.textContent.trim();
             if (phraseMap[text]) {
