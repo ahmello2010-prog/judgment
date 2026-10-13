@@ -116,11 +116,15 @@ app.get(
     (req, res) => {
         const apkPath = path.join(__dirname, "public/downloads/role-court.apk");
         if (!fs.existsSync(apkPath)) {
-            return res.status(404).send("الملف جارٍ تجهيزه أو غير موجود حالياً.");
+            return res.status(404).send("الملف غير متوفر حالياً.");
         }
         res.setHeader("Content-Type", "application/vnd.android.package-archive");
-        res.setHeader("Content-Disposition", 'attachment; filename="role-court.apk"');
-        return res.sendFile(apkPath);
+        res.setHeader("X-Content-Type-Options", "nosniff");
+        return res.download(apkPath, "role-court.apk", (err) => {
+            if (err && !res.headersSent) {
+                console.error("Error sending APK download:", err);
+            }
+        });
     }
 );
 

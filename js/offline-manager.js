@@ -2,7 +2,7 @@
 // 🌐 js/offline-manager.js — مدير الجاهزية والاتصال لوضع الأوفلاين
 // ==========================================================================
 
-const CACHE_NAME = "judgment-cache-v3"; // يتطابق مع CACHE_NAME في sw.js
+const CACHE_NAME = "judgment-cache-v4"; // يتطابق مع CACHE_NAME في sw.js
 const OFFLINE_READY_FLAG = "judgment_offline_ready";
 const FIRST_TIME_WARNING_SHOWN_FLAG = "judgment_first_time_warning_shown";
 

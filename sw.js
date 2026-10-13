@@ -3,8 +3,8 @@
 // ==========================================================================
 
 // ⚠️ لازم يتطابق مع CACHE_NAME في js/offline-manager.js
-// غيّر الرقم (v2 → v3 ...) كل ما تعدّل ملفات اللعبة عشان يتحدّث الكاش عند المستخدمين
-const CACHE_NAME = "judgment-cache-v3";
+// غيّر الرقم (v3 → v4 ...) كل ما تعدّل ملفات اللعبة عشان يتحدّث الكاش عند المستخدمين
+const CACHE_NAME = "judgment-cache-v4";
 
 // قائمة الملفات الأساسية والضرورية لتشغيل اللعبة أوفلاين بالكامل
 const ESSENTIAL_ASSETS = [
@@ -160,9 +160,15 @@ self.addEventListener("fetch", (event) => {
 
     const url = new URL(request.url);
 
-    // استثناء مسار TTS ومسارات الفيديو الكبيرة الخارجية
-    if (url.pathname.startsWith("/api/speak") || url.hostname.includes("res.cloudinary.com")) {
-        return;
+    // استثناء مسارات التنزيل وحزم الأندرويد وملفات الصوت والوسائط من اعتراض السيرفس ووركر تماماً
+    if (
+        url.pathname.startsWith("/download") ||
+        url.pathname.startsWith("/downloads") ||
+        url.pathname.endsWith(".apk") ||
+        url.pathname.startsWith("/api/speak") ||
+        url.hostname.includes("res.cloudinary.com")
+    ) {
+        return; // ترك التنزيل للمتصفح والشبكة مباشرة بدون اعتراض
     }
 
     const sameOrigin = url.origin === self.location.origin;
