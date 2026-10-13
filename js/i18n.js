@@ -1084,52 +1084,11 @@ export function bindLanguageButtons() {
 }
 
 /**
- * Ensure a language toggle button is present on the page header
+ * Language toggle is solely hosted in the settings drawer of rooms.html.
+ * Automatic injection into headers or body is disabled to prevent UI clutter.
  */
-export function mountHeaderLanguageToggle(targetSelector = null) {
-    if (document.getElementById("btn-header-lang-toggle") || document.querySelector(".btn-lang")) {
-        updateLanguageButtons();
-        return;
-    }
-
-    let container = null;
-    if (targetSelector) {
-        container = document.querySelector(targetSelector);
-    }
-
-    if (!container) {
-        container =
-            document.querySelector(".rm-header") ||
-            document.querySelector(".jn-header") ||
-            document.querySelector(".court-sovereign-navbar") ||
-            document.querySelector(".gc-header") ||
-            document.querySelector(".results-header") ||
-            document.querySelector(".gd-header") ||
-            document.querySelector(".admin-header") ||
-            document.querySelector(".offline-header");
-    }
-
-    const btn = document.createElement("button");
-    btn.id = "btn-header-lang-toggle";
-    btn.type = "button";
-    btn.className = "btn-lang btn-header-lang";
-    btn.textContent = getLanguage() === "ar" ? "EN" : "AR";
-    btn.title = t("btn.lang_title");
-    btn.setAttribute("aria-label", t("btn.lang_title"));
-
-    if (container) {
-        container.appendChild(btn);
-    } else {
-        // Floating button if no standard header exists
-        btn.classList.add("btn-lang-floating");
-        document.body.appendChild(btn);
-    }
-
-    btn.addEventListener("click", (e) => {
-        e.preventDefault();
-        e.stopPropagation();
-        toggleLanguage();
-    });
+export function mountHeaderLanguageToggle() {
+    updateLanguageButtons();
 }
 
 /**
