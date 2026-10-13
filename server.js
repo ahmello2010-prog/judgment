@@ -98,10 +98,15 @@ app.all("/api/livekit-token", (req, res) => livekitTokenHandler(req, res));
 app.all("/getLiveKitToken", (req, res) => livekitTokenHandler(req, res));
 
 // تقديم مكتبة livekit-client مباشرة من node_modules للواجهة الأمامية
-app.use(
-    "/vendor/livekit",
-    express.static(path.join(__dirname, "node_modules/livekit-client/dist"))
-);
+app.use("/vendor/livekit", express.static(path.join(__dirname, "node_modules/livekit-client/dist")));
+
+// مسار تنزيل ملف لعبة محكمة الأدوار مباشرة لهواتف الأندرويد (.apk)
+app.get(["/download/role-court.apk", "/downloads/role-court.apk"], (req, res) => {
+    const apkPath = path.join(__dirname, "public/downloads/role-court.apk");
+    res.setHeader("Content-Type", "application/vnd.android.package-archive");
+    res.setHeader("Content-Disposition", 'attachment; filename="role-court.apk"');
+    return res.sendFile(apkPath);
+});
 
 // Serve static assets from project root
 app.use(
