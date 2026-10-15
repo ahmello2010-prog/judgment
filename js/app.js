@@ -16,15 +16,7 @@ import {
     stopSpeech as stopTtsSpeech,
     registerForbiddenSpeech
 } from "./tts.js";
-import {
-    GAME_MODES,
-    normalizeGameMode,
-    isImprovisationMode,
-    buildImprovisationGuidance,
-    resolvePerformanceHelp,
-    escapeHtml,
-    extractSideCrime
-} from "./improv.js";
+import { resolvePerformanceHelp, escapeHtml, extractSideCrime } from "./improv.js";
 import "./soundtrack.js";
 import "./radio.js";
 import "./transitions.js";
@@ -85,95 +77,6 @@ const firebaseConfig = { databaseURL: "https://great-songs-e334c-default-rtdb.fi
 const app = initializeApp(firebaseConfig);
 const db = getDatabase(app);
 
-// ==========================================================================
-// 🎭 مبدّل نمط المحاكمة (Scripted / Improvisation) — للمنشئ فقط، ويُعرض للبقية للقراءة فقط
-// المسار السحابي: rooms/ROOM_CODE/game_state/gameMode
-// ==========================================================================
-function injectGameModeToggleStyles() {
-    if (document.getElementById("gm-toggle-styles")) return;
-    const style = document.createElement("style");
-    style.id = "gm-toggle-styles";
-    style.textContent = `
-        .gm-toggle-card{width:100%;box-sizing:border-box;background:rgba(13,25,43,.55);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);border:1.5px solid rgba(213,167,92,.55);border-radius:16px;padding:16px 14px;box-shadow:0 10px 30px rgba(0,0,0,.45),inset 0 1px 0 rgba(255,255,255,.08);direction:rtl;text-align:right}
-        .gm-toggle-title{margin:0 0 4px;font-family:'Alexandria',sans-serif;font-weight:800;font-size:1rem;color:var(--gold-glow,#d5a75c)}
-        .gm-toggle-sub{margin:0 0 12px;font-family:'Harmattan',sans-serif;font-size:1.15rem;color:rgba(255,255,255,.75);line-height:1.4}
-        .gm-toggle-options{display:flex;flex-direction:column;gap:10px}
-        .gm-option{all:unset;box-sizing:border-box;display:flex;flex-direction:column;gap:4px;padding:12px 14px;border-radius:12px;border:1.5px solid rgba(255,255,255,.15);background:rgba(255,255,255,.04);cursor:pointer;transition:all .2s ease;-webkit-tap-highlight-color:transparent;touch-action:manipulation}
-        .gm-option:active{transform:scale(.985)}
-        .gm-option.gm-active{border-color:var(--gold-glow,#d5a75c);background:rgba(213,167,92,.16);box-shadow:0 0 18px rgba(213,167,92,.25)}
-        .gm-option.gm-locked{cursor:default}
-        .gm-option-name{font-family:'Alexandria',sans-serif;font-weight:700;font-size:.9rem;color:#fff}
-        .gm-option.gm-active .gm-option-name{color:var(--gold-glow,#d5a75c)}
-        .gm-option-desc{font-family:'Harmattan',sans-serif;font-size:1.1rem;color:rgba(255,255,255,.7);line-height:1.35}
-        .gm-toggle-status{margin:10px 0 0;font-family:'Alexandria',sans-serif;font-size:.7rem;font-weight:600;color:#e2cba5;text-align:center;min-height:16px}
-    `;
-    document.head.appendChild(style);
-}
-
-function mountGameModeToggle(slot) {
-    if (!slot || !currentRoomCode || slot.dataset.mounted === "1") return;
-    slot.dataset.mounted = "1";
-    injectGameModeToggleStyles();
-
-    slot.innerHTML = `
-        <div class="gm-toggle-card" role="radiogroup" aria-label="نمط المحاكمة">
-            <h3 class="gm-toggle-title">⚖️ نمط المحاكمة</h3>
-            <p class="gm-toggle-sub">اختر كيف ستُدار الجلسة قبل بدء الجولة.</p>
-            <div class="gm-toggle-options">
-                <button type="button" class="gm-option" data-mode="${GAME_MODES.SCRIPTED}" role="radio" aria-checked="true">
-                    <span class="gm-option-name">📜 وضع السكريبتات الكامل</span>
-                    <span class="gm-option-desc">اللعبة تقود المحاكمة: أسئلة وأدلة وإجابات جاهزة من ملف القضايا.</span>
-                </button>
-                <button type="button" class="gm-option" data-mode="${GAME_MODES.IMPROVISATION}" role="radio" aria-checked="false">
-                    <span class="gm-option-name">🎭 وضع الارتجال القضائي</span>
-                    <span class="gm-option-desc">تُوزَّع الأدوار والمصالح السرية، والمحاكمة كلها من خيالكم: القاضي والمحامون يبتكرون الأسئلة والمتهمون يرتجلون الإجابات.</span>
-                </button>
-            </div>
-            <p class="gm-toggle-status" aria-live="polite"></p>
-        </div>
-    `;
-
-    const options = slot.querySelectorAll(".gm-option");
-    const statusEl = slot.querySelector(".gm-toggle-status");
-    const modeRef = ref(db, `rooms/${currentRoomCode}/game_state/gameMode`);
-    const hostRef = ref(db, `rooms/${currentRoomCode}/hostUID`);
-    let isHost = false;
-    let currentMode = GAME_MODES.SCRIPTED;
-
-    const render = () => {
-        options.forEach((btn) => {
-            const active = btn.dataset.mode === currentMode;
-            btn.classList.toggle("gm-active", active);
-            btn.classList.toggle("gm-locked", !isHost);
-            btn.setAttribute("aria-checked", String(active));
-            btn.disabled = !isHost;
-        });
-        statusEl.textContent = isHost
-            ? "أنت منشئ الغرفة: اختر النمط قبل بدء الجولة."
-            : "🔒 منشئ الغرفة وحده يختار النمط، والنمط الحالي معروض أعلاه.";
-    };
-
-    // onValue بدل get: الغرفة قد تُنشأ بعد لحظات من تحميل الصفحة
-    onValue(hostRef, (snap) => {
-        isHost = snap.val() === mySecretUID;
-        render();
-    });
-    onValue(modeRef, (snap) => {
-        currentMode = normalizeGameMode(snap.val());
-        render();
-    });
-
-    options.forEach((btn) => {
-        btn.addEventListener("click", () => {
-            if (!isHost) return;
-            const next = btn.dataset.mode;
-            if (next === currentMode) return;
-            set(modeRef, next).catch(() => {
-                statusEl.textContent = "⚠️ تعذّر حفظ الاختيار، تحقق من الاتصال وحاول مجدداً.";
-            });
-        });
-    });
-}
 // ==========================================================================
 // 2. محرك القائمة الجانبية (Sidebar) ومحرك الأكورديون وعداد اللودينج
 // ==========================================================================
@@ -348,9 +251,7 @@ if (currentRoomCode && document.getElementById("room-code-number")) {
             set(roomRef, {
                 code: currentRoomCode,
                 hostUID: mySecretUID,
-                createdAt: Date.now(),
-                // 🎭 النمط الافتراضي للجولة؛ يغيّره المنشئ من مبدّل النمط في create.html
-                game_state: { gameMode: GAME_MODES.SCRIPTED }
+                createdAt: Date.now()
             });
             const firstPlayerRef = push(playersRef);
             myPlayerKey = firstPlayerRef.key;
@@ -986,7 +887,9 @@ function showAdminOnlyAlert() {
     if (m) {
         const titleEl = document.getElementById("modal-alert-title");
         if (titleEl) titleEl.textContent = t("custom_alert_title");
-        document.getElementById("modal-alert-message").textContent = translatePhrase("انتظر الأدمن ليختار القضية وتبدأ اللعبة.");
+        document.getElementById("modal-alert-message").textContent = translatePhrase(
+            "انتظر الأدمن ليختار القضية وتبدأ اللعبة."
+        );
         m.className = "modal-overlay-active";
     }
 }
@@ -1094,8 +997,7 @@ function listenToFinalLobby() {
             const myRoleCard = assignments[mySecretUID] || {};
             let myLawyerType = "none";
 
-            // 🎭🔊 نمط الجولة الحالي وبطاقتي: يستخدمهما توجيه الارتجال وحارس سرية المتحدث الصوتي
-            window.currentGameMode = normalizeGameMode(gameState.gameMode);
+            // 🎭🔊 بطاقتي الحالية: يستخدمها توجيه الأداء وحارس سرية المتحدث الصوتي
             window.myCurrentRoleCard = myRoleCard;
             if (myRoleCard.secret_interest) registerForbiddenSpeech(myRoleCard.secret_interest);
 
@@ -1139,18 +1041,10 @@ function listenToFinalLobby() {
                 window.lastProcessedQuestionPromptTimestamp = gameState.active_question_prompt.timestamp;
                 const promptData = gameState.active_question_prompt;
 
-                if (promptData.improvised === true) {
-                    // 🎭 وضع الارتجال: لا نص جاهز، السؤال يُطرح شفهياً
-                    triggerKillFeedAlert(
-                        `🎭 ${promptData.asker_name || "طرف المحكمة"} يستجوب (${promptData.target_name || "أحد الحاضرين"}) ارتجالياً... السؤال يُطرح شفهياً`,
-                        true
-                    );
-                } else {
-                    triggerKillFeedAlert(
-                        `❓ سؤال موجّه لـ (${promptData.target_name || "أحد الحاضرين"}) من ${promptData.asker_name || "طرف المحكمة"}: ${promptData.question_text}`,
-                        true
-                    );
-                }
+                triggerKillFeedAlert(
+                    `❓ سؤال موجّه لـ (${promptData.target_name || "أحد الحاضرين"}) من ${promptData.asker_name || "طرف المحكمة"}: ${promptData.question_text}`,
+                    true
+                );
 
                 if (promptData.target_uid === mySecretUID) {
                     injectAutomatedResponseButtons(promptData);
@@ -1657,116 +1551,6 @@ function renderCircularSeats(playersList, assignments, gameState) {
                                 modal.className = "modal-overlay-active";
                             };
 
-                            // 🎭 مودال الاستجواب الارتجالي: القاضي مقفول على اللاعب الذي اختاره فعلاً (fixedTargetUID)، والسؤال يُطرح شفهياً
-                            const renderImprovisedQuestionsPicker = (
-                                latestPlayersData,
-                                latestAssignments,
-                                fixedTargetUID
-                            ) => {
-                                const modal = document.getElementById("custom-alert-modal");
-                                if (!modal) return;
-
-                                document.getElementById("modal-alert-title").textContent = "🎭 استجواب ارتجالي";
-
-                                const fixedTargetKey = fixedTargetUID
-                                    ? Object.keys(latestPlayersData).find(
-                                          (k) => latestPlayersData[k].uid === fixedTargetUID
-                                      )
-                                    : null;
-                                const fixedTargetName = fixedTargetKey ? latestPlayersData[fixedTargetKey].name : "";
-
-                                let selectorHTML = "";
-                                if (fixedTargetUID) {
-                                    selectorHTML = `<p style="color: var(--gold-glow); font-size: 0.85rem; font-weight: 700; margin: 0 0 12px; line-height: 1.6;">🎯 موجَّه حصرياً للاعب المستجوَب حالياً: <b>${escapeHtml(fixedTargetName || "اللاعب المحدد")}</b></p>`;
-                                } else {
-                                    let optionsHTML = "";
-                                    Object.keys(latestPlayersData).forEach((key) => {
-                                        const p = latestPlayersData[key];
-                                        const card = latestAssignments[p.uid] || {};
-                                        if (card.role_type !== "judge" && card.role_type !== "lawyer") {
-                                            optionsHTML += `<option value="${escapeHtml(p.uid)}">${escapeHtml(p.name)} (${escapeHtml(card.role_name || "متهم")})</option>`;
-                                        }
-                                    });
-                                    selectorHTML = `
-                    <label style="color: var(--gold-glow); font-size: 0.8rem; font-weight: 700; display: block; margin-bottom: 8px;">اختر اللاعب الذي تريد استجوابه:</label>
-                    <select id="improv-target-player" style="width: 100%; padding: 10px; background: #161c26; color: #fff; border: 1px solid var(--gold-glow); border-radius: 6px; font-family: 'Alexandria'; font-size: 0.85rem; outline: none; margin-bottom: 12px;">
-                        <option value="">-- اختر لاعباً --</option>
-                        ${optionsHTML}
-                    </select>
-                `;
-                                }
-
-                                document.getElementById("modal-alert-message").innerHTML = `
-                <div style="text-align: right; font-family: 'Alexandria', sans-serif; direction: rtl;">
-                    <p style="color: #cfd8e3; font-family: 'Harmattan'; font-size: 1.15rem; line-height: 1.5; margin: 0 0 12px;">
-                        وضع الارتجال القضائي: لا توجد أسئلة جاهزة. اطرح سؤالك من خيالك بصوتك، وسيصله تنبيه ليختار أسلوب إجابته.
-                    </p>
-                    ${selectorHTML}
-                    <button id="btn-send-improv-question" ${fixedTargetUID ? "" : "disabled"} style="width: 100%; padding: 12px; background: var(--gold-glow); color: #101820; border: none; border-radius: 8px; font-family: 'Alexandria'; font-weight: 700; font-size: 0.9rem; cursor: pointer; opacity: ${fixedTargetUID ? "1" : "0.5"};">📣 وجّه سؤالك الآن</button>
-                    <p id="improv-question-status" style="color: #ffe9b3; font-size: 0.8rem; text-align: center; margin: 12px 0 0; min-height: 20px; line-height: 1.7;"></p>
-                </div>
-            `;
-
-                                const targetSelect = document.getElementById("improv-target-player");
-                                const btnSend = document.getElementById("btn-send-improv-question");
-                                const statusLine = document.getElementById("improv-question-status");
-
-                                if (targetSelect) {
-                                    targetSelect.addEventListener("change", function () {
-                                        const ready = !!targetSelect.value;
-                                        btnSend.disabled = !ready;
-                                        btnSend.style.opacity = ready ? "1" : "0.5";
-                                        statusLine.textContent = "";
-                                    });
-                                }
-
-                                btnSend.addEventListener("click", function () {
-                                    const targetUID = fixedTargetUID || (targetSelect ? targetSelect.value : "");
-                                    if (!targetUID || btnSend.disabled) return;
-
-                                    const targetPlayerKey = Object.keys(latestPlayersData).find(
-                                        (k) => latestPlayersData[k].uid === targetUID
-                                    );
-                                    const targetName = targetPlayerKey
-                                        ? latestPlayersData[targetPlayerKey].name
-                                        : "اللاعب المستهدف";
-
-                                    update(gameStateRef, {
-                                        active_question_prompt: {
-                                            target_uid: targetUID,
-                                            target_name: targetName,
-                                            asker_uid: mySecretUID,
-                                            asker_name: myRoleCard.role_name || "أحد أطراف المحكمة",
-                                            question_text: "",
-                                            answers: null,
-                                            improvised: true,
-                                            timestamp: Date.now()
-                                        }
-                                    })
-                                        .then(() => {
-                                            statusLine.textContent = `✅ تم تنبيه ${targetName}. اطرح سؤالك شفهياً الآن.`;
-                                        })
-                                        .catch(() => {
-                                            statusLine.textContent = "⚠️ تعذّر إرسال التنبيه، حاول مرة أخرى.";
-                                        });
-
-                                    // منع الضغط المتكرر السريع الذي يُغرق اللاعب بتنبيهات
-                                    btnSend.disabled = true;
-                                    btnSend.style.opacity = "0.5";
-                                    setTimeout(() => {
-                                        if (fixedTargetUID || (targetSelect && targetSelect.value)) {
-                                            btnSend.disabled = false;
-                                            btnSend.style.opacity = "1";
-                                        }
-                                    }, 4000);
-                                });
-
-                                const globalCloseBtn = document.getElementById("btn-modal-close");
-                                if (globalCloseBtn) globalCloseBtn.style.setProperty("display", "block", "important");
-                                modal.style.setProperty("display", "flex", "important");
-                                modal.className = "modal-overlay-active";
-                            };
-
                             const openQuestionsPickerHandler = (e) => {
                                 if (e) {
                                     e.preventDefault();
@@ -1786,15 +1570,6 @@ function renderCircularSeats(playersList, assignments, gameState) {
                                     if (activeTargetUID === "none") {
                                         showLocalToast(
                                             "🔒 اختر لاعباً للاستجواب أولاً بالضغط على زر 'استجواب لاعب' قبل استخدام الأسئلة."
-                                        );
-                                        return;
-                                    }
-
-                                    if (isImprovisationMode(latestGameState)) {
-                                        renderImprovisedQuestionsPicker(
-                                            latestPlayersData,
-                                            latestAssignments,
-                                            activeTargetUID
                                         );
                                         return;
                                     }
@@ -1972,7 +1747,7 @@ function renderCircularSeats(playersList, assignments, gameState) {
                         ? `<span style="color:var(--gold-glow); font-size:0.65rem;">${isEnSeat ? "(You)" : "(أنت)"}</span>`
                         : "";
                 // جعل المسمى الوظيفي للدور علنياً ومكشوفاً للجميع على كراسي قاعة المحكمة
-                const rawCardName = roleCard ? roleCard.role_name : (isEnSeat ? "Receiving..." : "جاري الاستلام...");
+                const rawCardName = roleCard ? roleCard.role_name : isEnSeat ? "Receiving..." : "جاري الاستلام...";
                 const cardNameLabel = isEnSeat ? translateRoleTitle(rawCardName) : rawCardName;
 
                 let seatHTML = `
@@ -2268,19 +2043,14 @@ document.addEventListener("click", function (event) {
             } else {
                 console.log("اكتمل النصاب القانوني (3 لاعبين فأكثر). جاري الانتقال لموسوعة القضايا...");
 
-                // 🎭 update على المفتاح game_state يستبدله بالكامل، لذا نقرأ النمط المختار ونعيد كتابته ضمن الحالة
-                get(ref(db, "rooms/" + currentRoomCode + "/game_state/gameMode"))
-                    .then((modeSnap) =>
-                        update(ref(db, "rooms/" + currentRoomCode), {
-                            game_state: {
-                                status: "go-to-game",
-                                caseId: "none",
-                                assignments: {},
-                                interrogationsCount: 0,
-                                gameMode: normalizeGameMode(modeSnap.val())
-                            }
-                        })
-                    )
+                update(ref(db, "rooms/" + currentRoomCode), {
+                    game_state: {
+                        status: "go-to-game",
+                        caseId: "none",
+                        assignments: {},
+                        interrogationsCount: 0
+                    }
+                })
                     .then(() => {
                         console.log("تمت المزامنة السحابية بنجاح! جاري التوجيه الفوري لصفحة القضايا...");
                         navigateTo("game.html");
@@ -2390,7 +2160,6 @@ document.addEventListener("click", function (event) {
 
 // انطلاق دوال التحميل الكلية الآمنة عند رصد الصفحة المعنية لمنع التضارب
 document.addEventListener("DOMContentLoaded", () => {
-    document.querySelectorAll("[data-game-mode-toggle]").forEach(mountGameModeToggle);
     if (document.getElementById("cases-container")) loadAndDisplayCases();
 
     // [تطوير ذكي]: عند فتح صفحة ساحة اللعب (اللوبي)، يطلق شاشة التحميل السينمائية أولاً لتغطية تحميل السيرفر
@@ -2911,20 +2680,6 @@ if (!window.hasJudgeInterrogationEngineAttached) {
                         interrogationsCount: nextCount
                     };
 
-                    // 🎭 وضع الارتجال: عند استجواب متهم تظهر له أزرار (كذب/محايد/صدق) بتوجيه ارتجالي بدل نص جاهز
-                    const targetRoleType = (assignments[targetUID] || {}).role_type;
-                    if (isImprovisationMode(gameState) && targetRoleType !== "judge" && targetRoleType !== "lawyer") {
-                        interrogationUpdate.active_question_prompt = {
-                            target_uid: targetUID,
-                            target_name: targetName || "اللاعب المستهدف",
-                            asker_uid: mySecretUID,
-                            asker_name: myRoleCard.role_name || "القاضي المحقق",
-                            question_text: "",
-                            answers: null,
-                            improvised: true,
-                            timestamp: Date.now()
-                        };
-                    }
                     update(gameStateRef, interrogationUpdate);
                 }
             });
@@ -3650,13 +3405,7 @@ function injectLawyerActionControls(
         // المحاميان (سواء دفاع أو ادعاء) يريان الحقيبة دائماً لتدعيم المحاكمة
         showEvidenceButton = true;
     }
-    // 🎭 في وضع الارتجال لا توجد أدلة مكتوبة مسبقاً، فلا تُحقن الحقيبة
-    if (
-        showEvidenceButton &&
-        gameState.caseId &&
-        !isImprovisationMode(gameState) &&
-        !document.getElementById("btn-evidence-bag-trigger")
-    ) {
+    if (showEvidenceButton && gameState.caseId && !document.getElementById("btn-evidence-bag-trigger")) {
         const evidenceHolder = document.createElement("div");
         evidenceHolder.id = "btn-evidence-bag-trigger";
 
@@ -4038,93 +3787,6 @@ function injectLawyerActionControls(
             modal.className = "modal-overlay-active";
         };
 
-        // 🎭 مودال الاستجواب الارتجالي: اختيار المتهم فقط، والسؤال يُطرح شفهياً (لا JSON إطلاقاً)
-        const renderImprovisedQuestionsPicker = (latestPlayersData, latestAssignments) => {
-            const modal = document.getElementById("custom-alert-modal");
-            if (!modal) return;
-
-            document.getElementById("modal-alert-title").textContent = "🎭 استجواب ارتجالي";
-
-            let optionsHTML = "";
-            Object.keys(latestPlayersData).forEach((key) => {
-                const p = latestPlayersData[key];
-                const card = latestAssignments[p.uid] || {};
-                if (card.role_type !== "judge" && card.role_type !== "lawyer") {
-                    optionsHTML += `<option value="${escapeHtml(p.uid)}">${escapeHtml(p.name)} (${escapeHtml(card.role_name || "متهم")})</option>`;
-                }
-            });
-
-            document.getElementById("modal-alert-message").innerHTML = `
-                <div style="text-align: right; font-family: 'Alexandria', sans-serif; direction: rtl;">
-                    <p style="color: #cfd8e3; font-family: 'Harmattan'; font-size: 1.15rem; line-height: 1.5; margin: 0 0 12px;">
-                        وضع الارتجال القضائي: لا توجد أسئلة جاهزة. اختر اللاعب ثم اطرح سؤالك من خيالك بصوتك، وسيصله تنبيه ليختار أسلوب إجابته.
-                    </p>
-                    <label style="color: var(--gold-glow); font-size: 0.8rem; font-weight: 700; display: block; margin-bottom: 8px;">اختر اللاعب الذي تريد استجوابه:</label>
-                    <select id="improv-target-player" style="width: 100%; padding: 10px; background: #161c26; color: #fff; border: 1px solid var(--gold-glow); border-radius: 6px; font-family: 'Alexandria'; font-size: 0.85rem; outline: none; margin-bottom: 12px;">
-                        <option value="">-- اختر لاعباً --</option>
-                        ${optionsHTML}
-                    </select>
-                    <button id="btn-send-improv-question" disabled style="width: 100%; padding: 12px; background: var(--gold-glow); color: #101820; border: none; border-radius: 8px; font-family: 'Alexandria'; font-weight: 700; font-size: 0.9rem; cursor: pointer; opacity: 0.5;">📣 وجّه سؤالك الآن</button>
-                    <p id="improv-question-status" style="color: #ffe9b3; font-size: 0.8rem; text-align: center; margin: 12px 0 0; min-height: 20px; line-height: 1.7;"></p>
-                </div>
-            `;
-
-            const targetSelect = document.getElementById("improv-target-player");
-            const btnSend = document.getElementById("btn-send-improv-question");
-            const statusLine = document.getElementById("improv-question-status");
-
-            targetSelect.addEventListener("change", function () {
-                const ready = !!targetSelect.value;
-                btnSend.disabled = !ready;
-                btnSend.style.opacity = ready ? "1" : "0.5";
-                statusLine.textContent = "";
-            });
-
-            btnSend.addEventListener("click", function () {
-                const targetUID = targetSelect.value;
-                if (!targetUID || btnSend.disabled) return;
-
-                const targetPlayerKey = Object.keys(latestPlayersData).find(
-                    (k) => latestPlayersData[k].uid === targetUID
-                );
-                const targetName = targetPlayerKey ? latestPlayersData[targetPlayerKey].name : "اللاعب المستهدف";
-
-                update(gameStateRef, {
-                    active_question_prompt: {
-                        target_uid: targetUID,
-                        target_name: targetName,
-                        asker_uid: mySecretUID,
-                        asker_name: myRoleCard.role_name || "أحد أطراف المحكمة",
-                        question_text: "",
-                        answers: null,
-                        improvised: true,
-                        timestamp: Date.now()
-                    }
-                })
-                    .then(() => {
-                        statusLine.textContent = `✅ تم تنبيه ${targetName}. اطرح سؤالك شفهياً الآن.`;
-                    })
-                    .catch(() => {
-                        statusLine.textContent = "⚠️ تعذّر إرسال التنبيه، حاول مرة أخرى.";
-                    });
-
-                // منع الضغط المتكرر السريع الذي يُغرق اللاعب بتنبيهات
-                btnSend.disabled = true;
-                btnSend.style.opacity = "0.5";
-                setTimeout(() => {
-                    if (targetSelect.value) {
-                        btnSend.disabled = false;
-                        btnSend.style.opacity = "1";
-                    }
-                }, 4000);
-            });
-
-            const globalCloseBtn = document.getElementById("btn-modal-close");
-            if (globalCloseBtn) globalCloseBtn.style.setProperty("display", "block", "important");
-            modal.style.setProperty("display", "flex", "important");
-            modal.className = "modal-overlay-active";
-        };
-
         const openQuestionsPickerHandler = (e) => {
             if (e) {
                 e.preventDefault();
@@ -4143,11 +3805,6 @@ function injectLawyerActionControls(
                     showLocalToast(
                         "🔒 يجب طلب الكلمة أو استخدام الاعتراض القسري أولاً، والحصول على فرصة التحدث من القاضي."
                     );
-                    return;
-                }
-
-                if (isImprovisationMode(latestGameState)) {
-                    renderImprovisedQuestionsPicker(latestPlayersData, latestAssignments);
                     return;
                 }
 
@@ -4620,7 +4277,6 @@ async function injectAutomatedResponseButtons(promptData) {
         max-height: 80vh !important; overflow-y: auto !important; animation: smoothPanelReveal 0.4s ease-out;
     `;
 
-    const isImprovisedPrompt = promptData.improvised === true;
     const asker = escapeHtml(promptData.asker_name || "طرف المحكمة");
     const questionText = escapeHtml(promptData.question_text || "");
 
@@ -4640,11 +4296,7 @@ async function injectAutomatedResponseButtons(promptData) {
     box.innerHTML = `
         <div style="text-align: right; font-family: 'Alexandria', sans-serif; direction: rtl;">
             <p style="color: #fff; font-size: 0.82rem; margin: 0 0 8px; font-weight: 700; line-height: 1.6; text-align: center;">
-                ${
-                    isImprovisedPrompt
-                        ? `🎭 ${asker} يوجّه إليك سؤالاً ارتجالياً شفهياً. استمع إليه وارتجل إجابتك مستعيناً بالتوجيه والمفاتيح:`
-                        : `❓ سؤال موجّه لك من (${asker}): <b style="color: var(--gold-glow);">${questionText}</b>`
-                }
+                ❓ سؤال موجّه لك من (${asker}): <b style="color: var(--gold-glow);">${questionText}</b>
             </p>
 
             <p style="color: var(--gold-glow, #d5a75c); font-size: 0.74rem; font-weight: 700; margin: 8px 0 4px;">🎭 توجيه الأداء التكتيكي (خاص بك):</p>
@@ -5913,7 +5565,9 @@ function openCaseStoryFirstModal(roleCard, activeCase, defenseClientName) {
 
     const isEnModal = getLanguage() === "en";
     const localizedCaseTitle = translateCaseTitle(activeCase.id, activeCase.title);
-    const localizedCaseDesc = isEnModal ? translateCaseDesc(activeCase.id, activeCase.description) : activeCase.description;
+    const localizedCaseDesc = isEnModal
+        ? translateCaseDesc(activeCase.id, activeCase.description)
+        : activeCase.description;
 
     document.getElementById("modal-alert-title").textContent = isEnModal
         ? `Case File: ${localizedCaseTitle}`

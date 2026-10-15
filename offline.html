@@ -425,18 +425,25 @@
             <!-- الشاشة 1: اختيار القضية -->
             <div id="step-choose-case" class="step-card">
                 <h2 class="step-title" data-i18n="offline.step_choose_case">📁 اختيار القضية</h2>
-                <p class="step-desc" data-i18n="offline.choose_case_desc">اختر القضية الجنائية التي ستُدار حولها جلسة المحاكمة اليوم:</p>
+                <p class="step-desc" data-i18n="offline.choose_case_desc">
+                    اختر القضية الجنائية التي ستُدار حولها جلسة المحاكمة اليوم:
+                </p>
                 <div id="cases-list-container" class="cases-scroll-grid">
-                    <p style="text-align: center; color: var(--gold-glow)" data-i18n="offline.loading_local_cases">جاري تحميل القضايا المحلية...</p>
+                    <p style="text-align: center; color: var(--gold-glow)" data-i18n="offline.loading_local_cases">
+                        جاري تحميل القضايا المحلية...
+                    </p>
                 </div>
-                <button id="btn-confirm-case" class="btn-action-gold" data-i18n="offline.btn_confirm_case" disabled>المتابعة وتحديد اللاعبين</button>
+                <button id="btn-confirm-case" class="btn-action-gold" data-i18n="offline.btn_confirm_case" disabled>
+                    المتابعة وتحديد اللاعبين
+                </button>
             </div>
 
             <!-- الشاشة 2: إعداد اللاعبين والـ PIN (مخفية افتراضياً) -->
             <div id="step-setup-players" class="step-card" style="display: none">
                 <h2 class="step-title" data-i18n="offline.step_setup_players">👥 إعداد اللاعبين ورمز الحماية (PIN)</h2>
                 <p class="step-desc">
-                    <span data-i18n="offline.selected_case_label">القضية المختارة:</span> <strong id="selected-case-name" style="color: var(--gold-glow)"></strong>
+                    <span data-i18n="offline.selected_case_label">القضية المختارة:</span>
+                    <strong id="selected-case-name" style="color: var(--gold-glow)"></strong>
                 </p>
 
                 <div
@@ -448,7 +455,9 @@
                         padding: 8px 12px;
                         border-radius: 10px;
                     ">
-                    <span style="font-size: 0.85rem; font-weight: 700" data-i18n="offline.players_count_label">عدد اللاعبين:</span>
+                    <span style="font-size: 0.85rem; font-weight: 700" data-i18n="offline.players_count_label"
+                        >عدد اللاعبين:</span
+                    >
                     <div style="display: flex; align-items: center; gap: 8px">
                         <button
                             type="button"
@@ -488,33 +497,6 @@
                     </div>
                 </div>
 
-                <div style="display: flex; gap: 10px; margin: 4px 0">
-                    <label
-                        style="
-                            flex: 1;
-                            display: flex;
-                            align-items: center;
-                            gap: 6px;
-                            font-size: 0.8rem;
-                            cursor: pointer;
-                        ">
-                        <input type="radio" name="offline-mode-toggle" value="scripted" checked />
-                        <span>📜 وضع السكريبتات</span>
-                    </label>
-                    <label
-                        style="
-                            flex: 1;
-                            display: flex;
-                            align-items: center;
-                            gap: 6px;
-                            font-size: 0.8rem;
-                            cursor: pointer;
-                        ">
-                        <input type="radio" name="offline-mode-toggle" value="improvisation" />
-                        <span>🎭 وضع الارتجال القضائي</span>
-                    </label>
-                </div>
-
                 <div style="font-size: 0.75rem; color: #cbd5e1">
                     🔒 أدخل اسم كل لاعب مع رمز PIN سري مكون من 4 أرقام لحماية دوره عند تمرير الجهاز:
                 </div>
@@ -551,15 +533,6 @@
             <div id="step-courtroom" class="step-card" style="display: none">
                 <div style="display: flex; align-items: center; justify-content: space-between">
                     <h2 class="step-title">🏛️ قاعة المحاكمة (Pass & Play)</h2>
-                    <span
-                        id="game-mode-badge"
-                        style="
-                            font-size: 0.7rem;
-                            color: var(--gold-glow);
-                            border: 1px solid var(--gold-glow);
-                            padding: 2px 6px;
-                            border-radius: 6px;
-                        "></span>
                 </div>
                 <div
                     style="
@@ -787,24 +760,6 @@
                         ">
                         🔒 المصلحة والتكليف السري
                     </button>
-                    <button
-                        type="button"
-                        id="tab-btn-improv"
-                        class="role-tab-btn"
-                        style="
-                            flex: 1;
-                            padding: 6px;
-                            background: transparent;
-                            border: none;
-                            border-bottom: 2px solid transparent;
-                            color: #cbd5e1;
-                            font-family: inherit;
-                            font-size: 0.75rem;
-                            font-weight: 700;
-                            cursor: pointer;
-                        ">
-                        توجيهات الأداء
-                    </button>
                 </div>
 
                 <!-- محتوى التاب العام -->
@@ -843,13 +798,6 @@
                             color: #fff;
                             margin: 0;
                         "></p>
-                </div>
-
-                <!-- محتوى تاب الارتجال -->
-                <div
-                    id="tab-pane-improv"
-                    style="display: none; font-size: 0.82rem; color: #cbd5e1; line-height: 1.5; margin-bottom: 18px">
-                    <div id="role-improv-content"></div>
                 </div>
 
                 <!-- الزر الإجباري الأساسي لحماية الخصوصية -->
@@ -1003,7 +951,6 @@
             let selectedCase = null;
             let currentPlayers = [];
             let currentAssignments = {};
-            let selectedGameMode = "scripted";
             let activeViewingPlayerId = null;
             let currentPinInput = "";
 
@@ -1159,17 +1106,12 @@
                     });
                 });
 
-                selectedGameMode =
-                    document.querySelector('input[name="offline-mode-toggle"]:checked')?.value || "scripted";
-
                 // توزيع الأدوار
-                currentAssignments = distributeRoles(selectedCase, currentPlayers, selectedGameMode);
+                currentAssignments = distributeRoles(selectedCase, currentPlayers);
 
                 // الانتقال لشاشة قاعة المحكمة
                 document.getElementById("step-setup-players").style.display = "none";
                 document.getElementById("step-courtroom").style.display = "flex";
-                document.getElementById("game-mode-badge").textContent =
-                    selectedGameMode === "improvisation" ? "🎭 وضع الارتجال" : "📜 وضع السكريبتات";
 
                 renderCourtroomSeats();
             });
@@ -1275,19 +1217,6 @@
                 document.getElementById("role-secret-interest-text").textContent =
                     assignment.secret_interest || "لا توجد مصلحة سرية مسجلة.";
 
-                // محتوى الارتجال
-                const improvBox = document.getElementById("role-improv-content");
-                if (assignment.improvGuidance) {
-                    const g = assignment.improvGuidance;
-                    improvBox.innerHTML = `
-                        <p style="margin: 0 0 6px 0;"><strong>🎯 الهدف الأدائي:</strong> ${g.acting_goal || ""}</p>
-                        <p style="margin: 0 0 6px 0;"><strong>🤫 ما تخفيه:</strong> ${g.what_you_hide || ""}</p>
-                        <p style="margin: 0;"><strong>🧠 ما تعرفه:</strong> ${g.what_you_know || ""}</p>
-                    `;
-                } else {
-                    improvBox.innerHTML = "<p>وضع السكريبتات نشط - التزم بالأقوال والادعاءات المعلنة.</p>";
-                }
-
                 // ضبط التاب الأول
                 switchRoleTab("public");
 
@@ -1295,7 +1224,7 @@
             }
 
             function switchRoleTab(tab) {
-                const tabs = ["public", "secret", "improv"];
+                const tabs = ["public", "secret"];
                 tabs.forEach((t) => {
                     const btn = document.getElementById(`tab-btn-${t}`);
                     const pane = document.getElementById(`tab-pane-${t}`);
@@ -1310,7 +1239,6 @@
 
             document.getElementById("tab-btn-public").addEventListener("click", () => switchRoleTab("public"));
             document.getElementById("tab-btn-secret").addEventListener("click", () => switchRoleTab("secret"));
-            document.getElementById("tab-btn-improv").addEventListener("click", () => switchRoleTab("improv"));
 
             // إخفاء وقفل الدور للّاعب التالي
             document.getElementById("btn-hide-and-lock-role").addEventListener("click", () => {

@@ -3,17 +3,6 @@
 // نظام توجيه الأداء ومفاتيح الارتجال الثمانية بدون أي إجابات جاهزة أو Lie/Neutral/Truth
 // ==========================================================================
 
-export const GAME_MODES = Object.freeze({
-    SCRIPTED: "scripted",
-    IMPROVISATION: "improvisation"
-});
-
-export const normalizeGameMode = (value) =>
-    value === GAME_MODES.IMPROVISATION ? GAME_MODES.IMPROVISATION : GAME_MODES.SCRIPTED;
-
-export const isImprovisationMode = (gameState) =>
-    normalizeGameMode(gameState && gameState.gameMode) === GAME_MODES.IMPROVISATION;
-
 export function escapeHtml(value) {
     return String(value == null ? "" : value)
         .replace(/&/g, "&amp;")
@@ -208,7 +197,7 @@ export function resolvePerformanceHelp(context = {}) {
     const item = context.item || {};
     const roleCard = context.roleCard || window.myCurrentRoleCard || {};
     const category = context.category || classifyRole(roleCard);
-    // 🌟 [Judgment]: الـ fallback العام يُستخدم فقط لجسر وضع الارتجال القديم؛ المسار الأساسي يعتمد على بيانات العنصر نفسه
+    // 🌟 [Judgment]: المسار الأساسي يعتمد على بيانات العنصر نفسه؛ الـ fallback العام اختياري عبر allowFallback
     // محامي الدفاع في الأسئلة: الأسئلة القديمة تحمل fragments بدل performance/keys، فنكمل 8 بذور دفاعية تلقائياً
     const isDefenseQuestion = category === "defense_lawyer" && type === "question";
     const allowFallback = context.allowFallback === true || isDefenseQuestion;
@@ -272,17 +261,5 @@ export function resolvePerformanceHelp(context = {}) {
         category,
         performance: performanceText,
         keys
-    };
-}
-
-// جسر توافق برمجي للمرجعيات السابقة
-export function buildImprovisationGuidance(responseType, roleCard) {
-    const help = resolvePerformanceHelp({ type: "question", roleCard, allowFallback: true });
-    return {
-        title: "توجيه الأداء والارتجال",
-        category: help.category,
-        bodyHtml: escapeHtml(help.performance),
-        tipText: help.keys.slice(0, 3).join(" • "),
-        speechText: `توجيه الأداء: ${help.performance}`
     };
 }

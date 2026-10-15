@@ -199,8 +199,6 @@ export const translations = {
         "judge.select_player_title": "🗨️ استجواب لاعب محدد",
         "judge.select_player_label": "اختر اللاعب الذي تريد استجوابه:",
         "judge.btn_start_inquiry": "بدء الاستجواب",
-        "judge.improv_modal_title": "🎭 استجواب ارتجالي",
-        "judge.improv_hint": "اطرح سؤالك شفهياً وباشر استجواب المتهم الآن",
         "judge.interrogate_first_warning":
             "🔒 اختر لاعباً للاستجواب أولاً بالضغط على زر 'استجواب لاعب' قبل استخدام الأسئلة.",
         "judge.revoke_speaker_bar": "🎙️ المتحدث الآن:",
@@ -338,8 +336,6 @@ export const translations = {
         "offline.step_setup_players": "👥 إعداد اللاعبين ورمز الحماية (PIN)",
         "offline.selected_case_label": "القضية المختارة:",
         "offline.players_count_label": "عدد اللاعبين:",
-        "offline.mode_scripted": "📜 وضع السكريبتات",
-        "offline.mode_improv": "🎭 وضع الارتجال القضائي",
         "offline.pin_hint": "🔒 أدخل اسم كل لاعب مع رمز PIN سري مكون من 4 أرقام لحماية دوره عند تمرير الجهاز:",
         "offline.btn_start_offline": "⚖️ توزيع الأدوار وبدء الجلسة",
         "offline.court_hub_title": "🏛️ قاعة المحاكمة (Pass & Play)",
@@ -562,8 +558,6 @@ export const translations = {
         "judge.select_player_title": "🗨️ Interrogate Specific Player",
         "judge.select_player_label": "Select the player you wish to examine:",
         "judge.btn_start_inquiry": "Commence Examination",
-        "judge.improv_modal_title": "🎭 Freeform Interrogation",
-        "judge.improv_hint": "Ask your question aloud and examine the suspect now",
         "judge.interrogate_first_warning":
             "🔒 Please select a player by clicking 'Interrogate Player' before using questions.",
         "judge.revoke_speaker_bar": "🎙️ Current Speaker:",
@@ -699,8 +693,6 @@ export const translations = {
         "offline.step_setup_players": "👥 Players & PIN Security Setup",
         "offline.selected_case_label": "Selected Case:",
         "offline.players_count_label": "Number of Players:",
-        "offline.mode_scripted": "📜 Scripted Mode",
-        "offline.mode_improv": "🎭 Improv Trial Mode",
         "offline.pin_hint":
             "🔒 Enter each player's name and a secret 4-digit PIN to secure their role when passing the device:",
         "offline.btn_start_offline": "⚖️ Distribute Roles & Start Session",
@@ -810,7 +802,6 @@ export const phraseMap = {
     "إنهاء المحاكمة قسرياً": "Forced Courtroom Closure",
     "تنبيه قضائي صارم": "Strict Judicial Warning",
     "🗨️ استجواب لاعب محدد": "🗨️ Interrogate Specific Player",
-    "🎭 استجواب ارتجالي": "🎭 Freeform Interrogation",
     "حسم قرار المحكمة النهائي": "Court Final Decision",
     "منصة الحكم القضائي": "Judicial Verdict Bench",
     "🚨 حسم قضائي من محامي المحكمة": "🚨 Judicial Decision from Court Lawyer",

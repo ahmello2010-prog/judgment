@@ -2,8 +2,6 @@
 // ⚖️ js/offline-engine.js — محرك المحاكمة المحلية (Pass & Play Offline Engine)
 // ==========================================================================
 
-import { GAME_MODES, normalizeGameMode, isImprovisationMode, buildImprovisationGuidance } from "./improv.js";
-
 const OFFLINE_STORAGE_KEY = "court_offline_game_state";
 let cachedCases = null;
 
@@ -29,7 +27,7 @@ export async function getCaseById(caseId) {
 // ==========================================================================
 // توزيع الأدوار وفق القواعد المعتمدة للمشروع محلياً 100%
 // ==========================================================================
-export function distributeRoles(activeCase, playersList, gameMode = GAME_MODES.SCRIPTED) {
+export function distributeRoles(activeCase, playersList) {
     const totalPlayers = playersList.length;
     if (totalPlayers < 3) {
         throw new Error("الحد الأدنى لبدء المحاكمة هو 3 لاعبين.");
@@ -206,15 +204,6 @@ export function distributeRoles(activeCase, playersList, gameMode = GAME_MODES.S
     const assignments = {};
     shuffledPlayers.forEach((player, index) => {
         const assignedRole = finalRoles[index];
-        let improvGuidance = null;
-        if (gameMode === GAME_MODES.IMPROVISATION) {
-            try {
-                improvGuidance = buildImprovisationGuidance(assignedRole, activeCase);
-            } catch (e) {
-                console.warn("[OfflineEngine] Improv guidance error:", e);
-            }
-        }
-
         assignments[player.id] = {
             playerId: player.id,
             playerName: player.name,
@@ -228,7 +217,6 @@ export function distributeRoles(activeCase, playersList, gameMode = GAME_MODES.S
             radar_correct_choice: assignedRole.radar_correct_choice || null,
             claims: assignedRole.claims || [],
             character_context: assignedRole.character_context || null,
-            improvGuidance,
             viewed: false
         };
     });
