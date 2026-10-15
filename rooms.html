@@ -424,6 +424,50 @@
             body.rm-body #btn-modal-close:active {
                 transform: scale(0.97);
             }
+            /* ---------- نافذة QR لدعوة الأصدقاء (تعيد استخدام المودال الموحد) ---------- */
+            body.rm-body #custom-alert-modal .modal-alert-box:has(.qr-invite) {
+                max-height: 92vh;
+                max-height: 92dvh;
+                overflow-y: auto;
+                box-sizing: border-box;
+            }
+            /* style.css يحدّ ارتفاع #modal-alert-message بـ 420px مع تمرير؛ نافذة الدعوة تحتاج عرض الصورة كاملة دون شريط تمرير */
+            body.rm-body #custom-alert-modal.modal-overlay-active #modal-alert-message:has(.qr-invite) {
+                max-height: none !important;
+                overflow: visible !important;
+            }
+            body.rm-body .qr-invite {
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                gap: 12px;
+                text-align: center;
+            }
+            body.rm-body .qr-invite-frame {
+                width: min(300px, 100%);
+                box-sizing: border-box;
+                padding: 12px;
+                background: #ffffff;
+                line-height: 0;
+                border: 1.5px solid var(--rm-gold);
+                border-radius: 12px;
+                box-shadow: 0 4px 14px rgba(0, 0, 0, 0.35);
+            }
+            body.rm-body .qr-invite-img {
+                display: block;
+                width: 100%;
+                height: auto;
+                max-height: min(300px, 45vh);
+                object-fit: contain;
+            }
+            body.rm-body .qr-invite-text {
+                margin: 0;
+                font-family: "Harmattan", sans-serif;
+                font-size: 1.3rem;
+                font-weight: 700;
+                line-height: 1.4;
+                color: var(--rm-cream);
+            }
             /* تنبيه وضع الأوفلاين داخل rooms.html */
             .rooms-offline-notice {
                 display: flex;
@@ -519,6 +563,35 @@
                     <span id="sidebar-tts-tag" class="radio-status-tag is-stopped" data-i18n="tts.status_stopped"
                         >متوقف</span
                     >
+                </button>
+                <button id="btn-sidebar-invite" class="sidebar-link btn-sidebar-radio" type="button">
+                    <span class="sidebar-radio-title">
+                        <span class="sidebar-radio-icon">
+                            <svg
+                                viewBox="0 0 24 24"
+                                width="18"
+                                height="18"
+                                fill="none"
+                                stroke="currentColor"
+                                stroke-width="2"
+                                stroke-linecap="round"
+                                stroke-linejoin="round">
+                                <rect width="5" height="5" x="3" y="3" rx="1" />
+                                <rect width="5" height="5" x="16" y="3" rx="1" />
+                                <rect width="5" height="5" x="3" y="16" rx="1" />
+                                <path d="M21 16h-3a2 2 0 0 0-2 2v3" />
+                                <path d="M21 21v.01" />
+                                <path d="M12 7v3a2 2 0 0 1-2 2H7" />
+                                <path d="M3 12h.01" />
+                                <path d="M12 3h.01" />
+                                <path d="M12 16v.01" />
+                                <path d="M16 12h1" />
+                                <path d="M21 12v.01" />
+                                <path d="M12 21v-1" />
+                            </svg>
+                        </span>
+                        <span id="sidebar-invite-label">ادعُ أصدقاءك</span>
+                    </span>
                 </button>
                 <a href="guide.html" id="link-user-guide" class="sidebar-link" data-i18n="rooms.user_guide"
                     >دليل المستخدم</a
@@ -739,6 +812,100 @@
                 });
                 document.addEventListener("keydown", function (e) {
                     if (e.key === "Escape") setSidebar(false);
+                });
+            })();
+        </script>
+
+        <!-- نافذة QR لدعوة الأصدقاء: تعيد استخدام #custom-alert-modal وتعمل مستقلة عن app.js -->
+        <script>
+            (function () {
+                var QR_SRC = "img/QR.jpeg";
+                var TEXTS = {
+                    ar: {
+                        btn: "ادعُ أصدقاءك",
+                        title: "ادعُ أصدقاءك إلى المحكمة",
+                        text: "امسح الكود والعب لعبتنا",
+                        close: "إغلاق",
+                        alt: "رمز QR لدعوة الأصدقاء إلى لعبة محكمة الأدوار"
+                    },
+                    en: {
+                        btn: "Invite Friends",
+                        title: "Invite your friends to court",
+                        text: "Scan the code and play our game",
+                        close: "Close",
+                        alt: "QR code to invite friends to the Court of Roles game"
+                    }
+                };
+                function T() {
+                    return document.documentElement.lang === "en" ? TEXTS.en : TEXTS.ar;
+                }
+
+                var btn = document.getElementById("btn-sidebar-invite");
+                var label = document.getElementById("sidebar-invite-label");
+                var modal = document.getElementById("custom-alert-modal");
+                var titleEl = document.getElementById("modal-alert-title");
+                var msgEl = document.getElementById("modal-alert-message");
+                var closeBtn = document.getElementById("btn-modal-close");
+                if (!btn || !modal || !titleEl || !msgEl || !closeBtn) return;
+
+                var prev = null;
+
+                function syncLabel() {
+                    if (label) label.textContent = T().btn;
+                }
+                syncLabel();
+                window.addEventListener("court_language_changed", syncLabel);
+
+                function isQrOpen() {
+                    return !!prev && !!msgEl.querySelector(".qr-invite");
+                }
+
+                function openQr() {
+                    var t = T();
+                    if (!prev) {
+                        prev = { title: titleEl.textContent, msg: msgEl.innerHTML, close: closeBtn.textContent };
+                    }
+                    titleEl.textContent = t.title;
+                    msgEl.innerHTML =
+                        '<div class="qr-invite">' +
+                        '<div class="qr-invite-frame"><img class="qr-invite-img" src="' +
+                        QR_SRC +
+                        '" alt="' +
+                        t.alt +
+                        '" onerror="this.style.display=\'none\'" /></div>' +
+                        '<div class="qr-invite-text">' +
+                        t.text +
+                        "</div></div>";
+                    closeBtn.textContent = t.close;
+
+                    var drawer = document.getElementById("sidebar-drawer");
+                    var burger = document.getElementById("btn-hamburger");
+                    if (drawer) drawer.classList.remove("sidebar-drawer-active");
+                    if (burger) burger.setAttribute("aria-expanded", "false");
+
+                    modal.style.setProperty("display", "flex", "important");
+                    modal.className = "modal-overlay-active";
+                }
+
+                function closeQr() {
+                    if (!isQrOpen()) return;
+                    modal.style.setProperty("display", "none", "important");
+                    modal.className = "modal-overlay-hidden";
+                    titleEl.textContent = prev.title;
+                    msgEl.innerHTML = prev.msg;
+                    closeBtn.textContent = prev.close;
+                    prev = null;
+                }
+
+                btn.addEventListener("click", openQr);
+                // زر الإغلاق الموحد (app.js يخفي النافذة أيضاً؛ هنا نعيد النص الأصلي فقط عند الحاجة)
+                closeBtn.addEventListener("click", closeQr);
+                // الإغلاق بالنقر على الخلفية خارج الصندوق
+                modal.addEventListener("click", function (e) {
+                    if (e.target === modal) closeQr();
+                });
+                document.addEventListener("keydown", function (e) {
+                    if (e.key === "Escape") closeQr();
                 });
             })();
         </script>
