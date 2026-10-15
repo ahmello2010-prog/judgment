@@ -1,16 +1,23 @@
 // ==========================================================================
 // ⚖️ js/offline-engine.js — محرك المحاكمة المحلية (Pass & Play Offline Engine)
+// محرك متكامل ومستقل 100% لإدارة جلسات الأوفلاين المحلية بدون أي اعتماد على سيرفر أو إنترنت
 // ==========================================================================
 
-const OFFLINE_STORAGE_KEY = "court_offline_game_state";
+import { resolvePerformanceHelp, classifyRole, escapeHtml } from "./improv.js";
+
+export const PERMANENT_PLAYERS_STORAGE_KEY = "court_offline_permanent_players";
+export const OFFLINE_SESSION_STORAGE_KEY = "court_offline_game_state";
+
 let cachedCases = null;
 
-// تحميل موسوعة القضايا من cases.json
+// ==========================================================================
+// 1. تحميل وإدارة القضايا محلياً
+// ==========================================================================
 export async function loadCases() {
     if (cachedCases && cachedCases.length > 0) return cachedCases;
     try {
         const res = await fetch("cases.json");
-        if (!res.ok) throw new Error("Failed to load cases.json");
+        if (!res.ok) throw new Error("فشل في تحميل ملف cases.json محلياً");
         cachedCases = await res.json();
         return cachedCases;
     } catch (err) {
@@ -20,12 +27,183 @@ export async function loadCases() {
 }
 
 export async function getCaseById(caseId) {
-    const allCases = await loadCases();
-    return allCases.find((c) => String(c.id) === String(caseId)) || null;
+    const all = await loadCases();
+    return all.find((c) => String(c.id) === String(caseId)) || null;
 }
 
 // ==========================================================================
-// توزيع الأدوار وفق القواعد المعتمدة للمشروع محلياً 100%
+// 2. إدارة اللاعبين الدائمين والرموز السرية (Unique 4-Character PINs)
+// ==========================================================================
+export function loadPermanentPlayers() {
+    try {
+        const raw = localStorage.getItem(PERMANENT_PLAYERS_STORAGE_KEY);
+        if (!raw) return null;
+        const parsed = JSON.parse(raw);
+        return Array.isArray(parsed) && parsed.length >= 3 ? parsed : null;
+    } catch (e) {
+        return null;
+    }
+}
+
+export function savePermanentPlayers(playersList) {
+    try {
+        if (!Array.isArray(playersList)) return;
+        localStorage.setItem(PERMANENT_PLAYERS_STORAGE_KEY, JSON.stringify(playersList));
+    } catch (e) {
+        console.warn("[OfflineEngine] Failed to save permanent players:", e);
+    }
+}
+
+/**
+ * توليد رمز سري عشوائي مميز من 4 أرقام غير مكرر داخل مجموعة الرموز القائمة
+ */
+export function generateUniquePin(existingPins = []) {
+    const disallowed = new Set(existingPins.map((p) => String(p || "").trim()));
+    let attempts = 0;
+    while (attempts < 1000) {
+        attempts++;
+        // 4 خانات رقمية عشوائية سهلة الإدخال والحفظ
+        const num = Math.floor(1000 + Math.random() * 9000);
+        const pin = String(num);
+        if (!disallowed.has(pin)) {
+            return pin;
+        }
+    }
+    // احتياط في الحالات النادرة
+    return String(Math.floor(Date.now() % 9000 + 1000));
+}
+
+/**
+ * التحقق من تفرد الرموز السرية وعدم وجود تطابق
+ */
+export function validatePinsUnique(playersList = []) {
+    const seen = new Map();
+    for (const player of playersList) {
+        const pin = String(player.pin || "").trim();
+        if (!pin || pin.length < 4) {
+            return {
+                valid: false,
+                error: `الرمز السري للاعب (${player.name || "مجهول"}) يجب أن يتكون من 4 خانات.`,
+                playerId: player.id
+            };
+        }
+        if (seen.has(pin)) {
+            const otherName = seen.get(pin);
+            return {
+                valid: false,
+                error: `رمز اللاعب (${player.name}) يطابق رمز صديقه (${otherName}). يرجى تغييره.`,
+                playerId: player.id,
+                duplicatePin: pin
+            };
+        }
+        seen.set(pin, player.name);
+    }
+    return { valid: true };
+}
+
+// ==========================================================================
+// 3. مطابقة الأدلة والأسئلة وفق بنية المشروع المعتمدة
+// ==========================================================================
+export function resolveEvidenceItemMatchGlobal(item, playerCard) {
+    if (!item || !playerCard) return false;
+    const targetRole = String(item.target_role || "");
+    if (!targetRole) return false;
+
+    if (targetRole.includes("الجاني الحقيقي") && playerCard.is_guilty === true) {
+        return true;
+    }
+    const roleName = String(playerCard.role_name || "");
+    if (!roleName) return false;
+
+    return targetRole.includes(roleName) || roleName.includes(targetRole);
+}
+
+export function isDefenseLawyerCard(card) {
+    return !!card && card.role_type === "lawyer" && String(card.role_name || "").includes("دفاع");
+}
+
+export function buildTargetedQuestionPool(fullPool = [], targetCard = {}, clientRoleName = "") {
+    if (isDefenseLawyerCard(targetCard)) {
+        const client = String(clientRoleName || "");
+        return fullPool.filter(
+            (q) =>
+                q.text &&
+                Array.isArray(q.fragments) &&
+                (!q.about_role || !client || client.includes(q.about_role) || String(q.about_role).includes(client))
+        );
+    }
+    return fullPool.filter(
+        (q) => !Array.isArray(q.fragments) && (!q.target_role || resolveEvidenceItemMatchGlobal(q, targetCard))
+    );
+}
+
+// ==========================================================================
+// 4. استخراج الأسئلة المخصصة للمستهدف بحسب هوية السائل
+// ==========================================================================
+export function getQuestionsForTarget(activeCase, targetCard, askerRoleType = "judge", clientRoleName = "") {
+    if (!activeCase || !targetCard) return [];
+    const fullPool = Array.isArray(activeCase.radar_questions_pool) ? activeCase.radar_questions_pool : [];
+    const questions = [];
+
+    if (askerRoleType === "defense_lawyer") {
+        // محامي الدفاع: إذا كان يستجوب موكله ولديه أسئلة مرافعة fragments
+        const isClient = clientRoleName && String(targetCard.role_name || "").includes(clientRoleName);
+        if (isClient) {
+            const defenseFragmentsQuestions = fullPool.filter(
+                (q) =>
+                    q.text &&
+                    Array.isArray(q.fragments) &&
+                    (!q.about_role ||
+                        !clientRoleName ||
+                        clientRoleName.includes(q.about_role) ||
+                        String(q.about_role).includes(clientRoleName))
+            );
+            if (defenseFragmentsQuestions.length > 0) {
+                return defenseFragmentsQuestions;
+            }
+        }
+        // استجواب مشتبه به آخر لإلقاء الشبهة عليه
+        const targeted = fullPool.filter(
+            (q) => !Array.isArray(q.fragments) && (!q.target_role || resolveEvidenceItemMatchGlobal(q, targetCard))
+        );
+        questions.push(...targeted);
+    } else {
+        // القاضي أو محامي الادعاء
+        const targeted = fullPool.filter(
+            (q) => !Array.isArray(q.fragments) && (!q.target_role || resolveEvidenceItemMatchGlobal(q, targetCard))
+        );
+        questions.push(...targeted);
+
+        // إضافة ادعاءات الشخصية (claims) للاستجواب المباشر
+        if (Array.isArray(targetCard.claims)) {
+            targetCard.claims.forEach((c) => {
+                if (c && c.text) {
+                    questions.push({
+                        question_id: `claim_${c.id || Math.random().toString(36).slice(2, 6)}`,
+                        text: `ادعاء رسمي: "${c.text}" — هل تؤكد هذا الادعاء أمام المحكمة بالكامل؟`,
+                        target_role: targetCard.role_name
+                    });
+                }
+            });
+        }
+    }
+
+    return questions;
+}
+
+// ==========================================================================
+// 5. استخراج الأدلة الجنائية المخصصة للمستهدف بحسب هوية السائل
+// ==========================================================================
+export function getEvidenceForTarget(activeCase, targetCard, askerRoleType = "judge") {
+    if (!activeCase || !activeCase.lawyers_evidence_pool || !targetCard) return [];
+    const poolType = askerRoleType === "defense_lawyer" ? "defense_evidence" : "court_evidence";
+    const rawList = activeCase.lawyers_evidence_pool[poolType] || [];
+
+    return rawList.filter((item) => resolveEvidenceItemMatchGlobal(item, targetCard));
+}
+
+// ==========================================================================
+// 6. توزيع الأدوار وفق القواعد المعتمدة للمشروع محلياً 100%
 // ==========================================================================
 export function distributeRoles(activeCase, playersList) {
     const totalPlayers = playersList.length;
@@ -35,6 +213,7 @@ export function distributeRoles(activeCase, playersList) {
 
     const shuffledPlayers = [...playersList].sort(() => Math.random() - 0.5);
     let finalRoles = [];
+    let defenseClientUID = null;
 
     if (totalPlayers === 3) {
         // فرز تكتيكي لـ 3 لاعبين (36% جاني، 32% مشتبه به، 32% بريء محتال)
@@ -96,6 +275,7 @@ export function distributeRoles(activeCase, playersList) {
             const impostorChoices = extraDecoy
                 ? [...wrongOnly, extraDecoy].slice(0, 4)
                 : [...(randomSuspect.radar_choices || [])];
+
             selectedSuspectCard = {
                 role_name: randomSuspect.role_name || "مشتبه به غامض",
                 public_story: randomSuspect.public_story || "",
@@ -175,23 +355,31 @@ export function distributeRoles(activeCase, playersList) {
             radar_choices: card.radar_choices || [],
             radar_correct_choice: card.radar_correct_choice || null,
             claims: card.claims || [],
-            character_context: card.character_context || null
+            character_context: card.character_context || null,
+            linked_to: card.linked_to || null,
+            link_type: card.link_type || null,
+            link_hint: card.link_hint || null
         }));
         suspects.sort(() => Math.random() - 0.5);
 
-        // إذا كان 5 لاعبين أو أكثر: محامي الادعاء
+        // إذا كان 5 لاعبين أو أكثر: إضافة محامي الادعاء بالحق المدني
         if (totalPlayers >= 5) {
             const assistantCard = suspects.pop();
             finalRoles.push({
                 role_name: "محامي الادعاء بالحق المدني",
-                public_story: "أنا هنا لتمثيل الضحية والمطالبة بالقصاص العادل وإدانة الجاني.",
+                public_story: "أنا هنا لتمثيل الضحية والمطالبة بالقصاص العادل وإدانة الجاني الحقيقي بكل قوة أمام المحكمة.",
                 secret_interest: assistantCard?.secret_interest || "كشف الثغرات المصلحية وإدانة الجاني.",
                 is_guilty: false,
-                role_type: "lawyer"
+                role_type: "lawyer",
+                character_context: {
+                    what_you_know: "أنت محامي الادعاء، مهمتك توجيه الأسئلة وإبراز الأدلة الجنائية لإدانة القاتل الحقيقي.",
+                    what_you_hide: "لا تخفي سراً شخصياً؛ مصلحتك هي كشف الجاني وإسقاط محاولات التضليل.",
+                    acting_goal: "حاصر المشتبه بهم بالأسئلة والأدلة وأثبت تهمة القتل."
+                }
             });
         }
 
-        // إكمال بقية المقاعد من المشتبه بهم
+        // إكمال بقية المقاعد من مسبح المشتبه بهم
         while (suspects.length > 0 && finalRoles.length < totalPlayers) {
             finalRoles.push(suspects.pop());
         }
@@ -212,7 +400,7 @@ export function distributeRoles(activeCase, playersList) {
             role_type: assignedRole.role_type,
             public_story: assignedRole.public_story,
             secret_interest: assignedRole.secret_interest,
-            is_guilty: assignedRole.is_guilty,
+            is_guilty: assignedRole.is_guilty === true,
             radar_choices: assignedRole.radar_choices || [],
             radar_correct_choice: assignedRole.radar_correct_choice || null,
             claims: assignedRole.claims || [],
@@ -221,61 +409,43 @@ export function distributeRoles(activeCase, playersList) {
         };
     });
 
-    return assignments;
+    // تعيين موكل محامي الدفاع الثابت (defense_client_uid)
+    const allSuspects = Object.values(assignments).filter(
+        (a) => a.role_type === "suspect" || a.role_type === "innocent_impostor"
+    );
+    if (allSuspects.length > 0) {
+        const randomClient = allSuspects[Math.floor(Math.random() * allSuspects.length)];
+        defenseClientUID = randomClient.playerId;
+    }
+
+    return {
+        assignments,
+        defenseClientUID
+    };
 }
 
-// استخراج أسئلة الاستجواب الخاصة بدور محدد
-export function getQuestionsForRole(activeCase, roleName) {
-    if (!activeCase) return [];
-    const questions = [];
-
-    // من radar_questions_pool
-    if (Array.isArray(activeCase.radar_questions_pool)) {
-        activeCase.radar_questions_pool.forEach((item) => {
-            if (item.target_role === roleName || !item.target_role) {
-                questions.push(item);
-            }
-        });
-    }
-
-    // إضافة الادعاءات الخاصة بالشخصية
-    if (activeCase.roles_pool?.real_guilty?.role_name === roleName) {
-        const claims = activeCase.roles_pool.real_guilty.claims || [];
-        claims.forEach((c) =>
-            questions.push({ text: `ادعاء المشتبه به: "${c.text}" - هل تؤكد هذا الادعاء تحت القسم؟` })
-        );
-    }
-
-    const suspect = (activeCase.suspects_pool || []).find((s) => s.role_name === roleName);
-    if (suspect && Array.isArray(suspect.claims)) {
-        suspect.claims.forEach((c) => questions.push({ text: `ادعاء المشتبه به: "${c.text}" - ما هو ردك التفصيلي؟` }));
-    }
-
-    return questions;
-}
-
-// استخراج الأدلة الخاصة بالدفاع للقضية
-export function getCluesForDefense(activeCase) {
-    if (!activeCase) return [];
-    if (Array.isArray(activeCase.lawyers_evidence_pool)) {
-        return activeCase.lawyers_evidence_pool;
-    }
-    return [];
-}
-
-// إدارة وتخزين الحالة المحلية
+// ==========================================================================
+// 7. إدارة جلسة اللعب الحالية وتخزينها الآمن المستمر
+// ==========================================================================
 export function saveOfflineSession(state) {
     try {
-        localStorage.setItem(OFFLINE_STORAGE_KEY, JSON.stringify(state));
+        if (!state) return;
+        localStorage.setItem(OFFLINE_SESSION_STORAGE_KEY, JSON.stringify(state));
     } catch (e) {
-        console.warn("[OfflineEngine] Failed to save local session:", e);
+        console.warn("[OfflineEngine] Failed to save offline session:", e);
     }
 }
 
 export function loadOfflineSession() {
     try {
-        const saved = localStorage.getItem(OFFLINE_STORAGE_KEY);
-        return saved ? JSON.parse(saved) : null;
+        const saved = localStorage.getItem(OFFLINE_SESSION_STORAGE_KEY);
+        if (!saved) return null;
+        const parsed = JSON.parse(saved);
+        // التحقق من صحة الجلسة المحفوظة
+        if (parsed && parsed.caseId && parsed.assignments && typeof parsed.assignments === "object") {
+            return parsed;
+        }
+        return null;
     } catch (e) {
         return null;
     }
@@ -283,12 +453,14 @@ export function loadOfflineSession() {
 
 export function clearOfflineSession() {
     try {
-        localStorage.removeItem(OFFLINE_STORAGE_KEY);
+        localStorage.removeItem(OFFLINE_SESSION_STORAGE_KEY);
     } catch (e) {}
 }
 
-// احتساب نتائج الحكم النهائي وتوزيع النقاط
-export function evaluateVerdict(accusedPlayerId, assignments) {
+// ==========================================================================
+// 8. احتساب الحكم النهائي والخاتمة
+// ==========================================================================
+export function evaluateVerdict(accusedPlayerId, assignments, activeCase) {
     const accused = assignments[accusedPlayerId];
     if (!accused) return null;
 
@@ -300,20 +472,28 @@ export function evaluateVerdict(accusedPlayerId, assignments) {
         if (p.is_guilty === true) realGuilty = p;
     });
 
-    // احتساب النقاط
+    // احتساب النقاط التنافسية
     const scores = {};
     Object.values(assignments).forEach((player) => {
         let pts = 0;
         if (player.role_type === "judge") {
-            pts = isCorrect ? 15 : 0;
+            pts = isCorrect ? 25 : 0;
         } else if (player.role_type === "lawyer") {
-            pts = isCorrect ? 5 : 12; // محامي الدفاع يكسب نقاطاً أعلى إذا تمت تبرئة المتهم أو التشكيك
+            const isDefense = String(player.role_name || "").includes("دفاع");
+            if (isDefense) {
+                // الدفاع يكسب نقاطاً أعلى إذا ثبتت براءة موكله أو شكك في الاتهام
+                pts = isCorrect ? 8 : 18;
+            } else {
+                // الادعاء
+                pts = isCorrect ? 20 : 5;
+            }
         } else if (player.is_guilty) {
-            pts = isCorrect ? 0 : 20; // الجاني يفوز بالجائزة الكبرى إذا أفلت من القاضي
+            pts = isCorrect ? 0 : 30; // الجاني يكسب الجائزة الكبرى إن خدع المحكمة
         } else {
             // مشتبه به بريء
-            pts = player.playerId === accusedPlayerId ? 2 : 10;
+            pts = player.playerId === accusedPlayerId ? 5 : 15;
         }
+
         scores[player.playerId] = {
             name: player.playerName,
             role_name: player.role_name,
@@ -322,10 +502,23 @@ export function evaluateVerdict(accusedPlayerId, assignments) {
         };
     });
 
+    // استخراج قصة الجاني الحقيقي وخاتمة القضية
+    const guiltyStory =
+        realGuilty?.character_context?.what_you_hide ||
+        realGuilty?.secret_interest ||
+        activeCase?.roles_pool?.real_guilty?.secret_interest ||
+        "تم ارتكاب الجريمة بدهاء واستغلال ثغرات المكان.";
+
+    const caseEpilogue =
+        activeCase?.description ||
+        "أغلقت المحكمة ملف القضية بعد مداولات شاقة واستعراض كافة الأدلة ومواجهة المشتبه بهم.";
+
     return {
         isCorrect,
         accusedPlayer: accused,
         realGuiltyPlayer: realGuilty,
+        guiltyStory,
+        caseEpilogue,
         scores
     };
 }

@@ -25,6 +25,8 @@ const ESSENTIAL_ASSETS = [
     "/fonts/Alexandria-Bold.ttf",
     "/fonts/Harmattan-Medium.ttf",
     "/js/app.js",
+    "/js/i18n.js",
+    "/js/scoring.js",
     "/js/improv.js",
     "/js/radio.js",
     "/js/soundtrack.js",

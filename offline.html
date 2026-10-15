@@ -17,20 +17,20 @@
                 --gold-glow: #d5a75c;
                 --gold-dark: #b58b42;
                 --bg-deep: #080d16;
-                --card-bg: rgba(13, 25, 43, 0.85);
+                --card-bg: rgba(13, 25, 43, 0.92);
                 --border-gold: rgba(213, 167, 92, 0.35);
+                --cork-bg: #1c2638;
+                --cork-border: #d5a75c;
             }
             body.offline-body {
                 margin: 0;
                 padding: 0;
-                background: linear-gradient(180deg, #0d1523 0%, #171d28 50%, #050a12 100%);
+                background: linear-gradient(180deg, #0d1523 0%, #151d2a 50%, #050a12 100%);
                 color: #ffffff;
                 font-family: "Alexandria", system-ui, sans-serif;
                 min-height: 100vh;
                 min-height: 100dvh;
                 direction: rtl;
-                /* style.css يجعل body عامّاً: display:flex + height:100vh + overflow:hidden + توسيط؛
-                   هذا يُحوّل الحاوية لعنصر flex بعرض محتواها (نصوص nowrap) فتتسع عن الشاشة وتُقصّ ولا يعمل التمرير. */
                 display: block;
                 height: auto;
                 overflow-x: hidden;
@@ -38,34 +38,34 @@
             }
             .offline-container {
                 width: 100%;
-                max-width: 600px;
+                max-width: 620px;
                 margin: 0 auto;
-                padding: 16px 14px 40px;
+                padding: 12px 14px 40px;
                 box-sizing: border-box;
                 display: flex;
                 flex-direction: column;
-                gap: 16px;
+                gap: 14px;
             }
             .offline-header {
                 display: flex;
                 align-items: center;
                 justify-content: space-between;
-                padding: 10px 4px;
+                padding: 8px 4px 12px;
                 border-bottom: 1px solid var(--border-gold);
             }
             .offline-title {
                 margin: 0;
-                font-size: 1.15rem;
+                font-size: 1.1rem;
                 font-weight: 800;
                 color: var(--gold-glow);
                 display: flex;
                 align-items: center;
-                gap: 8px;
+                gap: 6px;
             }
             .btn-back-rooms {
-                color: rgba(255, 255, 255, 0.8);
+                color: rgba(255, 255, 255, 0.85);
                 text-decoration: none;
-                font-size: 0.82rem;
+                font-size: 0.8rem;
                 font-weight: 700;
                 border: 1px solid rgba(255, 255, 255, 0.2);
                 padding: 6px 12px;
@@ -86,13 +86,65 @@
                 border-radius: 12px;
                 font-weight: 700;
             }
+
+            /* مستطيل "تابع اللعب مع أصدقائك" */
+            .resume-session-box {
+                background: linear-gradient(135deg, rgba(213, 167, 92, 0.16) 0%, rgba(13, 25, 43, 0.95) 100%);
+                border: 2px solid var(--gold-glow);
+                border-radius: 14px;
+                padding: 14px 16px;
+                box-shadow: 0 8px 24px rgba(0, 0, 0, 0.6);
+                position: relative;
+                display: flex;
+                flex-direction: column;
+                gap: 8px;
+                animation: smoothPanelReveal 0.3s ease-out;
+            }
+            .resume-btn-close {
+                position: absolute;
+                top: 8px;
+                left: 10px;
+                background: transparent;
+                border: none;
+                color: #ff7070;
+                font-size: 1.4rem;
+                cursor: pointer;
+                line-height: 1;
+                padding: 4px;
+            }
+            .resume-title {
+                margin: 0;
+                font-size: 1rem;
+                font-weight: 800;
+                color: var(--gold-glow);
+                display: flex;
+                align-items: center;
+                gap: 6px;
+            }
+            .resume-desc {
+                font-size: 0.78rem;
+                color: #cbd5e1;
+                line-height: 1.4;
+                margin: 0;
+            }
+            .resume-meta-row {
+                display: flex;
+                flex-wrap: wrap;
+                gap: 10px;
+                font-size: 0.75rem;
+                color: #ffe9b3;
+                background: rgba(0, 0, 0, 0.25);
+                padding: 6px 10px;
+                border-radius: 8px;
+            }
+
             .step-card {
                 background: var(--card-bg);
                 backdrop-filter: blur(14px);
                 -webkit-backdrop-filter: blur(14px);
                 border: 1.5px solid var(--border-gold);
                 border-radius: 16px;
-                padding: 18px 14px;
+                padding: 16px 14px;
                 box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
                 display: flex;
                 flex-direction: column;
@@ -107,68 +159,7 @@
                 align-items: center;
                 gap: 6px;
             }
-            .step-desc {
-                margin: 0;
-                font-family: "Harmattan", sans-serif;
-                font-size: 1.15rem;
-                color: rgba(255, 255, 255, 0.75);
-                line-height: 1.4;
-            }
-            .cases-scroll-grid {
-                display: flex;
-                flex-direction: column;
-                gap: 12px;
-                max-height: 55vh;
-                overflow-y: auto;
-                padding-left: 2px;
-            }
-            .case-item-card {
-                display: flex;
-                align-items: center;
-                gap: 12px;
-                padding: 10px;
-                background: rgba(255, 255, 255, 0.04);
-                border: 1.5px solid rgba(255, 255, 255, 0.12);
-                border-radius: 12px;
-                cursor: pointer;
-                transition: all 0.2s ease;
-            }
-            .case-item-card:hover,
-            .case-item-card.is-selected {
-                background: rgba(213, 167, 92, 0.15);
-                border-color: var(--gold-glow);
-                transform: translateY(-1px);
-            }
-            .case-thumb {
-                width: 60px;
-                height: 60px;
-                border-radius: 8px;
-                object-fit: cover;
-                border: 1px solid var(--border-gold);
-                background: #000;
-                flex: none;
-            }
-            .case-info {
-                flex: 1;
-                min-width: 0;
-            }
-            .case-name {
-                margin: 0 0 4px 0;
-                font-size: 0.95rem;
-                font-weight: 800;
-                color: #fff;
-            }
-            .case-item-card.is-selected .case-name {
-                color: var(--gold-glow);
-            }
-            .case-meta {
-                font-family: "Harmattan", sans-serif;
-                font-size: 1.05rem;
-                color: rgba(255, 255, 255, 0.65);
-                white-space: nowrap;
-                overflow: hidden;
-                text-overflow: ellipsis;
-            }
+
             .btn-action-gold {
                 width: 100%;
                 padding: 12px;
@@ -190,24 +181,32 @@
             .btn-action-gold:active {
                 transform: scale(0.98);
             }
+
+            /* صفوف اللاعبين والرموز السرية */
             .player-row-setup {
                 display: flex;
                 align-items: center;
-                gap: 8px;
+                gap: 6px;
                 background: rgba(255, 255, 255, 0.04);
                 padding: 8px 10px;
                 border-radius: 10px;
                 border: 1px solid rgba(255, 255, 255, 0.08);
+                transition: border-color 0.2s;
+                position: relative;
+            }
+            .player-row-setup.has-duplicate {
+                border-color: #ff5252;
+                background: rgba(255, 82, 82, 0.08);
             }
             .player-num-tag {
                 font-size: 0.75rem;
                 font-weight: 800;
                 color: var(--gold-glow);
-                min-width: 24px;
+                min-width: 22px;
             }
             .player-input-name {
                 flex: 1;
-                min-width: 0; /* يسمح للحقل بالانكماش داخل الصف بدل دفع حقل الـPIN خارج الشاشة */
+                min-width: 0;
                 background: rgba(0, 0, 0, 0.35);
                 border: 1px solid rgba(255, 255, 255, 0.15);
                 color: #fff;
@@ -217,65 +216,176 @@
                 font-size: 0.85rem;
                 outline: none;
             }
-            .player-input-pin {
-                width: 75px;
+            .pin-input-group {
+                display: flex;
+                align-items: center;
+                gap: 4px;
                 flex: none;
+            }
+            .player-input-pin {
+                width: 65px;
                 background: rgba(0, 0, 0, 0.45);
                 border: 1.5px solid var(--border-gold);
                 color: var(--gold-glow);
-                padding: 8px;
+                padding: 8px 4px;
                 border-radius: 8px;
                 font-family: inherit;
-                font-size: 0.85rem;
+                font-size: 0.9rem;
                 text-align: center;
                 font-weight: 800;
                 letter-spacing: 2px;
                 outline: none;
             }
-            .player-seat-grid {
-                display: grid;
-                grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
-                gap: 10px;
+            .btn-pin-tool {
+                background: rgba(255, 255, 255, 0.06);
+                border: 1px solid rgba(255, 255, 255, 0.2);
+                color: #cbd5e1;
+                border-radius: 6px;
+                padding: 6px 7px;
+                font-size: 0.8rem;
+                cursor: pointer;
+                line-height: 1;
             }
-            .player-seat-card {
-                background: rgba(255, 255, 255, 0.05);
-                border: 1.5px solid rgba(255, 255, 255, 0.15);
-                border-radius: 12px;
-                padding: 12px 8px;
+
+            /* سبورة التحقيقات — 3 كروت في كل صف */
+            .corkboard-wall {
+                background: linear-gradient(180deg, #182233 0%, #0e1624 100%);
+                border: 2px solid var(--cork-border);
+                border-radius: 16px;
+                padding: 12px 10px;
+                box-shadow: inset 0 0 25px rgba(0, 0, 0, 0.7), 0 8px 25px rgba(0, 0, 0, 0.6);
+                display: flex;
+                flex-direction: column;
+                gap: 12px;
+            }
+            .corkboard-grid {
+                display: grid;
+                grid-template-columns: repeat(3, 1fr);
+                gap: 8px;
+                width: 100%;
+                box-sizing: border-box;
+            }
+            .role-dossier-card {
+                background: linear-gradient(180deg, #202b3d 0%, #151e2e 100%);
+                border: 1.5px solid rgba(213, 167, 92, 0.3);
+                border-radius: 10px;
+                padding: 10px 6px 8px;
                 text-align: center;
                 cursor: pointer;
-                transition: all 0.2s;
                 position: relative;
+                user-select: none;
+                -webkit-user-select: none;
+                transition: transform 0.15s, border-color 0.15s, box-shadow 0.15s;
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                gap: 3px;
+                min-height: 98px;
+                justify-content: space-between;
+                box-shadow: 0 4px 10px rgba(0, 0, 0, 0.4);
+                touch-action: manipulation;
             }
-            .player-seat-card:hover {
+            .role-dossier-card.is-pressing {
+                transform: scale(0.95);
+                border-color: #ff5252;
+                box-shadow: 0 0 15px rgba(255, 82, 82, 0.5);
+            }
+            .role-dossier-card.is-target {
+                border-color: #ff5252;
+                background: linear-gradient(180deg, #3d1b1b 0%, #1f1212 100%);
+                box-shadow: 0 0 16px rgba(255, 82, 82, 0.6);
+            }
+            .role-dossier-card.is-judge-card {
                 border-color: var(--gold-glow);
-                background: rgba(213, 167, 92, 0.12);
             }
-            .player-seat-card.is-viewed {
+            .role-dossier-card.is-viewed {
                 border-color: #4ade80;
-                background: rgba(74, 222, 128, 0.08);
             }
-            .seat-icon {
-                font-size: 1.6rem;
-                margin-bottom: 4px;
-            }
-            .seat-name {
+            .card-pin-header {
                 font-size: 0.85rem;
+                line-height: 1;
+                margin-bottom: 2px;
+            }
+            .card-player-title {
+                font-size: 0.78rem;
+                font-weight: 800;
+                color: #ffffff;
+                line-height: 1.2;
+                word-break: break-word;
+                max-width: 100%;
+            }
+            .card-role-title {
+                font-size: 0.7rem;
                 font-weight: 700;
-                color: #fff;
-                margin-bottom: 4px;
+                color: var(--gold-glow);
+                line-height: 1.2;
+                word-break: break-word;
+                max-width: 100%;
             }
-            .seat-status {
-                font-size: 0.68rem;
+            .card-role-icon {
+                font-size: 1.25rem;
+            }
+            .card-status-chip {
+                font-size: 0.62rem;
+                padding: 2px 6px;
+                border-radius: 6px;
+                background: rgba(255, 255, 255, 0.08);
                 color: #cbd5e1;
+                line-height: 1;
             }
+            .role-dossier-card.is-viewed .card-status-chip {
+                background: rgba(74, 222, 128, 0.15);
+                color: #4ade80;
+            }
+            .role-dossier-card.is-target .card-status-chip {
+                background: rgba(255, 82, 82, 0.25);
+                color: #ff8080;
+                font-weight: 800;
+            }
+
+            /* مستطيل توجيهات النظام الثابت */
+            .system-directives-box {
+                background: linear-gradient(180deg, #151e2e 0%, #0d1421 100%);
+                border: 2px solid var(--gold-glow);
+                border-radius: 14px;
+                padding: 14px 12px;
+                display: flex;
+                flex-direction: column;
+                gap: 10px;
+                box-shadow: 0 8px 24px rgba(0, 0, 0, 0.6);
+            }
+            .system-directive-header {
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                gap: 6px;
+            }
+            .system-directive-tag {
+                font-size: 0.72rem;
+                font-weight: 800;
+                color: var(--gold-glow);
+                background: rgba(213, 167, 92, 0.12);
+                border: 1px solid var(--border-gold);
+                padding: 2px 8px;
+                border-radius: 8px;
+            }
+            .system-directive-text {
+                font-size: 0.92rem;
+                font-weight: 700;
+                color: #ffffff;
+                margin: 0;
+                line-height: 1.45;
+                text-align: center;
+            }
+
+            /* المودالات */
             .modal-overlay {
                 position: fixed;
                 top: 0;
                 left: 0;
                 width: 100vw;
                 height: 100vh;
-                background: rgba(5, 10, 18, 0.92);
+                background: rgba(5, 10, 18, 0.94);
                 backdrop-filter: blur(10px);
                 -webkit-backdrop-filter: blur(10px);
                 z-index: 99999;
@@ -289,23 +399,26 @@
                 background: linear-gradient(180deg, #131d2e 0%, #0c1421 100%);
                 border: 2px solid var(--gold-glow);
                 border-radius: 18px;
-                padding: 24px 20px;
+                padding: 22px 18px;
                 max-width: 480px;
                 width: 100%;
-                max-height: 90vh;
+                max-height: 88vh;
                 overflow-y: auto;
                 box-shadow: 0 16px 40px rgba(0, 0, 0, 0.8);
                 color: #fff;
+                display: flex;
+                flex-direction: column;
+                gap: 12px;
             }
             .pin-display-dots {
                 display: flex;
                 justify-content: center;
                 gap: 10px;
-                margin: 16px 0;
+                margin: 12px 0 16px;
             }
             .pin-dot {
-                width: 16px;
-                height: 16px;
+                width: 14px;
+                height: 14px;
                 border-radius: 50%;
                 border: 2px solid var(--gold-glow);
                 background: transparent;
@@ -324,338 +437,353 @@
             }
             .numpad-btn {
                 background: rgba(255, 255, 255, 0.08);
-                border: 1px solid rgba(255, 255, 255, 0.2);
-                border-radius: 10px;
-                padding: 12px;
-                font-family: inherit;
-                font-size: 1.2rem;
-                font-weight: 700;
+                border: 1px solid rgba(255, 255, 255, 0.15);
                 color: #fff;
+                font-family: inherit;
+                font-size: 1.15rem;
+                font-weight: 700;
+                padding: 10px;
+                border-radius: 10px;
                 cursor: pointer;
+                transition: all 0.15s;
             }
             .numpad-btn:active {
                 background: var(--gold-glow);
-                color: #000;
+                color: #050a12;
+                transform: scale(0.95);
             }
 
-            @media screen and (max-width: 540px) {
-                .offline-container {
-                    padding: 10px 8px 30px;
-                    gap: 10px;
-                }
-                /* إخفاء عنصر الموازنة (70px) على الهاتف حتى لا يضغط العنوان ويكسره لسطرين */
-                .offline-header > div:last-child {
-                    display: none;
-                }
-                .offline-title {
-                    white-space: nowrap;
-                    font-size: 1.05rem;
-                }
-                .step-card {
-                    padding: 12px 10px;
-                    gap: 10px;
-                    border-radius: 12px;
-                }
-                .step-title {
-                    font-size: 0.92rem;
-                }
-                .step-desc {
-                    font-size: 1rem;
-                }
-                .cases-scroll-grid {
-                    max-height: 48vh;
-                    gap: 8px;
-                }
-                .case-item-card {
-                    padding: 8px;
-                    gap: 8px;
-                }
-                .case-thumb {
-                    width: 48px;
-                    height: 48px;
-                }
-                .case-name {
-                    font-size: 0.88rem;
-                }
-                .case-meta {
-                    font-size: 0.92rem;
-                }
-                .player-seat-grid {
-                    grid-template-columns: repeat(auto-fill, minmax(95px, 1fr));
-                    gap: 8px;
-                }
-                .player-seat-card {
-                    padding: 8px 4px;
-                }
-                .seat-icon {
-                    font-size: 1.3rem;
-                }
-                .seat-name {
-                    font-size: 0.78rem;
-                }
-                .seat-status {
-                    font-size: 0.62rem;
-                }
-                .modal-box {
-                    padding: 16px 12px;
-                    max-width: 94vw;
-                    border-radius: 14px;
-                }
-                .numpad-grid {
-                    max-width: 210px;
-                    gap: 6px;
-                }
-                .numpad-btn {
-                    padding: 9px;
-                    font-size: 1.1rem;
-                }
+            /* شاشة التحميل 4 ثوان */
+            .loading-4s-overlay {
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100vw;
+                height: 100vh;
+                background-color: #050a12;
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                z-index: 2147483647;
+            }
+            .loading-4s-box {
+                width: 88%;
+                max-width: 380px;
+                background: rgba(13, 25, 43, 0.95);
+                border: 2px solid var(--gold-glow);
+                border-radius: 20px;
+                padding: 34px 22px;
+                text-align: center;
+                box-shadow: 0 0 35px rgba(213, 167, 92, 0.35);
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                gap: 16px;
+            }
+            .loading-scale-anim {
+                width: 72px;
+                height: 72px;
+                border-radius: 50%;
+                background: rgba(213, 167, 92, 0.15);
+                border: 2px solid var(--gold-glow);
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                font-size: 2.2rem;
+                box-shadow: 0 0 20px rgba(213, 167, 92, 0.4);
+                animation: scalePulse 1.8s infinite ease-in-out;
+            }
+            @keyframes scalePulse {
+                0%, 100% { transform: scale(1); }
+                50% { transform: scale(1.08); }
+            }
+            .loading-progress-bar {
+                width: 100%;
+                height: 8px;
+                background: rgba(255, 255, 255, 0.1);
+                border-radius: 10px;
+                overflow: hidden;
+                border: 1px solid rgba(213, 167, 92, 0.3);
+            }
+            .loading-progress-fill {
+                height: 100%;
+                width: 0%;
+                background: linear-gradient(90deg, #b8860b, var(--gold-glow));
+                box-shadow: 0 0 10px var(--gold-glow);
+                transition: width 0.08s linear;
+            }
+
+            /* مفاتيح الارتجال الثمانية */
+            .keys-eight-grid {
+                display: grid;
+                grid-template-columns: repeat(2, 1fr);
+                gap: 6px;
+                margin-top: 8px;
+            }
+            .improv-key-chip {
+                background: rgba(213, 167, 92, 0.1);
+                border: 1px solid rgba(213, 167, 92, 0.35);
+                border-radius: 8px;
+                padding: 7px 8px;
+                font-size: 0.76rem;
+                color: #ffe9b3;
+                line-height: 1.35;
+                font-weight: 600;
+                text-align: center;
+            }
+
+            .case-item-card {
+                display: flex;
+                align-items: center;
+                gap: 12px;
+                padding: 10px;
+                background: rgba(255, 255, 255, 0.04);
+                border: 1.5px solid rgba(255, 255, 255, 0.12);
+                border-radius: 12px;
+                cursor: pointer;
+                transition: all 0.2s ease;
+            }
+            .case-item-card:hover,
+            .case-item-card.is-selected {
+                background: rgba(213, 167, 92, 0.15);
+                border-color: var(--gold-glow);
+            }
+            .case-thumb {
+                width: 55px;
+                height: 55px;
+                border-radius: 8px;
+                object-fit: cover;
+                border: 1px solid var(--border-gold);
+                background: #000;
+                flex: none;
             }
         </style>
     </head>
     <body class="offline-body">
         <div class="offline-container">
-            <!-- الشريط العلوي -->
+            <!-- الهيدر الرئيسي السيادي -->
             <header class="offline-header">
-                <a href="rooms.html" class="btn-back-rooms" data-i18n="offline.back_rooms">‹ قائمة الغرف</a>
-                <h1 class="offline-title">
-                    <span data-i18n="offline.header_title">محكمة الأدوار</span>
-                </h1>
+                <div style="display: flex; align-items: center; gap: 8px">
+                    <span style="font-size: 1.5rem">⚖️</span>
+                    <div>
+                        <h1 class="offline-title">محكمة الأدوار</h1>
+                        <span style="font-size: 0.72rem; color: rgba(255,255,255,0.65)">المحاكمة المحلية (Pass & Play)</span>
+                    </div>
+                </div>
+                <div style="display: flex; align-items: center; gap: 8px">
+                    <span class="offline-badge">أوفلاين 100%</span>
+                    <a href="rooms.html" class="btn-back-rooms">‹ الرئيسية</a>
+                </div>
             </header>
 
-            <!-- الشاشة 1: اختيار القضية -->
-            <div id="step-choose-case" class="step-card">
-                <h2 class="step-title" data-i18n="offline.step_choose_case">📁 اختيار القضية</h2>
-                <p class="step-desc" data-i18n="offline.choose_case_desc">
-                    اختر القضية الجنائية التي ستُدار حولها جلسة المحاكمة اليوم:
-                </p>
-                <div id="cases-list-container" class="cases-scroll-grid">
-                    <p style="text-align: center; color: var(--gold-glow)" data-i18n="offline.loading_local_cases">
-                        جاري تحميل القضايا المحلية...
-                    </p>
+            <!-- مستطيل «تابع اللعب مع أصدقائك» (يظهر تلقائياً عند وجود جلسة سابقة غير مكتملة) -->
+            <div id="resume-session-container" class="resume-session-box" style="display: none">
+                <button type="button" class="resume-btn-close" id="btn-resume-delete" title="حذف الجلسة">&times;</button>
+                <h3 class="resume-title">🔄 تابع اللعب مع أصدقائك</h3>
+                <p class="resume-desc">توجد جلسة قضائية غير مكتملة محفوظة على هذا الجهاز، يمكنك استئنافها الآن دون فقدان الأدوار أو مجريات التحقيق.</p>
+                <div class="resume-meta-row">
+                    <span id="resume-case-name">القضية: --</span>
+                    <span id="resume-players-count">عدد اللاعبين: --</span>
+                    <span id="resume-stage-badge">المرحلة: استجواب</span>
                 </div>
-                <button id="btn-confirm-case" class="btn-action-gold" data-i18n="offline.btn_confirm_case" disabled>
-                    المتابعة وتحديد اللاعبين
+                <button type="button" id="btn-resume-session" class="btn-action-gold" style="padding: 10px; font-size: 0.88rem; margin-top: 4px;">
+                    ▶️ متابعة اللعب
                 </button>
             </div>
 
-            <!-- الشاشة 2: إعداد اللاعبين والـ PIN (مخفية افتراضياً) -->
-            <div id="step-setup-players" class="step-card" style="display: none">
-                <h2 class="step-title" data-i18n="offline.step_setup_players">👥 إعداد اللاعبين ورمز الحماية (PIN)</h2>
-                <p class="step-desc">
-                    <span data-i18n="offline.selected_case_label">القضية المختارة:</span>
-                    <strong id="selected-case-name" style="color: var(--gold-glow)"></strong>
-                </p>
-
-                <div
-                    style="
-                        display: flex;
-                        align-items: center;
-                        justify-content: space-between;
-                        background: rgba(0, 0, 0, 0.25);
-                        padding: 8px 12px;
-                        border-radius: 10px;
-                    ">
-                    <span style="font-size: 0.85rem; font-weight: 700" data-i18n="offline.players_count_label"
-                        >عدد اللاعبين:</span
-                    >
+            <!-- الشاشة 1: تسجيل اللاعبين وتوليد الرموز السرية المميزة -->
+            <div id="step-setup-players" class="step-card">
+                <div style="display: flex; align-items: center; justify-content: space-between">
+                    <h2 class="step-title">👥 تسجيل اللاعبين والرموز السرية</h2>
                     <div style="display: flex; align-items: center; gap: 8px">
-                        <button
-                            type="button"
-                            id="btn-players-minus"
-                            style="
-                                width: 32px;
-                                height: 32px;
-                                border-radius: 6px;
-                                border: 1px solid var(--gold-glow);
-                                background: transparent;
-                                color: var(--gold-glow);
-                                font-size: 1.2rem;
-                                cursor: pointer;
-                            ">
-                            -
-                        </button>
-                        <strong
-                            id="players-count-display"
-                            style="font-size: 1.1rem; color: var(--gold-glow); min-width: 24px; text-align: center"
-                            >4</strong
-                        >
-                        <button
-                            type="button"
-                            id="btn-players-plus"
-                            style="
-                                width: 32px;
-                                height: 32px;
-                                border-radius: 6px;
-                                border: 1px solid var(--gold-glow);
-                                background: transparent;
-                                color: var(--gold-glow);
-                                font-size: 1.2rem;
-                                cursor: pointer;
-                            ">
-                            +
-                        </button>
+                        <button type="button" id="btn-players-minus" class="btn-pin-tool" style="font-size: 1rem; width: 30px; height: 30px; font-weight: 800;">-</button>
+                        <strong id="players-count-display" style="color: var(--gold-glow); font-size: 1.1rem; min-width: 20px; text-align: center;">4</strong>
+                        <button type="button" id="btn-players-plus" class="btn-pin-tool" style="font-size: 1rem; width: 30px; height: 30px; font-weight: 800;">+</button>
                     </div>
                 </div>
 
-                <div style="font-size: 0.75rem; color: #cbd5e1">
-                    🔒 أدخل اسم كل لاعب مع رمز PIN سري مكون من 4 أرقام لحماية دوره عند تمرير الجهاز:
+                <div style="font-size: 0.76rem; color: #cbd5e1; line-height: 1.45;">
+                    🔒 أدخل اسم كل لاعب. يتم إنشاء رمز سري (PIN) من 4 خانات تلقائياً لكل لاعب بشكل فريد لحماية سره عند تمرير الهاتف.
                 </div>
 
-                <div
-                    id="players-inputs-container"
-                    style="display: flex; flex-direction: column; gap: 8px; max-height: 45vh; overflow-y: auto">
+                <!-- حاوية إدخال أسماء ورموز اللاعبين -->
+                <div id="players-inputs-container" style="display: flex; flex-direction: column; gap: 8px; max-height: 44vh; overflow-y: auto;">
                     <!-- يتم حقن صفوف اللاعبين برمجياً -->
                 </div>
 
-                <div style="display: flex; gap: 8px">
-                    <button
-                        id="btn-back-to-cases"
-                        type="button"
-                        style="
-                            width: 35%;
-                            padding: 12px;
-                            background: rgba(255, 255, 255, 0.08);
-                            border: 1px solid rgba(255, 255, 255, 0.2);
-                            color: #fff;
-                            border-radius: 12px;
-                            font-weight: 700;
-                            cursor: pointer;
-                        ">
-                        ‹ رجوع
+                <!-- زر اختيار القضايا وبدء التوزيع -->
+                <div style="display: flex; flex-direction: column; gap: 8px; margin-top: 4px;">
+                    <button type="button" id="btn-open-case-modal" class="btn-action-gold" style="background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%); border: 1.5px solid var(--gold-glow); color: var(--gold-glow);">
+                        📂 اختار القضايا (<span id="chosen-case-label">لم يتم الاختيار</span>)
                     </button>
-                    <button id="btn-start-offline-game" type="button" class="btn-action-gold" style="width: 65%">
+                    <button type="button" id="btn-start-offline-game" class="btn-action-gold">
                         ⚖️ توزيع الأدوار وبدء الجلسة
                     </button>
                 </div>
             </div>
 
-            <!-- الشاشة 3: قاعة المحاكمة وتمرير الجهاز (Pass & Play Hub) -->
-            <div id="step-courtroom" class="step-card" style="display: none">
-                <div style="display: flex; align-items: center; justify-content: space-between">
-                    <h2 class="step-title">🏛️ قاعة المحاكمة (Pass & Play)</h2>
-                </div>
-                <div
-                    style="
-                        background: rgba(213, 167, 92, 0.12);
-                        border-right: 3px solid var(--gold-glow);
-                        padding: 10px;
-                        border-radius: 8px;
-                        font-size: 0.8rem;
-                        line-height: 1.5;
-                    ">
-                    📱 <strong>طريقة اللعب:</strong> مرّر الجهاز لكل لاعب على حدة ليضغط على اسمه ويدخل الـ PIN الخاص به
-                    للاطلاع على دوره والمصلحة السرية، ثم يضغط إخفاء وقفل لتسليمه للّاعب التالي!
-                </div>
-
-                <div id="seats-grid" class="player-seat-grid">
-                    <!-- كروت اللاعبين المحمية -->
-                </div>
-
-                <div
-                    style="
-                        border-top: 1px solid rgba(255, 255, 255, 0.1);
-                        padding-top: 12px;
-                        display: flex;
-                        flex-direction: column;
-                        gap: 8px;
-                    ">
-                    <div style="display: flex; gap: 8px">
-                        <button
-                            id="btn-judge-tools"
-                            type="button"
-                            style="
-                                flex: 1;
-                                padding: 10px;
-                                background: rgba(213, 167, 92, 0.18);
-                                border: 1.5px solid var(--gold-glow);
-                                color: var(--gold-glow);
-                                border-radius: 10px;
-                                font-weight: 700;
-                                cursor: pointer;
-                            ">
-                            🔨 لوحة القاضي (الاستجواب)
+            <!-- الشاشة 2: سبورة القضية وكروت الأدوار (Police Corkboard) -->
+            <div id="step-corkboard" class="step-card" style="display: none; padding: 12px 10px;">
+                <!-- شريط أدوات السبورة العلوي -->
+                <div style="display: flex; flex-wrap: wrap; gap: 6px; align-items: center; justify-content: space-between; border-bottom: 1px solid var(--border-gold); padding-bottom: 8px;">
+                    <div style="display: flex; align-items: center; gap: 6px;">
+                        <button type="button" id="btn-show-story" class="btn-pin-tool" style="background: rgba(213, 167, 92, 0.18); border-color: var(--gold-glow); color: var(--gold-glow); font-weight: 800;">
+                            📖 عرض القصة
                         </button>
-                        <button
-                            id="btn-defense-tools"
-                            type="button"
-                            style="
-                                flex: 1;
-                                padding: 10px;
-                                background: rgba(255, 255, 255, 0.06);
-                                border: 1px solid rgba(255, 255, 255, 0.2);
-                                color: #fff;
-                                border-radius: 10px;
-                                font-weight: 700;
-                                cursor: pointer;
-                            ">
-                            🛡️ أدلة الدفاع
+                        <span id="case-board-title" style="font-size: 0.8rem; font-weight: 800; color: #fff;"></span>
+                    </div>
+
+                    <div style="display: flex; gap: 6px;">
+                        <button type="button" id="btn-lawyer-defense-mode" class="btn-pin-tool" style="font-weight: 700; border-color: rgba(213,167,92,0.4);">
+                            🛡️ أنا محامي الدفاع
+                        </button>
+                        <button type="button" id="btn-lawyer-prosecution-mode" class="btn-pin-tool" style="font-weight: 700; border-color: rgba(213,167,92,0.4); display: none;">
+                            📜 أنا محامي الادعاء
                         </button>
                     </div>
-                    <button
-                        id="btn-trigger-verdict"
-                        type="button"
-                        style="
-                            padding: 12px;
-                            background: #ff5252;
-                            border: none;
-                            color: #fff;
-                            border-radius: 10px;
-                            font-family: inherit;
-                            font-size: 0.9rem;
-                            font-weight: 800;
-                            cursor: pointer;
-                            box-shadow: 0 4px 15px rgba(255, 82, 82, 0.3);
-                        ">
-                        ⚖️ إصدار الحكم النهائي وإسدال الستار
-                    </button>
+                </div>
+
+                <!-- سبورة التحقيقات الحقيقية — 3 كروت في كل صف -->
+                <div class="corkboard-wall">
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <span style="font-size: 0.72rem; color: var(--gold-glow); font-weight: 800;">📋 سبورة تحقيقات القضية (انقر للاطلاع السري / اضغط مطولاً للاستجواب)</span>
+                    </div>
+                    <div id="corkboard-grid" class="corkboard-grid">
+                        <!-- يتم حقن كروت اللاعبين 3 في كل صف -->
+                    </div>
+                </div>
+
+                <!-- مستطيل توجيهات النظام الثابت المسؤول عن تسيير الجلسة -->
+                <div id="system-directives-box" class="system-directives-box">
+                    <div class="system-directive-header">
+                        <span class="system-directive-tag">📢 توجيه النظام</span>
+                        <span id="directive-active-role-tag" style="font-size: 0.72rem; color: #cbd5e1;">بانتظار الإجراء</span>
+                    </div>
+                    <p id="directive-main-text" class="system-directive-text">اللعبة لن تبدأ حتى تقرأ قصة القضية.</p>
+
+                    <!-- الحاوية الديناميكية للأزرار التفاعلية لتوجيهات النظام -->
+                    <div id="directive-actions-container" style="display: flex; flex-direction: column; gap: 8px;">
+                        <!-- يتم حقن الأزرار التفاعلية بحسب الحالة الحالية -->
+                    </div>
                 </div>
             </div>
 
-            <!-- الشاشة 4: شاشة النتائج والحكم النهائي -->
+            <!-- الشاشة 3: نتائج الحكم النهائي والخاتمة -->
             <div id="step-results" class="step-card" style="display: none">
-                <h2
-                    id="results-headline"
-                    style="text-align: center; color: var(--gold-glow); font-size: 1.3rem; margin: 0">
-                    نطق الحكم النهائي
+                <h2 style="text-align: center; color: var(--gold-glow); font-size: 1.3rem; margin: 0">
+                    ⚖️ نطق الحكم النهائي وإسدال الستار
                 </h2>
-                <div
-                    id="verdict-banner"
-                    style="
-                        padding: 14px;
-                        border-radius: 12px;
-                        text-align: center;
-                        font-weight: 800;
-                        font-size: 1.05rem;
-                    "></div>
+                <div id="verdict-banner" style="padding: 14px; border-radius: 12px; text-align: center; font-weight: 800; font-size: 1.05rem; line-height: 1.5;"></div>
 
-                <div id="identities-reveal-table" style="display: flex; flex-direction: column; gap: 8px">
+                <div id="verdict-culprit-story-box" style="background: rgba(0, 0, 0, 0.35); border: 1.5px solid var(--border-gold); border-radius: 12px; padding: 12px; display: flex; flex-direction: column; gap: 6px;">
+                    <h3 style="margin: 0; color: var(--gold-glow); font-size: 0.95rem;">🕵️‍♂️ حقيقة واعترافات الجاني:</h3>
+                    <p id="verdict-culprit-story-text" style="font-size: 0.85rem; color: #cbd5e1; line-height: 1.6; margin: 0;"></p>
+                </div>
+
+                <div id="verdict-scores-table" style="display: flex; flex-direction: column; gap: 8px;">
                     <!-- كشف هويات كل اللاعبين والجرائم الجانبية والنقاط -->
                 </div>
 
-                <div style="display: flex; gap: 8px; margin-top: 10px">
+                <div style="display: flex; gap: 8px; margin-top: 10px;">
                     <button id="btn-play-again" type="button" class="btn-action-gold" style="flex: 1">
                         🔄 جولة جديدة
                     </button>
-                    <a href="rooms.html" class="btn-back-rooms" style="text-align: center; padding: 12px 16px"
-                        >الرئيسية</a
-                    >
+                    <a href="rooms.html" class="btn-back-rooms" style="text-align: center; padding: 12px 16px;">الرئيسية</a>
                 </div>
             </div>
         </div>
 
         <!-- ================================================================= -->
-        <!-- المودالات التفاعلية لحماية الأدوار والاستجواب والحكم -->
+        <!-- المودالات التفاعلية -->
         <!-- ================================================================= -->
 
-        <!-- مودال إدخال الـ PIN لفتح بطاقة الدور -->
-        <div id="modal-pin-entry" class="modal-overlay" style="display: none">
-            <div class="modal-box" style="text-align: center; max-width: 320px">
-                <div style="font-size: 2rem; margin-bottom: 8px">🔒</div>
-                <h3 id="pin-modal-player-name" style="margin: 0 0 6px 0; color: var(--gold-glow); font-size: 1.1rem">
-                    لاعب 1
-                </h3>
-                <p style="font-size: 0.8rem; color: #cbd5e1; margin: 0">
-                    أدخل رمز PIN السري الخاص بك للاطلاع على دورك:
+        <!-- 1. شاشة التحميل السينمائية لمدة 4 ثوان -->
+        <div id="loading-4s-screen" class="loading-4s-overlay" style="display: none;">
+            <div class="loading-4s-box">
+                <div class="loading-scale-anim">⚖️</div>
+                <h2 style="color: var(--gold-glow); font-size: 1.25rem; font-weight: 800; margin: 0;">محكمة الأدوار</h2>
+                <p style="font-size: 0.85rem; color: #cbd5e1; margin: 0;">جاري توزيع الأدوار السرية وتحضير ملفات التحقيق...</p>
+                <div class="loading-progress-bar">
+                    <div id="loading-4s-fill" class="loading-progress-fill"></div>
+                </div>
+                <span id="loading-4s-text" style="color: var(--gold-glow); font-size: 0.85rem; font-weight: 700;">0%</span>
+            </div>
+        </div>
+
+        <!-- 2. نافذة قوانين اللعب الإلزامية -->
+        <div id="modal-game-rules" class="modal-overlay" style="display: none;">
+            <div class="modal-box" style="max-width: 440px;">
+                <h3 style="color: var(--gold-glow); font-size: 1.15rem; font-weight: 800; margin: 0; text-align: center;">📜 قوانين اللعب الرسمية</h3>
+                <div style="background: rgba(255,255,255,0.04); border: 1px solid var(--border-gold); border-radius: 10px; padding: 12px; display: flex; flex-direction: column; gap: 10px; font-size: 0.88rem; line-height: 1.55;">
+                    <div>1️⃣ <strong>«القاضي هو من يمسك الهاتف أثناء الجلسة».</strong></div>
+                    <div>2️⃣ <strong>«يحق لمحامي الدفاع ومحامي الادعاء أن يطلبا الهاتف من القاضي لعرض أسئلتهم أو أدلتهم».</strong></div>
+                    <div>3️⃣ <strong>«تأكد من صحة كلامك بناءً على مفاتيح الارتجال أو الأدلة والأسئلة الموجهة إليك لكي لا تخرج عن سياق قصة القضية».</strong></div>
+                </div>
+                <label style="display: flex; align-items: center; gap: 8px; font-size: 0.85rem; cursor: pointer; color: #ffe9b3; margin-top: 4px;">
+                    <input type="checkbox" id="checkbox-read-rules" style="width: 18px; height: 18px; accent-color: var(--gold-glow); cursor: pointer;" />
+                    <span>قرأت القوانين وأوافق على الالتزام بها</span>
+                </label>
+                <button type="button" id="btn-rules-start-game" class="btn-action-gold" disabled style="opacity: 0.5;">
+                    بدأ اللعبة ⚖️
+                </button>
+            </div>
+        </div>
+
+        <!-- 3. نافذة اختيار القضايا -->
+        <div id="modal-choose-case" class="modal-overlay" style="display: none;">
+            <div class="modal-box" style="max-width: 520px;">
+                <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-gold); padding-bottom: 8px;">
+                    <h3 style="margin: 0; color: var(--gold-glow); font-size: 1.1rem;">📂 موسوعة قضايا المحكمة</h3>
+                    <button type="button" id="btn-close-choose-case" style="background: transparent; border: none; color: #cbd5e1; font-size: 1.4rem; cursor: pointer;">&times;</button>
+                </div>
+                <p style="font-size: 0.78rem; color: #cbd5e1; margin: 0;">اختر القضية المتفق عليها بين اللاعبين لبدء المحاكمة:</p>
+                <div id="cases-scroll-container" style="display: flex; flex-direction: column; gap: 8px; max-height: 55vh; overflow-y: auto;">
+                    <!-- يتم حقن القضايا الـ 11 برمجياً -->
+                </div>
+                <button type="button" id="btn-confirm-chosen-case" class="btn-action-gold" disabled>
+                    تأكيد اختيار القضية
+                </button>
+            </div>
+        </div>
+
+        <!-- 4. نافذة عرض القصة وراوي القضية -->
+        <div id="modal-story-reader" class="modal-overlay" style="display: none;">
+            <div class="modal-box" style="max-width: 500px;">
+                <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-gold); padding-bottom: 8px;">
+                    <h3 id="story-modal-title" style="margin: 0; color: var(--gold-glow); font-size: 1.1rem;">📖 قصة القضية</h3>
+                    <button type="button" id="btn-close-story-modal" style="background: transparent; border: none; color: #cbd5e1; font-size: 1.4rem; cursor: pointer;">&times;</button>
+                </div>
+
+                <!-- مشغل راوي القصة الصوتي -->
+                <div style="background: rgba(0,0,0,0.3); border: 1px solid rgba(213,167,92,0.3); border-radius: 10px; padding: 10px; display: flex; flex-direction: column; gap: 6px; align-items: center;">
+                    <div style="display: flex; align-items: center; gap: 8px; width: 100%; justify-content: center;">
+                        <button type="button" id="btn-audio-play" class="btn-pin-tool" style="background: var(--gold-glow); color: #050a12; font-weight: 800; padding: 8px 16px;">
+                            ▶️ تشغيل راوي القصة
+                        </button>
+                        <span id="audio-playback-status" style="font-size: 0.78rem; color: #ffe9b3;"></span>
+                    </div>
+                    <div id="audio-offline-warning" style="display: none; color: #ff5252; font-size: 0.75rem; font-weight: 700; text-align: center;">
+                        ⚠️ يجب فتح الإنترنت لتستمع إلى راوي القصة
+                    </div>
+                </div>
+
+                <div id="story-modal-body" style="font-size: 0.9rem; line-height: 1.7; color: #f1f5f9; max-height: 48vh; overflow-y: auto; padding: 4px; background: rgba(0,0,0,0.2); border-radius: 8px;">
+                    <!-- نص القصة العامة -->
+                </div>
+
+                <button type="button" id="btn-done-reading-story" class="btn-action-gold">
+                    ✅ قرأت القصة بالكامل — ابدأ الجلسة
+                </button>
+            </div>
+        </div>
+
+        <!-- 5. مودال إدخال الـ PIN لفتح بطاقة الدور أو صلاحية المحامي -->
+        <div id="modal-pin-entry" class="modal-overlay" style="display: none;">
+            <div class="modal-box" style="text-align: center; max-width: 320px;">
+                <div style="font-size: 2rem; margin-bottom: 2px;">🔒</div>
+                <h3 id="pin-modal-player-name" style="margin: 0 0 4px 0; color: var(--gold-glow); font-size: 1.05rem;">لاعب</h3>
+                <p id="pin-modal-prompt-text" style="font-size: 0.78rem; color: #cbd5e1; margin: 0;">
+                    أدخل رمزك السري (PIN) الخاص بك للاطلاع على معلوماتك:
                 </p>
 
                 <div class="pin-display-dots">
@@ -675,479 +803,803 @@
                     <button type="button" class="numpad-btn" data-num="7">7</button>
                     <button type="button" class="numpad-btn" data-num="8">8</button>
                     <button type="button" class="numpad-btn" data-num="9">9</button>
-                    <button
-                        type="button"
-                        class="numpad-btn"
-                        id="btn-pin-clear"
-                        style="color: #ff5252; font-size: 0.9rem">
-                        مسح
-                    </button>
+                    <button type="button" class="numpad-btn" id="btn-pin-clear" style="color: #ff5252; font-size: 0.82rem;">مسح</button>
                     <button type="button" class="numpad-btn" data-num="0">0</button>
-                    <button type="button" class="numpad-btn" id="btn-pin-cancel" style="font-size: 0.85rem">
-                        إلغاء
-                    </button>
+                    <button type="button" class="numpad-btn" id="btn-pin-cancel" style="font-size: 0.82rem;">إلغاء</button>
                 </div>
-                <div
-                    id="pin-error-msg"
-                    style="color: #ff5252; font-size: 0.78rem; margin-top: 8px; min-height: 18px"></div>
+                <div id="pin-error-msg" style="color: #ff5252; font-size: 0.78rem; margin-top: 6px; min-height: 18px; font-weight: 700;"></div>
             </div>
         </div>
 
-        <!-- مودال بطاقة الدور السرية (Privacy Role Card) -->
-        <div id="modal-role-card" class="modal-overlay" style="display: none">
-            <div class="modal-box">
-                <div
-                    style="
-                        display: flex;
-                        justify-content: space-between;
-                        align-items: center;
-                        border-bottom: 1px solid var(--border-gold);
-                        padding-bottom: 10px;
-                    ">
+        <!-- 6. مودال بطاقة الدور والمعلومات السرية (Privacy Role Card) -->
+        <div id="modal-role-card" class="modal-overlay" style="display: none;">
+            <div class="modal-box" style="max-width: 480px;">
+                <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-gold); padding-bottom: 8px;">
                     <div>
-                        <span
-                            id="role-card-badge"
-                            style="font-size: 0.72rem; color: var(--gold-glow); font-weight: 800"></span>
-                        <h2 id="role-card-title" style="margin: 2px 0 0 0; color: #fff; font-size: 1.25rem">
-                            اسم الدور
-                        </h2>
+                        <span id="role-card-badge" style="font-size: 0.72rem; color: var(--gold-glow); font-weight: 800;"></span>
+                        <h2 id="role-card-title" style="margin: 2px 0 0 0; color: #fff; font-size: 1.15rem;">اسم الدور</h2>
                     </div>
-                    <span
-                        id="role-card-player"
-                        style="font-size: 0.85rem; color: rgba(255, 255, 255, 0.7); font-weight: 700"></span>
+                    <span id="role-card-player" style="font-size: 0.82rem; color: rgba(255,255,255,0.7); font-weight: 700;"></span>
                 </div>
 
-                <div
-                    style="
-                        display: flex;
-                        gap: 4px;
-                        margin: 12px 0 8px;
-                        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-                    ">
-                    <button
-                        type="button"
-                        id="tab-btn-public"
-                        class="role-tab-btn active"
-                        style="
-                            flex: 1;
-                            padding: 6px;
-                            background: transparent;
-                            border: none;
-                            border-bottom: 2px solid var(--gold-glow);
-                            color: var(--gold-glow);
-                            font-family: inherit;
-                            font-size: 0.75rem;
-                            font-weight: 700;
-                            cursor: pointer;
-                        ">
-                        القصة المعلنة
-                    </button>
-                    <button
-                        type="button"
-                        id="tab-btn-secret"
-                        class="role-tab-btn"
-                        style="
-                            flex: 1;
-                            padding: 6px;
-                            background: transparent;
-                            border: none;
-                            border-bottom: 2px solid transparent;
-                            color: #cbd5e1;
-                            font-family: inherit;
-                            font-size: 0.75rem;
-                            font-weight: 700;
-                            cursor: pointer;
-                        ">
-                        🔒 المصلحة والتكليف السري
-                    </button>
+                <div style="display: flex; gap: 4px; margin: 4px 0; border-bottom: 1px solid rgba(255,255,255,0.1);">
+                    <button type="button" id="tab-btn-public" class="btn-pin-tool" style="flex: 1; border-color: var(--gold-glow); color: var(--gold-glow); font-weight: 800;">القصة المعلنة</button>
+                    <button type="button" id="tab-btn-secret" class="btn-pin-tool" style="flex: 1; font-weight: 800;">🔒 المصلحة والتكليف السري</button>
                 </div>
 
-                <!-- محتوى التاب العام -->
-                <div
-                    id="tab-pane-public"
-                    style="
-                        font-family: &quot;Harmattan&quot;, sans-serif;
-                        font-size: 1.25rem;
-                        line-height: 1.5;
-                        color: rgba(255, 255, 255, 0.9);
-                        margin-bottom: 18px;
-                    ">
-                    <p id="role-public-story-text" style="margin: 0"></p>
+                <!-- التاب العام -->
+                <div id="tab-pane-public" style="font-size: 0.88rem; line-height: 1.6; color: #f1f5f9; max-height: 40vh; overflow-y: auto;">
+                    <p id="role-public-story-text" style="margin: 0;"></p>
                 </div>
 
-                <!-- محتوى التاب السري -->
-                <div
-                    id="tab-pane-secret"
-                    style="
-                        display: none;
-                        background: rgba(255, 82, 82, 0.08);
-                        border: 1.5px solid rgba(255, 82, 82, 0.4);
-                        border-radius: 10px;
-                        padding: 12px;
-                        margin-bottom: 18px;
-                    ">
-                    <strong style="color: #ff7070; font-size: 0.85rem; display: block; margin-bottom: 4px"
-                        >⚠️ سري للغاية (لا تظهره لأحد):</strong
-                    >
-                    <p
-                        id="role-secret-interest-text"
-                        style="
-                            font-family: &quot;Harmattan&quot;, sans-serif;
-                            font-size: 1.2rem;
-                            line-height: 1.5;
-                            color: #fff;
-                            margin: 0;
-                        "></p>
+                <!-- التاب السري -->
+                <div id="tab-pane-secret" style="display: none; background: rgba(255,82,82,0.08); border: 1.5px solid rgba(255,82,82,0.4); border-radius: 10px; padding: 12px; max-height: 42vh; overflow-y: auto;">
+                    <strong style="color: #ff7070; font-size: 0.82rem; display: block; margin-bottom: 4px;">⚠️ سري للغاية (لا تظهره لأحد):</strong>
+                    <p id="role-secret-interest-text" style="font-size: 0.88rem; line-height: 1.6; color: #fff; margin: 0 0 8px 0;"></p>
+                    <div id="role-context-details" style="display: flex; flex-direction: column; gap: 6px; font-size: 0.8rem; border-top: 1px dashed rgba(255,82,82,0.3); padding-top: 8px;">
+                        <!-- what you know / what you hide / acting goal -->
+                    </div>
                 </div>
 
-                <!-- الزر الإجباري الأساسي لحماية الخصوصية -->
-                <button
-                    type="button"
-                    id="btn-hide-and-lock-role"
-                    class="btn-action-gold"
-                    style="
-                        background: linear-gradient(135deg, #10b981 0%, #059669 100%);
-                        color: #fff;
-                        font-size: 1rem;
-                        box-shadow: 0 4px 15px rgba(16, 185, 129, 0.3);
-                    ">
-                    👁️‍🗨️ إخفاء الدور وقفل الشاشة للّاعب التالي
+                <button type="button" id="btn-hide-and-lock-role" class="btn-action-gold" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: #fff; margin-top: 6px;">
+                    👁️‍🗨️ إخفاء وقفل الشاشة للّاعب التالي
                 </button>
             </div>
         </div>
 
-        <!-- مودال لوحة القاضي المحقق (استجواب المشتبه بهم) -->
-        <div id="modal-judge-tools" class="modal-overlay" style="display: none">
-            <div class="modal-box">
-                <div
-                    style="
-                        display: flex;
-                        justify-content: space-between;
-                        align-items: center;
-                        border-bottom: 1px solid var(--border-gold);
-                        padding-bottom: 8px;
-                    ">
-                    <h3 style="margin: 0; color: var(--gold-glow); font-size: 1.1rem">🔨 لوحة القاضي المحقق</h3>
-                    <button
-                        type="button"
-                        class="btn-close-modal"
-                        id="btn-close-judge"
-                        style="
-                            background: transparent;
-                            border: none;
-                            color: #94a3b8;
-                            font-size: 1.3rem;
-                            cursor: pointer;
-                        ">
-                        &times;
-                    </button>
+        <!-- 7. مودال اختيار الأسئلة أو الأدلة للمستهدف -->
+        <div id="modal-picker-items" class="modal-overlay" style="display: none;">
+            <div class="modal-box" style="max-width: 500px;">
+                <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-gold); padding-bottom: 8px;">
+                    <h3 id="picker-modal-title" style="margin: 0; color: var(--gold-glow); font-size: 1.1rem;">اختر السؤال أو الدليل</h3>
+                    <button type="button" id="btn-close-picker-modal" style="background: transparent; border: none; color: #cbd5e1; font-size: 1.4rem; cursor: pointer;">&times;</button>
                 </div>
-                <p style="font-size: 0.8rem; color: #cbd5e1; margin: 8px 0">
-                    اختر مشتبهاً به لاستعراض أسئلة التحقيق والادعاءات المسجلة ضده لتوجيهها إليه:
-                </p>
-                <div
-                    id="judge-suspects-select"
-                    style="display: flex; gap: 6px; overflow-x: auto; padding-bottom: 6px; margin-bottom: 10px"></div>
-                <div
-                    id="judge-questions-box"
-                    style="max-height: 40vh; overflow-y: auto; display: flex; flex-direction: column; gap: 8px"></div>
+                <div id="picker-target-desc" style="font-size: 0.82rem; color: #ffe9b3;">المستهدف: --</div>
+                <div id="picker-items-list" style="display: flex; flex-direction: column; gap: 8px; max-height: 52vh; overflow-y: auto;">
+                    <!-- قائمة الأسئلة أو الأدلة المطابقة -->
+                </div>
             </div>
         </div>
 
-        <!-- مودال أدلة محامي الدفاع -->
-        <div id="modal-defense-tools" class="modal-overlay" style="display: none">
-            <div class="modal-box">
-                <div
-                    style="
-                        display: flex;
-                        justify-content: space-between;
-                        align-items: center;
-                        border-bottom: 1px solid var(--border-gold);
-                        padding-bottom: 8px;
-                    ">
-                    <h3 style="margin: 0; color: var(--gold-glow); font-size: 1.1rem">🛡️ أدلة وتفنيد محامي الدفاع</h3>
-                    <button
-                        type="button"
-                        class="btn-close-modal"
-                        id="btn-close-defense"
-                        style="
-                            background: transparent;
-                            border: none;
-                            color: #94a3b8;
-                            font-size: 1.3rem;
-                            cursor: pointer;
-                        ">
-                        &times;
-                    </button>
+        <!-- 8. شاشة استجواب اللاعب المستهدف بمفاتيح الارتجال -->
+        <div id="modal-target-answering" class="modal-overlay" style="display: none;">
+            <div class="modal-box" style="max-width: 520px;">
+                <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-gold); padding-bottom: 8px;">
+                    <div>
+                        <span id="answering-target-badge" style="font-size: 0.72rem; color: var(--gold-glow); font-weight: 800;">اللاعب المستهدف</span>
+                        <h3 id="answering-target-name" style="margin: 0; color: #fff; font-size: 1.15rem;">الاسم</h3>
+                    </div>
+                    <div style="display: flex; align-items: center; gap: 6px;">
+                        <span style="font-size: 0.72rem; color: #cbd5e1;">المهلة:</span>
+                        <span id="answering-countdown-timer" style="font-size: 1.1rem; font-weight: 800; color: var(--gold-glow); background: rgba(0,0,0,0.4); padding: 2px 8px; border-radius: 6px; border: 1px solid var(--border-gold);">10</span>
+                    </div>
                 </div>
-                <div
-                    id="defense-clues-box"
-                    style="
-                        margin-top: 10px;
-                        max-height: 50vh;
-                        overflow-y: auto;
-                        display: flex;
-                        flex-direction: column;
-                        gap: 8px;
-                    "></div>
-            </div>
-        </div>
 
-        <!-- مودال اختيار المتهم للحكم النهائي -->
-        <div id="modal-verdict-pick" class="modal-overlay" style="display: none">
-            <div class="modal-box" style="text-align: center">
-                <div style="font-size: 2.2rem; margin-bottom: 6px">⚖️</div>
-                <h3 style="margin: 0 0 6px 0; color: #ff5252; font-size: 1.2rem">إصدار الحكم القضائي</h3>
-                <p style="font-size: 0.82rem; color: #cbd5e1; margin: 0 0 14px 0">
-                    أيها القاضي المحقق، حدد الشخص الذي تثبت عليه جناية القتل لإنهاء المحاكمة:
+                <div id="answering-presented-item" style="background: rgba(213,167,92,0.12); border-right: 3px solid var(--gold-glow); padding: 10px; border-radius: 8px; font-size: 0.92rem; font-weight: 700; line-height: 1.5; color: #fff;">
+                    <!-- نص السؤال أو الدليل -->
+                </div>
+
+                <div style="font-size: 0.8rem; color: #4ade80; font-weight: 700;">
+                    🎭 توجيه الأداء ومفاتيح الارتجال:
+                </div>
+                <div id="answering-performance-text" style="font-size: 0.82rem; color: #cbd5e1; line-height: 1.5; background: rgba(0,0,0,0.25); padding: 8px 10px; border-radius: 8px;">
+                    <!-- توجيه الأداء -->
+                </div>
+
+                <!-- مفاتيح الارتجال الثمانية أو أشباه الجمل الدفاعية -->
+                <div id="answering-keys-container" class="keys-eight-grid">
+                    <!-- المفاتيح الثمانية -->
+                </div>
+
+                <p style="font-size: 0.75rem; color: #ffe9b3; text-align: center; margin: 4px 0 0 0;">
+                    أجب على السؤال أو الدليل الموجه لك باستخدام مفاتيح الارتجال دون الخروج عن سياق القضية.
                 </p>
-                <div
-                    id="verdict-candidates-list"
-                    style="
-                        display: flex;
-                        flex-direction: column;
-                        gap: 8px;
-                        max-height: 40vh;
-                        overflow-y: auto;
-                        margin-bottom: 14px;
-                    "></div>
-                <button
-                    type="button"
-                    id="btn-cancel-verdict"
-                    style="
-                        padding: 10px 16px;
-                        background: rgba(255, 255, 255, 0.08);
-                        border: 1px solid rgba(255, 255, 255, 0.2);
-                        color: #fff;
-                        border-radius: 8px;
-                        cursor: pointer;
-                    ">
-                    إلغاء والتراجع للجلسة
+
+                <button type="button" id="btn-target-finish-answer" class="btn-action-gold" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: #fff;">
+                    ✅ أنهيت إجابتي — إعادة الهاتف للقاضي
                 </button>
             </div>
         </div>
 
-        <!-- محرك الترجمة الشامل الموحد -->
+        <!-- 9. نافذة تأكيد إصدار الحكم النهائي -->
+        <div id="modal-verdict-pick" class="modal-overlay" style="display: none;">
+            <div class="modal-box" style="max-width: 440px;">
+                <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-gold); padding-bottom: 8px;">
+                    <h3 style="margin: 0; color: #ff7070; font-size: 1.15rem;">⚖️ إصدار الحكم النهائي</h3>
+                    <button type="button" id="btn-cancel-verdict" style="background: transparent; border: none; color: #cbd5e1; font-size: 1.4rem; cursor: pointer;">&times;</button>
+                </div>
+                <p style="font-size: 0.82rem; color: #cbd5e1; margin: 0;">
+                    اختر المتهم الذي يدينه القاضي بارتكاب الجناية الكبرى:
+                </p>
+                <div id="verdict-candidates-list" style="display: flex; flex-direction: column; gap: 8px; max-height: 48vh; overflow-y: auto;">
+                    <!-- مرشحو الاتهام من المشتبه بهم -->
+                </div>
+            </div>
+        </div>
+
+        <!-- 10. نافذة تأكيد الإدانة قبل اعتمادها -->
+        <div id="modal-confirm-verdict-action" class="modal-overlay" style="display: none;">
+            <div class="modal-box" style="max-width: 380px; text-align: center;">
+                <div style="font-size: 2.2rem; margin-bottom: 4px;">⚠️</div>
+                <h3 style="color: #ff5252; margin: 0; font-size: 1.15rem;">تأكيد الحكم القضائي</h3>
+                <p id="confirm-verdict-text" style="font-size: 0.88rem; line-height: 1.5; color: #f1f5f9; margin: 8px 0;"></p>
+                <div style="display: flex; gap: 8px; margin-top: 6px;">
+                    <button type="button" id="btn-verdict-abort" class="btn-pin-tool" style="flex: 1; padding: 10px; font-weight: 700;">إلغاء</button>
+                    <button type="button" id="btn-verdict-commit" class="btn-action-gold" style="flex: 1; background: #ff5252; color: #fff; padding: 10px;">نطق الحكم 🔨</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 11. نافذة تأكيد حذف الجلسة -->
+        <div id="modal-delete-session-confirm" class="modal-overlay" style="display: none;">
+            <div class="modal-box" style="max-width: 380px; text-align: center;">
+                <div style="font-size: 2rem; margin-bottom: 4px;">🗑️</div>
+                <h3 style="color: #ff5252; margin: 0; font-size: 1.1rem;">حذف الجلسة المحفوظة</h3>
+                <p style="font-size: 0.85rem; line-height: 1.5; color: #f1f5f9; margin: 10px 0;">
+                    هل تريد حذف الجلسة المحفوظة؟ لن تتمكن من استعادتها بعد الحذف.
+                </p>
+                <div style="display: flex; gap: 8px; margin-top: 6px;">
+                    <button type="button" id="btn-cancel-delete-session" class="btn-pin-tool" style="flex: 1; padding: 10px; font-weight: 700;">إلغاء</button>
+                    <button type="button" id="btn-confirm-delete-session" class="btn-action-gold" style="flex: 1; background: #ff5252; color: #fff; padding: 10px;">حذف الجلسة</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- البرمجة التشغيلية المكتملة للأوفلاين بالكامل -->
         <script type="module" src="js/i18n.js"></script>
-
-        <!-- مدير الجاهزية كسكريبت مستقل: يعمل ويعرض المودال حتى لو فشل استيراد ملف آخر (مثل offline-engine.js) -->
         <script type="module" src="js/offline-manager.js"></script>
-
         <script type="module">
             import {
                 loadCases,
                 getCaseById,
+                loadPermanentPlayers,
+                savePermanentPlayers,
+                generateUniquePin,
+                validatePinsUnique,
                 distributeRoles,
-                getQuestionsForRole,
-                getCluesForDefense,
-                evaluateVerdict,
+                getQuestionsForTarget,
+                getEvidenceForTarget,
                 saveOfflineSession,
                 loadOfflineSession,
-                clearOfflineSession
+                clearOfflineSession,
+                evaluateVerdict
             } from "./js/offline-engine.js";
-            import "./js/offline-manager.js";
+            import { resolvePerformanceHelp, escapeHtml } from "./js/improv.js";
 
+            // المتغيرات العامة لحالة اللعبة
             let allCases = [];
             let selectedCase = null;
             let currentPlayers = [];
-            let currentAssignments = {};
-            let activeViewingPlayerId = null;
-            let currentPinInput = "";
+            let gameState = {
+                caseId: null,
+                assignments: {},
+                defenseClientUID: null,
+                stage: "setup", // setup, rules, story_pending, judge_turn, lawyer_turn, handover_to_target, target_answering, return_to_judge, completed
+                activeInterrogator: null, // { role_type: 'judge'|'defense_lawyer'|'prosecution_lawyer', playerId, playerName }
+                selectedTargetId: null,
+                currentInteraction: null, // { type: 'question'|'evidence', item, guidance }
+                storyRead: false,
+                rulesAcknowledged: false,
+                isCompleted: false,
+                history: []
+            };
 
-            // 1. تحميل القضايا عند الإقلاع
+            let activePinContext = null; // { mode: 'view_role'|'defense_lawyer'|'prosecution_lawyer', playerId }
+            let currentPinInput = "";
+            let answeringTimerInterval = null;
+            let pendingAccusedPlayerId = null;
+            let audioNarratorElement = null;
+
+            // =================================================================
+            // 1. الإقلاع والتهيئة واستعادة الجلسة
+            // =================================================================
             async function init() {
-                if (typeof window.isOfflineReady === "function") {
-                    try {
-                        const ready = await window.isOfflineReady();
-                        if (!ready && !navigator.onLine) {
-                            if (typeof window.showFirstTimeOfflineModal === "function") {
-                                window.showFirstTimeOfflineModal();
-                            }
-                            return;
-                        }
-                    } catch (err) {}
-                }
+                setupBeforeUnloadWarning();
                 try {
                     allCases = await loadCases();
-                    renderCasesList();
                 } catch (e) {
-                    // المودال فقط إذا كان الجهاز Offline والكاش غير جاهز؛ غير ذلك نعرض رسالة الخطأ العادية
-                    let cacheReady = false;
-                    try {
-                        cacheReady =
-                            typeof window.isOfflineReady === "function" ? await window.isOfflineReady() : false;
-                    } catch (err) {}
-                    if (
-                        typeof window.showFirstTimeOfflineModal === "function" &&
-                        navigator.onLine === false &&
-                        !cacheReady
-                    ) {
-                        window.showFirstTimeOfflineModal();
-                    } else {
-                        document.getElementById("cases-list-container").innerHTML =
-                            "<p style='color:#ff5252; text-align:center;'>تعذر تحميل ملف القضايا محلياً.</p>";
+                    console.error("فشل تحميل القضايا:", e);
+                }
+
+                // فحص الجلسة المحفوظة
+                checkAndRenderResumeBox();
+
+                // تهيئة اللاعبين الدائمين
+                initPlayersSetup();
+            }
+
+            function setupBeforeUnloadWarning() {
+                window.addEventListener("beforeunload", (e) => {
+                    if (gameState && gameState.assignments && Object.keys(gameState.assignments).length > 0 && !gameState.isCompleted) {
+                        e.preventDefault();
+                        e.returnValue = "هناك محاكمة جارية، هل أنت متأكد من مغادرة الصفحة؟";
+                        return e.returnValue;
                     }
+                });
+            }
+
+            function checkAndRenderResumeBox() {
+                const saved = loadOfflineSession();
+                const container = document.getElementById("resume-session-container");
+                if (saved && saved.caseId && saved.assignments && !saved.isCompleted) {
+                    const c = allCases.find((x) => String(x.id) === String(saved.caseId));
+                    document.getElementById("resume-case-name").textContent = `القضية: ${c ? c.title : saved.caseId}`;
+                    const count = Object.keys(saved.assignments).length;
+                    document.getElementById("resume-players-count").textContent = `عدد اللاعبين: ${count}`;
+
+                    let stageLabel = "قاعة المحاكمة";
+                    if (!saved.storyRead) stageLabel = "قراءة القصة";
+                    else if (saved.stage === "handover_to_target" || saved.stage === "target_answering") stageLabel = "استجواب مستهدف";
+                    else if (saved.stage === "lawyer_turn") stageLabel = "مرافعة المحامي";
+                    document.getElementById("resume-stage-badge").textContent = `المرحلة: ${stageLabel}`;
+
+                    container.style.display = "flex";
+                } else {
+                    container.style.display = "none";
                 }
             }
 
-            function renderCasesList() {
-                const container = document.getElementById("cases-list-container");
+            // حذف الجلسة المحفوظة عبر علامة ×
+            document.getElementById("btn-resume-delete").addEventListener("click", (e) => {
+                e.stopPropagation();
+                document.getElementById("modal-delete-session-confirm").style.display = "flex";
+            });
+
+            document.getElementById("btn-cancel-delete-session").addEventListener("click", () => {
+                document.getElementById("modal-delete-session-confirm").style.display = "none";
+            });
+
+            document.getElementById("btn-confirm-delete-session").addEventListener("click", () => {
+                clearOfflineSession();
+                document.getElementById("modal-delete-session-confirm").style.display = "none";
+                document.getElementById("resume-session-container").style.display = "none";
+            });
+
+            // استئناف الجلسة المحفوظة
+            document.getElementById("btn-resume-session").addEventListener("click", () => {
+                const saved = loadOfflineSession();
+                if (!saved || !saved.caseId || !saved.assignments) {
+                    alert("تعذر استعادة الجلسة المحفوظة، يرجى بدء جولة جديدة.");
+                    clearOfflineSession();
+                    document.getElementById("resume-session-container").style.display = "none";
+                    return;
+                }
+
+                selectedCase = allCases.find((x) => String(x.id) === String(saved.caseId)) || null;
+                if (!selectedCase) {
+                    alert("القضية المحفوظة غير متاحة حالياً.");
+                    return;
+                }
+
+                gameState = saved;
+                currentPlayers = Object.values(saved.assignments).map((a) => ({
+                    id: a.playerId,
+                    name: a.playerName,
+                    pin: a.pin
+                }));
+
+                // الانتقال للسبورة مباشرة بحالة آمنة
+                document.getElementById("step-setup-players").style.display = "none";
+                document.getElementById("step-corkboard").style.display = "flex";
+                document.getElementById("case-board-title").textContent = `قضية: ${selectedCase.title}`;
+
+                renderCorkboardCards();
+                updateSystemDirectiveUI();
+            });
+
+            // =================================================================
+            // 2. إعداد اللاعبين والرموز السرية الدائمة
+            // =================================================================
+            let currentPlayersCount = 4;
+            const MIN_PLAYERS = 3;
+            const MAX_PLAYERS = 10;
+
+            function initPlayersSetup() {
+                const savedPermanent = loadPermanentPlayers();
+                if (savedPermanent && savedPermanent.length >= MIN_PLAYERS) {
+                    currentPlayersCount = savedPermanent.length;
+                    currentPlayers = savedPermanent;
+                } else {
+                    currentPlayers = [];
+                    const existingPins = [];
+                    for (let i = 0; i < currentPlayersCount; i++) {
+                        const pin = generateUniquePin(existingPins);
+                        existingPins.push(pin);
+                        currentPlayers.push({
+                            id: `p_${i + 1}`,
+                            name: `لاعب ${i + 1}`,
+                            pin: pin
+                        });
+                    }
+                }
+                document.getElementById("players-count-display").textContent = currentPlayersCount;
+                renderPlayerInputs();
+            }
+
+            document.getElementById("btn-players-minus").addEventListener("click", () => {
+                if (currentPlayersCount > MIN_PLAYERS) {
+                    currentPlayersCount--;
+                    document.getElementById("players-count-display").textContent = currentPlayersCount;
+                    adjustPlayersListCount();
+                }
+            });
+
+            document.getElementById("btn-players-plus").addEventListener("click", () => {
+                if (currentPlayersCount < MAX_PLAYERS) {
+                    currentPlayersCount++;
+                    document.getElementById("players-count-display").textContent = currentPlayersCount;
+                    adjustPlayersListCount();
+                }
+            });
+
+            function adjustPlayersListCount() {
+                // مزامنة المدخلات الحالية أولاً
+                syncInputsToCurrentPlayers();
+                const existingPins = currentPlayers.map((p) => p.pin);
+                while (currentPlayers.length < currentPlayersCount) {
+                    const idx = currentPlayers.length + 1;
+                    const pin = generateUniquePin(existingPins);
+                    existingPins.push(pin);
+                    currentPlayers.push({
+                        id: `p_${idx}`,
+                        name: `لاعب ${idx}`,
+                        pin: pin
+                    });
+                }
+                while (currentPlayers.length > currentPlayersCount) {
+                    currentPlayers.pop();
+                }
+                renderPlayerInputs();
+            }
+
+            function syncInputsToCurrentPlayers() {
+                const container = document.getElementById("players-inputs-container");
+                container.querySelectorAll(".player-row-setup").forEach((row) => {
+                    const id = row.dataset.id;
+                    const p = currentPlayers.find((x) => x.id === id);
+                    if (p) {
+                        p.name = row.querySelector(".player-input-name").value.trim() || p.name;
+                        p.pin = row.querySelector(".player-input-pin").value.trim() || p.pin;
+                    }
+                });
+            }
+
+            function renderPlayerInputs() {
+                const container = document.getElementById("players-inputs-container");
+                container.innerHTML = "";
+
+                currentPlayers.forEach((player, idx) => {
+                    const row = document.createElement("div");
+                    row.className = "player-row-setup";
+                    row.dataset.id = player.id;
+
+                    row.innerHTML = `
+                        <span class="player-num-tag">#${idx + 1}</span>
+                        <input type="text" class="player-input-name" value="${escapeHtml(player.name)}" placeholder="اسم اللاعب ${idx + 1}" maxlength="20" />
+                        <div class="pin-input-group">
+                            <input type="password" class="player-input-pin" value="${player.pin}" maxlength="4" placeholder="0000" />
+                            <button type="button" class="btn-pin-tool btn-toggle-pin-mask" title="إظهار/إخفاء">👁️</button>
+                            <button type="button" class="btn-pin-tool btn-regen-pin" title="توليد رمز جديد">🔄</button>
+                        </div>
+                    `;
+
+                    // زر التبديل بين إظهار وإخفاء الرمز
+                    const pinInput = row.querySelector(".player-input-pin");
+                    const toggleBtn = row.querySelector(".btn-toggle-pin-mask");
+                    toggleBtn.addEventListener("click", () => {
+                        pinInput.type = pinInput.type === "password" ? "text" : "password";
+                    });
+
+                    // زر إعادة توليد رمز مميز
+                    const regenBtn = row.querySelector(".btn-regen-pin");
+                    regenBtn.addEventListener("click", () => {
+                        syncInputsToCurrentPlayers();
+                        const otherPins = currentPlayers.filter((x) => x.id !== player.id).map((x) => x.pin);
+                        const newPin = generateUniquePin(otherPins);
+                        player.pin = newPin;
+                        pinInput.value = newPin;
+                        checkPinDuplicates();
+                    });
+
+                    // التحقق الفوري عند التعديل اليدوي
+                    pinInput.addEventListener("input", () => {
+                        player.pin = pinInput.value.trim();
+                        checkPinDuplicates();
+                    });
+
+                    const nameInput = row.querySelector(".player-input-name");
+                    nameInput.addEventListener("input", () => {
+                        player.name = nameInput.value.trim() || `لاعب ${idx + 1}`;
+                    });
+
+                    container.appendChild(row);
+                });
+
+                checkPinDuplicates();
+            }
+
+            function checkPinDuplicates() {
+                syncInputsToCurrentPlayers();
+                const container = document.getElementById("players-inputs-container");
+                const rows = container.querySelectorAll(".player-row-setup");
+                const seenPins = new Map();
+                let hasDuplicate = false;
+
+                rows.forEach((r) => {
+                    r.classList.remove("has-duplicate");
+                    const err = r.querySelector(".pin-duplicate-alert");
+                    if (err) err.remove();
+                });
+
+                currentPlayers.forEach((p, idx) => {
+                    const pin = String(p.pin || "").trim();
+                    const row = rows[idx];
+                    if (seenPins.has(pin) && pin.length >= 4) {
+                        hasDuplicate = true;
+                        const otherName = seenPins.get(pin);
+                        if (row) {
+                            row.classList.add("has-duplicate");
+                            const alertMsg = document.createElement("div");
+                            alertMsg.className = "pin-duplicate-alert";
+                            alertMsg.style.cssText = "color:#ff5252; font-size:0.72rem; font-weight:700; width:100%; margin-top:2px;";
+                            alertMsg.textContent = `⚠️ رمزك يطابق رمز (${otherName}). يرجى تغييره.`;
+                            row.appendChild(alertMsg);
+                        }
+                    } else {
+                        seenPins.set(pin, p.name);
+                    }
+                });
+
+                const startBtn = document.getElementById("btn-start-offline-game");
+                const validation = validatePinsUnique(currentPlayers);
+                if (!validation.valid || hasDuplicate) {
+                    startBtn.disabled = true;
+                    startBtn.style.opacity = "0.5";
+                } else {
+                    startBtn.disabled = false;
+                    startBtn.style.opacity = "1";
+                }
+            }
+
+            // =================================================================
+            // 3. اختيار القضايا
+            // =================================================================
+            document.getElementById("btn-open-case-modal").addEventListener("click", () => {
+                renderCasesModalList();
+                document.getElementById("modal-choose-case").style.display = "flex";
+            });
+
+            document.getElementById("btn-close-choose-case").addEventListener("click", () => {
+                document.getElementById("modal-choose-case").style.display = "none";
+            });
+
+            function renderCasesModalList() {
+                const container = document.getElementById("cases-scroll-container");
                 container.innerHTML = "";
 
                 allCases.forEach((c) => {
                     const card = document.createElement("div");
-                    card.className =
-                        "case-item-card" + (selectedCase && selectedCase.id === c.id ? " is-selected" : "");
-                    card.dataset.id = c.id;
-
-                    const img = c.image || "img/jud1.png";
+                    card.className = "case-item-card" + (selectedCase && selectedCase.id === c.id ? " is-selected" : "");
                     card.innerHTML = `
-                        <img src="${img}" class="case-thumb" alt="${c.title}" onerror="this.src='img/jud1.png'"/>
-                        <div class="case-info">
-                            <h4 class="case-name">${c.id}. ${c.title}</h4>
-                            <div class="case-meta">الحد الأدنى: ${c.required_players || 3} لاعبين | ${c.description ? c.description.slice(0, 60) + "..." : ""}</div>
+                        <img src="${c.image || 'img/jud1.png'}" class="case-thumb" alt="${c.title}" onerror="this.src='img/jud1.png'"/>
+                        <div style="flex:1; min-width:0;">
+                            <h4 style="margin:0 0 4px 0; color:#fff; font-size:0.95rem;">${c.id}. ${c.title}</h4>
+                            <div style="font-size:0.76rem; color:#cbd5e1; line-height:1.4;">
+                                اللاعبين: ${c.required_players || 3}+ | ${c.description ? c.description.slice(0, 75) + '...' : ''}
+                            </div>
                         </div>
                     `;
-
                     card.addEventListener("click", () => {
-                        document
-                            .querySelectorAll(".case-item-card")
-                            .forEach((el) => el.classList.remove("is-selected"));
+                        container.querySelectorAll(".case-item-card").forEach((el) => el.classList.remove("is-selected"));
                         card.classList.add("is-selected");
                         selectedCase = c;
-                        document.getElementById("btn-confirm-case").disabled = false;
+                        document.getElementById("btn-confirm-chosen-case").disabled = false;
                     });
-
                     container.appendChild(card);
                 });
 
-                // اختيار أول قضية افتراضياً
-                if (allCases.length > 0 && !selectedCase) {
-                    container.firstChild.click();
+                if (selectedCase) {
+                    document.getElementById("btn-confirm-chosen-case").disabled = false;
                 }
             }
 
-            // الانتقال لشاشة إعداد اللاعبين
-            document.getElementById("btn-confirm-case").addEventListener("click", () => {
+            document.getElementById("btn-confirm-chosen-case").addEventListener("click", () => {
                 if (!selectedCase) return;
-                document.getElementById("step-choose-case").style.display = "none";
-                document.getElementById("step-setup-players").style.display = "flex";
-                document.getElementById("selected-case-name").textContent = `${selectedCase.id}. ${selectedCase.title}`;
+                document.getElementById("chosen-case-label").textContent = `${selectedCase.id}. ${selectedCase.title}`;
+                document.getElementById("modal-choose-case").style.display = "none";
 
-                const minPlayers = Math.max(3, selectedCase.required_players || 3);
-                updatePlayersCount(minPlayers);
-            });
-
-            document.getElementById("btn-back-to-cases").addEventListener("click", () => {
-                document.getElementById("step-setup-players").style.display = "none";
-                document.getElementById("step-choose-case").style.display = "flex";
-            });
-
-            // تحكم عدد اللاعبين
-            let playersCount = 4;
-            const minAllowed = 3;
-            const maxAllowed = 10;
-
-            function updatePlayersCount(cnt) {
-                const minReq = Math.max(minAllowed, selectedCase?.required_players || 3);
-                playersCount = Math.max(minReq, Math.min(maxAllowed, cnt));
-                document.getElementById("players-count-display").textContent = playersCount;
-                renderPlayerInputs();
-            }
-
-            document
-                .getElementById("btn-players-minus")
-                .addEventListener("click", () => updatePlayersCount(playersCount - 1));
-            document
-                .getElementById("btn-players-plus")
-                .addEventListener("click", () => updatePlayersCount(playersCount + 1));
-
-            function renderPlayerInputs() {
-                const container = document.getElementById("players-inputs-container");
-                const existingData = [];
-                container.querySelectorAll(".player-row-setup").forEach((row, idx) => {
-                    existingData.push({
-                        name: row.querySelector(".player-input-name").value,
-                        pin: row.querySelector(".player-input-pin").value
-                    });
-                });
-
-                container.innerHTML = "";
-                for (let i = 0; i < playersCount; i++) {
-                    const defaultName = existingData[i]?.name || `لاعب ${i + 1}`;
-                    const defaultPin = existingData[i]?.pin || String(1000 + i * 111).slice(0, 4);
-
-                    const row = document.createElement("div");
-                    row.className = "player-row-setup";
-                    row.innerHTML = `
-                        <span class="player-num-tag">#${i + 1}</span>
-                        <input type="text" class="player-input-name" value="${defaultName}" placeholder="اسم اللاعب ${i + 1}" maxlength="20"/>
-                        <span style="font-size: 0.72rem; color: #cbd5e1;">PIN:</span>
-                        <input type="tel" class="player-input-pin" value="${defaultPin}" maxlength="4" placeholder="0000"/>
-                    `;
-                    container.appendChild(row);
+                // ضبط الحد الأدنى إن كانت القضية تتطلب أكثر
+                const minReq = Math.max(3, selectedCase.required_players || 3);
+                if (currentPlayersCount < minReq) {
+                    currentPlayersCount = minReq;
+                    document.getElementById("players-count-display").textContent = currentPlayersCount;
+                    adjustPlayersListCount();
                 }
-            }
+            });
 
-            // بدء المحاكمة وتوزيع الأدوار
+            // =================================================================
+            // 4. بدء المحاكمة وتوزيع الأدوار وشاشة التحميل وقوانين اللعب
+            // =================================================================
             document.getElementById("btn-start-offline-game").addEventListener("click", () => {
-                const rows = document.querySelectorAll(".player-row-setup");
-                currentPlayers = [];
+                syncInputsToCurrentPlayers();
+                const validation = validatePinsUnique(currentPlayers);
+                if (!validation.valid) {
+                    alert(validation.error);
+                    return;
+                }
 
-                rows.forEach((r, idx) => {
-                    const name = r.querySelector(".player-input-name").value.trim() || `لاعب ${idx + 1}`;
-                    let pin = r.querySelector(".player-input-pin").value.trim();
-                    if (!pin || pin.length < 4) pin = String(1000 + idx).slice(0, 4);
+                if (!selectedCase) {
+                    if (allCases.length > 0) {
+                        selectedCase = allCases[0];
+                    } else {
+                        alert("يرجى اختيار قضية أولاً.");
+                        return;
+                    }
+                }
 
-                    currentPlayers.push({
-                        id: `p_${idx + 1}`,
-                        name,
-                        pin
-                    });
-                });
+                // حفظ اللاعبين الدائمين
+                savePermanentPlayers(currentPlayers);
 
                 // توزيع الأدوار
-                currentAssignments = distributeRoles(selectedCase, currentPlayers);
+                const distribution = distributeRoles(selectedCase, currentPlayers);
 
-                // الانتقال لشاشة قاعة المحكمة
-                document.getElementById("step-setup-players").style.display = "none";
-                document.getElementById("step-courtroom").style.display = "flex";
+                // تهيئة كائن الجلسة
+                gameState = {
+                    caseId: selectedCase.id,
+                    assignments: distribution.assignments,
+                    defenseClientUID: distribution.defenseClientUID,
+                    stage: "rules",
+                    activeInterrogator: null,
+                    selectedTargetId: null,
+                    currentInteraction: null,
+                    storyRead: false,
+                    rulesAcknowledged: false,
+                    isCompleted: false,
+                    history: []
+                };
 
-                renderCourtroomSeats();
+                // حفظ الجلسة محلياً فوراً
+                saveOfflineSession(gameState);
+
+                // إطلاق شاشة التحميل السينمائية لـ 4 ثوانٍ
+                runFourSecondsLoading(() => {
+                    // فتح نافذة القوانين
+                    document.getElementById("modal-game-rules").style.display = "flex";
+                });
             });
 
-            // رسم مقاعد اللاعبين
-            function renderCourtroomSeats() {
-                const grid = document.getElementById("seats-grid");
+            function runFourSecondsLoading(callback) {
+                const screen = document.getElementById("loading-4s-screen");
+                const fill = document.getElementById("loading-4s-fill");
+                const text = document.getElementById("loading-4s-text");
+                screen.style.display = "flex";
+
+                let progress = 0;
+                const duration = 4000;
+                const step = 40;
+                const increment = (step / duration) * 100;
+
+                const timer = setInterval(() => {
+                    progress += increment;
+                    if (progress >= 100) {
+                        progress = 100;
+                        clearInterval(timer);
+                        fill.style.width = "100%";
+                        text.textContent = "100%";
+                        setTimeout(() => {
+                            screen.style.display = "none";
+                            if (callback) callback();
+                        }, 250);
+                    } else {
+                        fill.style.width = `${progress}%`;
+                        text.textContent = `${Math.floor(progress)}%`;
+                    }
+                }, step);
+            }
+
+            // التحكم في نافذة القوانين
+            const rulesCheckbox = document.getElementById("checkbox-read-rules");
+            const rulesStartBtn = document.getElementById("btn-rules-start-game");
+            rulesCheckbox.addEventListener("change", () => {
+                rulesStartBtn.disabled = !rulesCheckbox.checked;
+                rulesStartBtn.style.opacity = rulesCheckbox.checked ? "1" : "0.5";
+            });
+
+            rulesStartBtn.addEventListener("click", () => {
+                document.getElementById("modal-game-rules").style.display = "none";
+                gameState.rulesAcknowledged = true;
+                gameState.stage = "story_pending";
+                saveOfflineSession(gameState);
+
+                // الانتقال لشاشة السبورة
+                document.getElementById("step-setup-players").style.display = "none";
+                document.getElementById("step-corkboard").style.display = "flex";
+                document.getElementById("case-board-title").textContent = `قضية: ${selectedCase.title}`;
+
+                renderCorkboardCards();
+                updateSystemDirectiveUI();
+            });
+
+            // =================================================================
+            // 5. سبورة القضية وكروت الأدوار (3 في كل صف)
+            // =================================================================
+            function renderCorkboardCards() {
+                const grid = document.getElementById("corkboard-grid");
                 grid.innerHTML = "";
 
-                currentPlayers.forEach((player) => {
-                    const assignment = currentAssignments[player.id];
+                // إظهار زر محامي الادعاء فقط إذا كان عدد اللاعبين 5 أو أكثر
+                const totalCount = Object.keys(gameState.assignments).length;
+                const prosecutionBtn = document.getElementById("btn-lawyer-prosecution-mode");
+                if (totalCount >= 5) {
+                    prosecutionBtn.style.display = "inline-flex";
+                } else {
+                    prosecutionBtn.style.display = "none";
+                }
+
+                Object.values(gameState.assignments).forEach((assignment) => {
                     const card = document.createElement("div");
-                    card.className = "player-seat-card" + (assignment.viewed ? " is-viewed" : "");
+                    card.className = "role-dossier-card";
+                    card.dataset.playerId = assignment.playerId;
+
+                    if (assignment.role_type === "judge") {
+                        card.classList.add("is-judge-card");
+                    }
+                    if (assignment.viewed) {
+                        card.classList.add("is-viewed");
+                    }
+                    if (gameState.selectedTargetId === assignment.playerId) {
+                        card.classList.add("is-target");
+                    }
+
+                    let roleIcon = "👤";
+                    if (assignment.role_type === "judge") roleIcon = "⚖️";
+                    else if (assignment.role_type === "lawyer") {
+                        roleIcon = String(assignment.role_name || "").includes("دفاع") ? "🛡️" : "📜";
+                    } else if (assignment.is_guilty) {
+                        roleIcon = "🕵️‍♂️";
+                    }
+
                     card.innerHTML = `
-                        <div class="seat-icon">${assignment.viewed ? "✅" : "🔒"}</div>
-                        <div class="seat-name">${player.name}</div>
-                        <div class="seat-status">${assignment.viewed ? "تم الاطلاع" : "انقر لإدخال PIN"}</div>
+                        <div class="card-pin-header">📌</div>
+                        <div class="card-player-title">${escapeHtml(assignment.playerName)}</div>
+                        <div class="card-role-icon">${roleIcon}</div>
+                        <div class="card-role-title">${escapeHtml(assignment.role_name)}</div>
+                        <span class="card-status-chip">${assignment.viewed ? "تم الاطلاع" : "اضغط للسر"}</span>
                     `;
 
-                    card.addEventListener("click", () => {
-                        openPinModal(player.id);
-                    });
+                    // ربط أحداث الضغط العادي والمطوّل بدقة
+                    bindCardInteractions(card, assignment.playerId);
 
                     grid.appendChild(card);
                 });
             }
 
-            // نافذة إدخال PIN
-            function openPinModal(playerId) {
-                activeViewingPlayerId = playerId;
+            /**
+             * فصل دقيق بين الضغط العادي (فتح الرمز والسر) والضغط المطوّل (اختيار المستهدف)
+             */
+            function bindCardInteractions(cardElement, playerId) {
+                let pressTimer = null;
+                let isLongPress = false;
+                let startX = 0;
+                let startY = 0;
+
+                const startPress = (e) => {
+                    isLongPress = false;
+                    if (e.touches && e.touches[0]) {
+                        startX = e.touches[0].clientX;
+                        startY = e.touches[0].clientY;
+                    } else {
+                        startX = e.clientX;
+                        startY = e.clientY;
+                    }
+                    cardElement.classList.add("is-pressing");
+                    pressTimer = setTimeout(() => {
+                        isLongPress = true;
+                        cardElement.classList.remove("is-pressing");
+                        handleCardLongPress(playerId);
+                    }, 500);
+                };
+
+                const cancelPress = () => {
+                    if (pressTimer) {
+                        clearTimeout(pressTimer);
+                        pressTimer = null;
+                    }
+                    cardElement.classList.remove("is-pressing");
+                };
+
+                const movePress = (e) => {
+                    let curX = 0, curY = 0;
+                    if (e.touches && e.touches[0]) {
+                        curX = e.touches[0].clientX;
+                        curY = e.touches[0].clientY;
+                    } else {
+                        curX = e.clientX;
+                        curY = e.clientY;
+                    }
+                    if (Math.abs(curX - startX) > 10 || Math.abs(curY - startY) > 10) {
+                        cancelPress();
+                    }
+                };
+
+                cardElement.addEventListener("touchstart", startPress, { passive: true });
+                cardElement.addEventListener("touchmove", movePress, { passive: true });
+                cardElement.addEventListener("touchend", () => {
+                    cancelPress();
+                    if (!isLongPress) {
+                        handleCardClick(playerId);
+                    }
+                });
+
+                cardElement.addEventListener("mousedown", startPress);
+                cardElement.addEventListener("mousemove", movePress);
+                cardElement.addEventListener("mouseup", () => {
+                    cancelPress();
+                    if (!isLongPress) {
+                        handleCardClick(playerId);
+                    }
+                });
+                cardElement.addEventListener("mouseleave", cancelPress);
+            }
+
+            // 1. الضغط العادي: فتح مودال التحقق بالـ PIN للاطلاع على السر
+            function handleCardClick(playerId) {
+                openPinModalForAction("view_role", playerId);
+            }
+
+            // 2. الضغط المطوّل: اختيار اللاعب المستهدف للاستجواب
+            function handleCardLongPress(playerId) {
+                if (!gameState.storyRead) {
+                    alert("اللعبة لن تبدأ حتى تقرأ قصة القضية أولاً!");
+                    return;
+                }
+
+                // التحقق من حالة الجلسة
+                if (gameState.stage === "handover_to_target" || gameState.stage === "target_answering") {
+                    alert("هناك استجواب جارٍ لم ينتهِ بعد، أعد الهاتف للقاضي أولاً.");
+                    return;
+                }
+
+                const targetCard = gameState.assignments[playerId];
+                if (!targetCard) return;
+
+                // لا يجوز استهداف القاضي
+                if (targetCard.role_type === "judge") {
+                    alert("لا يمكن استجواب القاضي المحقق!");
+                    return;
+                }
+
+                gameState.selectedTargetId = playerId;
+                saveOfflineSession(gameState);
+                renderCorkboardCards();
+                updateSystemDirectiveUI();
+            }
+
+            // =================================================================
+            // 6. مودال التحقق بالرمز السري (PIN Entry)
+            // =================================================================
+            function openPinModalForAction(mode, playerId) {
+                activePinContext = { mode, playerId };
                 currentPinInput = "";
                 updatePinDots();
 
-                const player = currentPlayers.find((p) => p.id === playerId);
-                document.getElementById("pin-modal-player-name").textContent = player ? player.name : "اللاعب";
-                document.getElementById("pin-error-msg").textContent = "";
+                const playerAssignment = gameState.assignments[playerId];
+                const playerNameEl = document.getElementById("pin-modal-player-name");
+                const promptEl = document.getElementById("pin-modal-prompt-text");
+                const errorEl = document.getElementById("pin-error-msg");
+                errorEl.textContent = "";
+
+                if (mode === "view_role") {
+                    playerNameEl.textContent = playerAssignment ? playerAssignment.playerName : "اللاعب";
+                    promptEl.textContent = "أدخل رمزك السري للاطلاع على بطاقتك وتكليفك السري:";
+                } else if (mode === "defense_lawyer") {
+                    playerNameEl.textContent = "محامي الدفاع";
+                    promptEl.textContent = "أدخل الرمز السري الخاص بمحامي الدفاع لاستلام إدارة الجلسة:";
+                } else if (mode === "prosecution_lawyer") {
+                    playerNameEl.textContent = "محامي الادعاء";
+                    promptEl.textContent = "أدخل الرمز السري الخاص بمحامي الادعاء لاستلام إدارة الجلسة:";
+                }
+
                 document.getElementById("modal-pin-entry").style.display = "flex";
             }
 
@@ -1160,14 +1612,13 @@
                 }
             }
 
-            // لوحة أزرار الأرقام
             document.querySelectorAll(".numpad-btn[data-num]").forEach((btn) => {
                 btn.addEventListener("click", () => {
                     if (currentPinInput.length < 4) {
                         currentPinInput += btn.dataset.num;
                         updatePinDots();
                         if (currentPinInput.length === 4) {
-                            validatePin();
+                            validatePinSubmission();
                         }
                     }
                 });
@@ -1181,16 +1632,29 @@
 
             document.getElementById("btn-pin-cancel").addEventListener("click", () => {
                 document.getElementById("modal-pin-entry").style.display = "none";
-                activeViewingPlayerId = null;
+                activePinContext = null;
+                currentPinInput = "";
             });
 
-            function validatePin() {
-                const player = currentPlayers.find((p) => p.id === activeViewingPlayerId);
-                if (player && player.pin === currentPinInput) {
+            function validatePinSubmission() {
+                if (!activePinContext) return;
+                const { mode, playerId } = activePinContext;
+                const targetAssignment = gameState.assignments[playerId];
+                const expectedPin = targetAssignment ? String(targetAssignment.pin).trim() : null;
+
+                if (expectedPin && expectedPin === currentPinInput.trim()) {
                     document.getElementById("modal-pin-entry").style.display = "none";
-                    openRoleCardModal(activeViewingPlayerId);
+                    if (mode === "view_role") {
+                        openRoleCardModal(playerId);
+                    } else if (mode === "defense_lawyer") {
+                        activateLawyerSession("defense_lawyer", playerId);
+                    } else if (mode === "prosecution_lawyer") {
+                        activateLawyerSession("prosecution_lawyer", playerId);
+                    }
+                    activePinContext = null;
+                    currentPinInput = "";
                 } else {
-                    document.getElementById("pin-error-msg").textContent = "رمز PIN غير صحيح، حاول مجدداً.";
+                    document.getElementById("pin-error-msg").textContent = "رمز PIN غير صحيح لهذا اللاعب!";
                     setTimeout(() => {
                         currentPinInput = "";
                         updatePinDots();
@@ -1198,175 +1662,588 @@
                 }
             }
 
-            // فتح بطاقة الدور
+            // =================================================================
+            // 7. فتح بطاقة الدور والمعلومات السرية
+            // =================================================================
             function openRoleCardModal(playerId) {
-                const assignment = currentAssignments[playerId];
+                const assignment = gameState.assignments[playerId];
                 if (!assignment) return;
 
                 document.getElementById("role-card-badge").textContent =
-                    assignment.role_type === "judge"
-                        ? "القاضي"
-                        : assignment.role_type === "lawyer"
-                          ? "محامي"
-                          : "مشتبه به";
+                    assignment.role_type === "judge" ? "القاضي" : assignment.role_type === "lawyer" ? "محامٍ" : "مشتبه به";
                 document.getElementById("role-card-title").textContent = assignment.role_name;
                 document.getElementById("role-card-player").textContent = `اللاعب: ${assignment.playerName}`;
 
-                document.getElementById("role-public-story-text").textContent =
-                    assignment.public_story || "لا توجد قصة معلنة.";
-                document.getElementById("role-secret-interest-text").textContent =
-                    assignment.secret_interest || "لا توجد مصلحة سرية مسجلة.";
+                document.getElementById("role-public-story-text").textContent = assignment.public_story || "لا توجد قصة معلنة.";
+                document.getElementById("role-secret-interest-text").textContent = assignment.secret_interest || "لا توجد مصلحة سرية مسجلة.";
 
-                // ضبط التاب الأول
+                const contextContainer = document.getElementById("role-context-details");
+                contextContainer.innerHTML = "";
+                if (assignment.character_context) {
+                    const ctx = assignment.character_context;
+                    if (ctx.what_you_know) {
+                        contextContainer.innerHTML += `<div><strong style="color:#6ee7a0;">ما تعرفه:</strong> ${escapeHtml(ctx.what_you_know)}</div>`;
+                    }
+                    if (ctx.acting_goal) {
+                        contextContainer.innerHTML += `<div><strong style="color:var(--gold-glow);">هدفك في الأداء:</strong> ${escapeHtml(ctx.acting_goal)}</div>`;
+                    }
+                }
+
+                // فتح التاب العام افتراضياً
                 switchRoleTab("public");
-
                 document.getElementById("modal-role-card").style.display = "flex";
             }
 
             function switchRoleTab(tab) {
-                const tabs = ["public", "secret"];
-                tabs.forEach((t) => {
-                    const btn = document.getElementById(`tab-btn-${t}`);
-                    const pane = document.getElementById(`tab-pane-${t}`);
-                    if (btn && pane) {
-                        const active = t === tab;
-                        btn.style.borderBottomColor = active ? "var(--gold-glow)" : "transparent";
-                        btn.style.color = active ? "var(--gold-glow)" : "#cbd5e1";
-                        pane.style.display = active ? "block" : "none";
-                    }
-                });
+                const btnPublic = document.getElementById("tab-btn-public");
+                const btnSecret = document.getElementById("tab-btn-secret");
+                const panePublic = document.getElementById("tab-pane-public");
+                const paneSecret = document.getElementById("tab-pane-secret");
+
+                if (tab === "public") {
+                    btnPublic.style.borderColor = "var(--gold-glow)";
+                    btnPublic.style.color = "var(--gold-glow)";
+                    btnSecret.style.borderColor = "rgba(255,255,255,0.2)";
+                    btnSecret.style.color = "#cbd5e1";
+                    panePublic.style.display = "block";
+                    paneSecret.style.display = "none";
+                } else {
+                    btnSecret.style.borderColor = "var(--gold-glow)";
+                    btnSecret.style.color = "var(--gold-glow)";
+                    btnPublic.style.borderColor = "rgba(255,255,255,0.2)";
+                    btnPublic.style.color = "#cbd5e1";
+                    paneSecret.style.display = "block";
+                    panePublic.style.display = "none";
+                }
             }
 
             document.getElementById("tab-btn-public").addEventListener("click", () => switchRoleTab("public"));
             document.getElementById("tab-btn-secret").addEventListener("click", () => switchRoleTab("secret"));
 
-            // إخفاء وقفل الدور للّاعب التالي
             document.getElementById("btn-hide-and-lock-role").addEventListener("click", () => {
-                if (activeViewingPlayerId && currentAssignments[activeViewingPlayerId]) {
-                    currentAssignments[activeViewingPlayerId].viewed = true;
-                }
                 document.getElementById("modal-role-card").style.display = "none";
-                activeViewingPlayerId = null;
-                renderCourtroomSeats();
+                // تعليم البطاقة بأنها تم الاطلاع عليها
+                const curCard = Object.values(gameState.assignments).find((a) => a.role_name === document.getElementById("role-card-title").textContent);
+                if (curCard) {
+                    curCard.viewed = true;
+                    saveOfflineSession(gameState);
+                    renderCorkboardCards();
+                }
             });
 
-            // لوحة القاضي (استجواب)
-            document.getElementById("btn-judge-tools").addEventListener("click", () => {
-                renderJudgeSuspects();
-                document.getElementById("modal-judge-tools").style.display = "flex";
+            // =================================================================
+            // 8. عرض القصة وتشغيل راوي القضية
+            // =================================================================
+            document.getElementById("btn-show-story").addEventListener("click", () => {
+                if (!selectedCase) return;
+                document.getElementById("story-modal-title").textContent = `📖 قصة قضية: ${selectedCase.title}`;
+                document.getElementById("story-modal-body").textContent = selectedCase.description || "لا يوجد وصف مدون للقضية.";
+                document.getElementById("modal-story-reader").style.display = "flex";
             });
 
-            document.getElementById("btn-close-judge").addEventListener("click", () => {
-                document.getElementById("modal-judge-tools").style.display = "none";
+            document.getElementById("btn-close-story-modal").addEventListener("click", () => {
+                stopStoryAudio();
+                document.getElementById("modal-story-reader").style.display = "none";
             });
 
-            function renderJudgeSuspects() {
-                const selectContainer = document.getElementById("judge-suspects-select");
-                selectContainer.innerHTML = "";
+            document.getElementById("btn-done-reading-story").addEventListener("click", () => {
+                stopStoryAudio();
+                gameState.storyRead = true;
+                if (gameState.stage === "story_pending") {
+                    gameState.stage = "judge_turn";
+                }
+                saveOfflineSession(gameState);
+                document.getElementById("modal-story-reader").style.display = "none";
+                updateSystemDirectiveUI();
+            });
 
-                const suspects = Object.values(currentAssignments).filter(
-                    (a) => a.role_type === "suspect" || a.role_type === "innocent_impostor"
-                );
-                suspects.forEach((s, idx) => {
-                    const chip = document.createElement("button");
-                    chip.type = "button";
-                    chip.textContent = s.role_name;
-                    chip.style.cssText =
-                        "all:unset; padding: 6px 12px; background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.2); border-radius: 8px; font-size: 0.75rem; font-weight: 700; cursor: pointer; white-space: nowrap;";
-                    chip.addEventListener("click", () => {
-                        selectContainer.querySelectorAll("button").forEach((b) => {
-                            b.style.borderColor = "rgba(255,255,255,0.2)";
-                            b.style.background = "rgba(255,255,255,0.06)";
-                        });
-                        chip.style.borderColor = "var(--gold-glow)";
-                        chip.style.background = "rgba(213,167,92,0.2)";
-                        showSuspectQuestions(s);
-                    });
-                    selectContainer.appendChild(chip);
-                    if (idx === 0) chip.click();
-                });
-            }
+            // راوي القصة الصوتي
+            const btnAudioPlay = document.getElementById("btn-audio-play");
+            const audioStatus = document.getElementById("audio-playback-status");
+            const audioWarning = document.getElementById("audio-offline-warning");
 
-            function showSuspectQuestions(suspect) {
-                const box = document.getElementById("judge-questions-box");
-                box.innerHTML = "";
-
-                const questions = getQuestionsForRole(selectedCase, suspect.role_name);
-                if (questions.length === 0) {
-                    box.innerHTML =
-                        "<p style='color:#cbd5e1; font-size:0.8rem;'>لا توجد أسئلة مسجلة لهذا الدور، اطرح عليه أسئلة استجواب حرة.</p>";
+            btnAudioPlay.addEventListener("click", () => {
+                if (!selectedCase || !selectedCase.story_audio_url) {
+                    audioWarning.textContent = "⚠️ لا يتوفر تسجيل صوتي لراوي هذه القضية.";
+                    audioWarning.style.display = "block";
                     return;
                 }
 
-                questions.forEach((q) => {
-                    const item = document.createElement("div");
-                    item.style.cssText =
-                        "background: rgba(0,0,0,0.3); padding: 8px 10px; border-radius: 8px; border-right: 3px solid var(--gold-glow); font-size: 0.8rem; line-height: 1.4;";
-                    item.textContent = q.text || q.question;
-                    box.appendChild(item);
-                });
-            }
+                if (audioNarratorElement && !audioNarratorElement.paused) {
+                    audioNarratorElement.pause();
+                    btnAudioPlay.textContent = "▶️ تشغيل راوي القصة";
+                    audioStatus.textContent = "";
+                    return;
+                }
 
-            // لوحة الدفاع
-            document.getElementById("btn-defense-tools").addEventListener("click", () => {
-                const box = document.getElementById("defense-clues-box");
-                box.innerHTML = "";
-
-                const clues = getCluesForDefense(selectedCase);
-                if (clues.length === 0) {
-                    box.innerHTML =
-                        "<p style='color:#cbd5e1; font-size:0.8rem;'>لا توجد أدلة إضافية خاصة بالمرافعة لهذه القضية.</p>";
-                } else {
-                    clues.forEach((clue) => {
-                        const item = document.createElement("div");
-                        item.style.cssText =
-                            "background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; padding: 10px; font-size: 0.8rem; line-height: 1.4;";
-                        item.innerHTML = `<strong style="color:var(--gold-glow);">${clue.target_role || "شاهد"}:</strong> ${clue.text || clue}`;
-                        box.appendChild(item);
+                if (!audioNarratorElement) {
+                    audioNarratorElement = new Audio(selectedCase.story_audio_url);
+                    audioNarratorElement.addEventListener("playing", () => {
+                        btnAudioPlay.textContent = "⏸️ إيقاف مؤقت";
+                        audioStatus.textContent = "جاري الاستماع للراوي...";
+                        audioWarning.style.display = "none";
+                    });
+                    audioNarratorElement.addEventListener("ended", () => {
+                        btnAudioPlay.textContent = "▶️ تشغيل راوي القصة";
+                        audioStatus.textContent = "انتهى التسجيل.";
+                    });
+                    audioNarratorElement.addEventListener("error", () => {
+                        audioWarning.textContent = "⚠️ يجب فتح الإنترنت لتستمع إلى راوي القصة";
+                        audioWarning.style.display = "block";
+                        btnAudioPlay.textContent = "▶️ تشغيل راوي القصة";
+                        audioStatus.textContent = "";
                     });
                 }
-                document.getElementById("modal-defense-tools").style.display = "flex";
+
+                audioNarratorElement.play().catch(() => {
+                    audioWarning.textContent = "⚠️ يجب فتح الإنترنت لتستمع إلى راوي القصة";
+                    audioWarning.style.display = "block";
+                    btnAudioPlay.textContent = "▶️ تشغيل راوي القصة";
+                });
             });
 
-            document.getElementById("btn-close-defense").addEventListener("click", () => {
-                document.getElementById("modal-defense-tools").style.display = "none";
+            function stopStoryAudio() {
+                if (audioNarratorElement) {
+                    audioNarratorElement.pause();
+                    btnAudioPlay.textContent = "▶️ تشغيل راوي القصة";
+                    audioStatus.textContent = "";
+                }
+            }
+
+            // =================================================================
+            // 9. مستطيل توجيهات النظام وإدارة المراحل
+            // =================================================================
+            function updateSystemDirectiveUI() {
+                const textEl = document.getElementById("directive-main-text");
+                const roleTagEl = document.getElementById("directive-active-role-tag");
+                const actionsEl = document.getElementById("directive-actions-container");
+                actionsEl.innerHTML = "";
+
+                const judgeAssignment = Object.values(gameState.assignments).find((a) => a.role_type === "judge");
+                const targetAssignment = gameState.selectedTargetId ? gameState.assignments[gameState.selectedTargetId] : null;
+
+                // الحالة 1: قبل قراءة القصة
+                if (!gameState.storyRead) {
+                    roleTagEl.textContent = "مرحلة القصة";
+                    textEl.textContent = "اللعبة لن تبدأ حتى تقرأ قصة القضية.";
+                    const btn = document.createElement("button");
+                    btn.type = "button";
+                    btn.className = "btn-action-gold";
+                    btn.textContent = "📖 فتح قراءة قصة القضية";
+                    btn.addEventListener("click", () => document.getElementById("btn-show-story").click());
+                    actionsEl.appendChild(btn);
+                    return;
+                }
+
+                // الحالة 2: بعد قراءة القصة مباشرة (تأكيد القاضي)
+                if (gameState.stage === "story_pending" || (gameState.stage === "judge_turn" && !gameState.activeInterrogator)) {
+                    roleTagEl.textContent = "منصة القضاء";
+                    textEl.textContent = "يجب أن يمسك القاضي الهاتف طوال الجلسة.";
+                    const btn = document.createElement("button");
+                    btn.type = "button";
+                    btn.className = "btn-action-gold";
+                    btn.textContent = `⚖️ تأكد إنك (${judgeAssignment ? judgeAssignment.playerName : "القاضي"}) الذي يمسك الهاتف حاليًا`;
+                    btn.addEventListener("click", () => {
+                        gameState.activeInterrogator = {
+                            role_type: "judge",
+                            playerId: judgeAssignment.playerId,
+                            playerName: judgeAssignment.playerName
+                        };
+                        gameState.stage = "judge_turn";
+                        saveOfflineSession(gameState);
+                        updateSystemDirectiveUI();
+                    });
+                    actionsEl.appendChild(btn);
+                    return;
+                }
+
+                // الحالة 3 و 4: القاضي أو المحامي في وضع الاستجواب واختيار المستهدف
+                if (gameState.stage === "judge_turn" || gameState.stage === "lawyer_turn") {
+                    const asker = gameState.activeInterrogator;
+                    const askerTitle = asker.role_type === "judge" ? "القاضي المحقق" : asker.role_type === "defense_lawyer" ? "محامي الدفاع" : "محامي الادعاء";
+                    roleTagEl.textContent = askerTitle;
+
+                    if (!gameState.selectedTargetId || !targetAssignment) {
+                        textEl.textContent = `أنت الآن (${askerTitle}). اضغط مطولاً على كارت أي لاعب في السبورة لاستجوابه.`;
+                    } else {
+                        textEl.textContent = `المستهدف الحالي: (${targetAssignment.playerName} - ${targetAssignment.role_name}). اختر ما تريد توجيهه إليه:`;
+
+                        // أزرار الأسئلة وحقيبة الأدلة
+                        const rowBtns = document.createElement("div");
+                        rowBtns.style.cssText = "display: flex; gap: 8px;";
+
+                        const btnQ = document.createElement("button");
+                        btnQ.type = "button";
+                        btnQ.className = "btn-action-gold";
+                        btnQ.style.cssText = "flex: 1; padding: 10px;";
+                        btnQ.textContent = "🗨️ الأسئلة";
+                        btnQ.addEventListener("click", () => openQuestionsPickerModal());
+
+                        const btnE = document.createElement("button");
+                        btnE.type = "button";
+                        btnE.className = "btn-action-gold";
+                        btnE.style.cssText = "flex: 1; padding: 10px; background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%); border: 1.5px solid var(--gold-glow); color: var(--gold-glow);";
+                        btnE.textContent = "💼 حقيبة الأدلة";
+                        btnE.addEventListener("click", () => openEvidencePickerModal());
+
+                        rowBtns.appendChild(btnQ);
+                        rowBtns.appendChild(btnE);
+                        actionsEl.appendChild(rowBtns);
+                    }
+
+                    // زر مخصص للقاضي لإصدار الحكم في أي وقت
+                    if (asker.role_type === "judge") {
+                        const btnVerdict = document.createElement("button");
+                        btnVerdict.type = "button";
+                        btnVerdict.style.cssText = "width: 100%; padding: 11px; background: #ff5252; color: #fff; border: none; border-radius: 10px; font-weight: 800; font-family: inherit; cursor: pointer;";
+                        btnVerdict.textContent = "⚖️ إصدار الحكم النهائي";
+                        btnVerdict.addEventListener("click", () => openVerdictCandidatesModal());
+                        actionsEl.appendChild(btnVerdict);
+                    } else {
+                        // للمحامي: زر إعادة الهاتف للقاضي
+                        const btnReturnJudge = document.createElement("button");
+                        btnReturnJudge.type = "button";
+                        btnReturnJudge.style.cssText = "width: 100%; padding: 9px; background: rgba(255,255,255,0.06); color: #cbd5e1; border: 1px solid rgba(255,255,255,0.2); border-radius: 8px; font-weight: 700; font-family: inherit; cursor: pointer;";
+                        btnReturnJudge.textContent = "↩️ إعادة الهاتف للقاضي";
+                        btnReturnJudge.addEventListener("click", () => returnControlToJudge());
+                        actionsEl.appendChild(btnReturnJudge);
+                    }
+                    return;
+                }
+
+                // الحالة 5: تسليم الهاتف للمستهدف
+                if (gameState.stage === "handover_to_target") {
+                    roleTagEl.textContent = "تسليم الهاتف";
+                    textEl.textContent = `مرر الهاتف للاعب (${targetAssignment?.playerName}) المستهدف.`;
+
+                    const btnHandover = document.createElement("button");
+                    btnHandover.type = "button";
+                    btnHandover.className = "btn-action-gold";
+                    btnHandover.textContent = `📱 أنا اللاعب (${targetAssignment?.playerName})`;
+                    btnHandover.addEventListener("click", () => {
+                        gameState.stage = "target_answering";
+                        saveOfflineSession(gameState);
+                        openTargetAnsweringScreen();
+                    });
+                    actionsEl.appendChild(btnHandover);
+                    return;
+                }
+
+                // الحالة 7: إعادة الهاتف للقاضي
+                if (gameState.stage === "return_to_judge") {
+                    roleTagEl.textContent = "إعادة الهاتف";
+                    textEl.textContent = "مرر الهاتف إلى القاضي مرة أخرى.";
+
+                    const btnReturn = document.createElement("button");
+                    btnReturn.type = "button";
+                    btnReturn.className = "btn-action-gold";
+                    btnReturn.textContent = `⚖️ أنا اللاعب (${judgeAssignment ? judgeAssignment.playerName : "القاضي"}) القاضي`;
+                    btnReturn.addEventListener("click", () => {
+                        returnControlToJudge();
+                    });
+                    actionsEl.appendChild(btnReturn);
+                    return;
+                }
+            }
+
+            function returnControlToJudge() {
+                const judgeAssignment = Object.values(gameState.assignments).find((a) => a.role_type === "judge");
+                gameState.activeInterrogator = {
+                    role_type: "judge",
+                    playerId: judgeAssignment.playerId,
+                    playerName: judgeAssignment.playerName
+                };
+                gameState.stage = "judge_turn";
+                gameState.selectedTargetId = null;
+                gameState.currentInteraction = null;
+                saveOfflineSession(gameState);
+                renderCorkboardCards();
+                updateSystemDirectiveUI();
+            }
+
+            // =================================================================
+            // 10. اختيار السؤال أو الدليل للمستهدف
+            // =================================================================
+            function openQuestionsPickerModal() {
+                const targetAssignment = gameState.assignments[gameState.selectedTargetId];
+                if (!targetAssignment) return;
+
+                const askerRole = gameState.activeInterrogator?.role_type || "judge";
+                const clientRole = gameState.defenseClientUID && gameState.assignments[gameState.defenseClientUID] ? gameState.assignments[gameState.defenseClientUID].role_name : "";
+
+                const questions = getQuestionsForTarget(selectedCase, targetAssignment, askerRole, clientRole);
+                const listEl = document.getElementById("picker-items-list");
+                listEl.innerHTML = "";
+
+                document.getElementById("picker-modal-title").textContent = "🗨️ الأسئلة الجنائية المتاحة";
+                document.getElementById("picker-target-desc").textContent = `توجيه سؤال للمستهدف: (${targetAssignment.playerName} - ${targetAssignment.role_name})`;
+
+                if (questions.length === 0) {
+                    listEl.innerHTML = `<p style="color:#ffe9b3; text-align:center; font-size:0.85rem;">لا توجد أسئلة مسجلة خاصة بهذا الدور في ملفات القضية الحالية.</p>`;
+                } else {
+                    questions.forEach((q, idx) => {
+                        const item = document.createElement("div");
+                        item.style.cssText = "background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.15); border-radius: 10px; padding: 10px; cursor: pointer; transition: all 0.2s;";
+                        item.innerHTML = `<strong style="color:var(--gold-glow); font-size:0.8rem;">سؤال #${idx + 1}:</strong> <div style="font-size:0.85rem; line-height:1.5; color:#fff; margin-top:3px;">${escapeHtml(q.text)}</div>`;
+                        item.addEventListener("click", () => {
+                            document.getElementById("modal-picker-items").style.display = "none";
+                            presentItemToTarget("question", q);
+                        });
+                        listEl.appendChild(item);
+                    });
+                }
+
+                document.getElementById("modal-picker-items").style.display = "flex";
+            }
+
+            function openEvidencePickerModal() {
+                const targetAssignment = gameState.assignments[gameState.selectedTargetId];
+                if (!targetAssignment) return;
+
+                const askerRole = gameState.activeInterrogator?.role_type || "judge";
+                const evidenceList = getEvidenceForTarget(selectedCase, targetAssignment, askerRole);
+                const listEl = document.getElementById("picker-items-list");
+                listEl.innerHTML = "";
+
+                document.getElementById("picker-modal-title").textContent = "💼 حقيبة الأدلة الجنائية";
+                document.getElementById("picker-target-desc").textContent = `مواجهة المستهدف بالأدلة: (${targetAssignment.playerName} - ${targetAssignment.role_name})`;
+
+                if (evidenceList.length === 0) {
+                    listEl.innerHTML = `<p style="color:#ffe9b3; text-align:center; font-size:0.85rem;">لا توجد أدلة جنائية مسجلة تخص هذا المستهدف في هذه القضية.</p>`;
+                } else {
+                    evidenceList.forEach((ev, idx) => {
+                        const item = document.createElement("div");
+                        item.style.cssText = "background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.15); border-radius: 10px; padding: 10px; cursor: pointer; transition: all 0.2s;";
+                        item.innerHTML = `<strong style="color:var(--gold-glow); font-size:0.8rem;">دليل #${idx + 1}:</strong> <div style="font-size:0.85rem; line-height:1.5; color:#fff; margin-top:3px;">${escapeHtml(ev.text)}</div>`;
+                        item.addEventListener("click", () => {
+                            document.getElementById("modal-picker-items").style.display = "none";
+                            presentItemToTarget("evidence", ev);
+                        });
+                        listEl.appendChild(item);
+                    });
+                }
+
+                document.getElementById("modal-picker-items").style.display = "flex";
+            }
+
+            document.getElementById("btn-close-picker-modal").addEventListener("click", () => {
+                document.getElementById("modal-picker-items").style.display = "none";
             });
 
-            // إصدار الحكم
-            document.getElementById("btn-trigger-verdict").addEventListener("click", () => {
-                const candidatesContainer = document.getElementById("verdict-candidates-list");
-                candidatesContainer.innerHTML = "";
+            function presentItemToTarget(type, item) {
+                const targetAssignment = gameState.assignments[gameState.selectedTargetId];
+                // استخراج مساعدة الأداء ومفاتيح الارتجال
+                const guidance = resolvePerformanceHelp({
+                    type,
+                    item,
+                    roleCard: targetAssignment
+                });
 
-                const suspects = Object.values(currentAssignments).filter((a) => a.role_type !== "judge");
+                gameState.currentInteraction = {
+                    type,
+                    itemText: item.text,
+                    guidance,
+                    fragments: Array.isArray(item.fragments) ? item.fragments : null,
+                    targetPlayerId: targetAssignment.playerId,
+                    targetPlayerName: targetAssignment.playerName
+                };
+
+                // الانتقال لتسليم الهاتف للمستهدف
+                gameState.stage = "handover_to_target";
+                saveOfflineSession(gameState);
+                updateSystemDirectiveUI();
+            }
+
+            // =================================================================
+            // 11. واجهة إجابة المستهدف ومفاتيح الارتجال والعداد (10 ثوان)
+            // =================================================================
+            function openTargetAnsweringScreen() {
+                const targetAssignment = gameState.assignments[gameState.selectedTargetId];
+                const interaction = gameState.currentInteraction;
+                if (!targetAssignment || !interaction) return;
+
+                document.getElementById("answering-target-name").textContent = `${targetAssignment.playerName} (${targetAssignment.role_name})`;
+                document.getElementById("answering-presented-item").textContent = `${interaction.type === "evidence" ? "💼 دليل جنائي: " : "❓ سؤال التحقيق: "} ${interaction.itemText}`;
+
+                document.getElementById("answering-performance-text").textContent = interaction.guidance.performance || "أجب من موقع شخصيتك ودورك في القضية دون اختلاق وقائع جديدة.";
+
+                const keysContainer = document.getElementById("answering-keys-container");
+                keysContainer.innerHTML = "";
+
+                // فحص إذا كان السؤال سؤال محامي دفاع بأشباه جمل (fragments)
+                if (interaction.fragments && interaction.fragments.length > 0) {
+                    keysContainer.style.gridTemplateColumns = "1fr";
+                    interaction.fragments.forEach((frag, idx) => {
+                        const chip = document.createElement("div");
+                        chip.className = "improv-key-chip";
+                        chip.style.textAlign = "right";
+                        chip.innerHTML = `<span style="color:var(--gold-glow);">#${idx + 1}</span> ${escapeHtml(frag)}`;
+                        keysContainer.appendChild(chip);
+                    });
+                } else {
+                    // مفاتيح الارتجال الثمانية
+                    keysContainer.style.gridTemplateColumns = "repeat(2, 1fr)";
+                    const keys = interaction.guidance.keys || [];
+                    keys.forEach((k) => {
+                        const chip = document.createElement("div");
+                        chip.className = "improv-key-chip";
+                        chip.textContent = `🔑 ${k}`;
+                        keysContainer.appendChild(chip);
+                    });
+                }
+
+                // عداد الـ 10 ثوانٍ التنازلي
+                let timeLeft = 10;
+                const timerEl = document.getElementById("answering-countdown-timer");
+                timerEl.textContent = timeLeft;
+
+                if (answeringTimerInterval) clearInterval(answeringTimerInterval);
+                answeringTimerInterval = setInterval(() => {
+                    timeLeft--;
+                    if (timeLeft <= 0) {
+                        clearInterval(answeringTimerInterval);
+                        answeringTimerInterval = null;
+                        timerEl.textContent = "انتهى الوقت";
+                        // التوجيه لإعادة الهاتف للقاضي
+                        finishTargetAnswer();
+                    } else {
+                        timerEl.textContent = timeLeft;
+                    }
+                }, 1000);
+
+                document.getElementById("modal-target-answering").style.display = "flex";
+            }
+
+            document.getElementById("btn-target-finish-answer").addEventListener("click", () => {
+                if (answeringTimerInterval) {
+                    clearInterval(answeringTimerInterval);
+                    answeringTimerInterval = null;
+                }
+                finishTargetAnswer();
+            });
+
+            function finishTargetAnswer() {
+                document.getElementById("modal-target-answering").style.display = "none";
+                // تسجيل الاستجواب في السجل
+                if (gameState.currentInteraction) {
+                    gameState.history.push({
+                        asker: gameState.activeInterrogator?.playerName || "القاضي",
+                        target: gameState.currentInteraction.targetPlayerName,
+                        text: gameState.currentInteraction.itemText,
+                        timestamp: Date.now()
+                    });
+                }
+                gameState.stage = "return_to_judge";
+                saveOfflineSession(gameState);
+                updateSystemDirectiveUI();
+            }
+
+            // =================================================================
+            // 12. تفعيل صلاحيات المحامين (الدفاع والادعاء)
+            // =================================================================
+            document.getElementById("btn-lawyer-defense-mode").addEventListener("click", () => {
+                const defenseAssignment = Object.values(gameState.assignments).find(
+                    (a) => a.role_type === "lawyer" && String(a.role_name || "").includes("دفاع")
+                );
+                if (!defenseAssignment) {
+                    alert("لا يوجد دور محامي دفاع مسجل في هذه الجلسة.");
+                    return;
+                }
+                openPinModalForAction("defense_lawyer", defenseAssignment.playerId);
+            });
+
+            document.getElementById("btn-lawyer-prosecution-mode").addEventListener("click", () => {
+                const prosecutionAssignment = Object.values(gameState.assignments).find(
+                    (a) => a.role_type === "lawyer" && !String(a.role_name || "").includes("دفاع")
+                );
+                if (!prosecutionAssignment) {
+                    alert("لا يوجد دور محامي ادعاء مسجل في هذه الجلسة.");
+                    return;
+                }
+                openPinModalForAction("prosecution_lawyer", prosecutionAssignment.playerId);
+            });
+
+            function activateLawyerSession(lawyerType, playerId) {
+                const lawyerAssignment = gameState.assignments[playerId];
+                gameState.activeInterrogator = {
+                    role_type: lawyerType,
+                    playerId: lawyerAssignment.playerId,
+                    playerName: lawyerAssignment.playerName
+                };
+                gameState.stage = "lawyer_turn";
+                gameState.selectedTargetId = null;
+                gameState.currentInteraction = null;
+                saveOfflineSession(gameState);
+
+                const title = lawyerType === "defense_lawyer" ? "محامي الدفاع" : "محامي الادعاء";
+                alert(`أنت الآن (${title}). يحق لك أن تعرض أسئلتك وأدلتك وتوجهها لمن في الجلسة.`);
+
+                renderCorkboardCards();
+                updateSystemDirectiveUI();
+            }
+
+            // =================================================================
+            // 13. الحكم النهائي في الأوفلاين والخاتمة
+            // =================================================================
+            function openVerdictCandidatesModal() {
+                const listEl = document.getElementById("verdict-candidates-list");
+                listEl.innerHTML = "";
+
+                // استثناء القاضي من قائمة المتهمين
+                const suspects = Object.values(gameState.assignments).filter((a) => a.role_type !== "judge");
+
                 suspects.forEach((s) => {
                     const btn = document.createElement("button");
                     btn.type = "button";
-                    btn.style.cssText =
-                        "padding: 12px; background: rgba(255,255,255,0.06); border: 1.5px solid rgba(255,255,255,0.15); border-radius: 10px; color: #fff; font-family: inherit; font-size: 0.9rem; font-weight: 700; cursor: pointer; text-align: right; display: flex; justify-content: space-between; align-items: center;";
+                    btn.style.cssText = "padding: 12px; background: rgba(255,255,255,0.05); border: 1.5px solid rgba(255,255,255,0.15); border-radius: 10px; color: #fff; font-family: inherit; font-size: 0.9rem; font-weight: 700; cursor: pointer; text-align: right; display: flex; justify-content: space-between; align-items: center;";
                     btn.innerHTML = `
-                        <span>${s.playerName} (${s.role_name})</span>
+                        <span>${escapeHtml(s.playerName)} (${escapeHtml(s.role_name)})</span>
                         <span style="color:#ff5252; font-size:0.75rem;">اتهام بالجناية ⚖️</span>
                     `;
                     btn.addEventListener("click", () => {
                         document.getElementById("modal-verdict-pick").style.display = "none";
-                        processFinalVerdict(s.playerId);
+                        confirmVerdictAction(s.playerId);
                     });
-                    candidatesContainer.appendChild(btn);
+                    listEl.appendChild(btn);
                 });
 
                 document.getElementById("modal-verdict-pick").style.display = "flex";
-            });
+            }
 
             document.getElementById("btn-cancel-verdict").addEventListener("click", () => {
                 document.getElementById("modal-verdict-pick").style.display = "none";
             });
 
-            // معالجة ونطق الحكم النهائي
+            function confirmVerdictAction(accusedPlayerId) {
+                pendingAccusedPlayerId = accusedPlayerId;
+                const accused = gameState.assignments[accusedPlayerId];
+                document.getElementById("confirm-verdict-text").textContent = `هل أنت متأكد من اتهام (${accused ? accused.playerName : "اللاعب"}) [${accused ? accused.role_name : ""}] بالجناية؟ هذا الإجراء نهائي ولا يمكن التراجع عنه.`;
+                document.getElementById("modal-confirm-verdict-action").style.display = "flex";
+            }
+
+            document.getElementById("btn-verdict-abort").addEventListener("click", () => {
+                document.getElementById("modal-confirm-verdict-action").style.display = "none";
+                pendingAccusedPlayerId = null;
+            });
+
+            document.getElementById("btn-verdict-commit").addEventListener("click", () => {
+                document.getElementById("modal-confirm-verdict-action").style.display = "none";
+                if (pendingAccusedPlayerId) {
+                    processFinalVerdict(pendingAccusedPlayerId);
+                    pendingAccusedPlayerId = null;
+                }
+            });
+
             function processFinalVerdict(accusedPlayerId) {
-                const outcome = evaluateVerdict(accusedPlayerId, currentAssignments);
+                const outcome = evaluateVerdict(accusedPlayerId, gameState.assignments, selectedCase);
                 if (!outcome) return;
 
-                document.getElementById("step-courtroom").style.display = "none";
+                // تحديث حالة الجلسة واكتمالها
+                gameState.isCompleted = true;
+                gameState.verdictResult = outcome;
+                saveOfflineSession(gameState);
+
+                document.getElementById("step-corkboard").style.display = "none";
                 document.getElementById("step-results").style.display = "flex";
 
                 const banner = document.getElementById("verdict-banner");
@@ -1374,44 +2251,46 @@
                     banner.style.background = "rgba(74, 222, 128, 0.2)";
                     banner.style.border = "2px solid #4ade80";
                     banner.style.color = "#4ade80";
-                    banner.innerHTML = `
-                        🎉 أصاب القاضي! تم القبض على الجاني الحقيقي (${outcome.realGuiltyPlayer?.playerName} - ${outcome.realGuiltyPlayer?.role_name}) وتطبيق العدالة!
-                    `;
+                    banner.innerHTML = `🎉 أصاب القاضي! تم القبض على الجاني الحقيقي (${outcome.realGuiltyPlayer?.playerName} - ${outcome.realGuiltyPlayer?.role_name}) وتطبيق العدالة!`;
                 } else {
                     banner.style.background = "rgba(255, 82, 82, 0.2)";
                     banner.style.border = "2px solid #ff5252";
                     banner.style.color = "#ff7070";
-                    banner.innerHTML = `
-                        ⚠️ حكم خاطئ! أُدين بريء (${outcome.accusedPlayer?.playerName})، ونجح الجاني الحقيقي (${outcome.realGuiltyPlayer?.playerName} - ${outcome.realGuiltyPlayer?.role_name}) في التضليل والإفلات!
-                    `;
+                    banner.innerHTML = `⚠️ حكم خاطئ! أُدين بريء (${outcome.accusedPlayer?.playerName})، ونجح الجاني الحقيقي (${outcome.realGuiltyPlayer?.playerName} - ${outcome.realGuiltyPlayer?.role_name}) في التضليل والإفلات!`;
                 }
 
-                // كشف تفصيلي بالهويات والجرائم الجانبية
-                const table = document.getElementById("identities-reveal-table");
-                table.innerHTML = "";
+                // سرد قصة واعترافات الجاني وخاتمة القضية
+                document.getElementById("verdict-culprit-story-text").textContent = outcome.guiltyStory;
 
-                Object.values(currentAssignments).forEach((p) => {
+                // كشف تفصيلي بالهويات والنقاط
+                const scoresTable = document.getElementById("verdict-scores-table");
+                scoresTable.innerHTML = "";
+
+                Object.values(gameState.assignments).forEach((p) => {
                     const score = outcome.scores[p.playerId]?.points || 0;
                     const card = document.createElement("div");
-                    card.style.cssText =
-                        "background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.1); border-radius: 10px; padding: 10px; display: flex; flex-direction: column; gap: 4px;";
+                    card.style.cssText = "background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.1); border-radius: 10px; padding: 10px; display: flex; flex-direction: column; gap: 4px;";
                     card.innerHTML = `
                         <div style="display: flex; justify-content: space-between; align-items: center;">
-                            <strong style="color: ${p.is_guilty ? "#ff5252" : "var(--gold-glow)"}; font-size: 0.95rem;">${p.playerName}: ${p.role_name} ${p.is_guilty ? "(🔴 الجاني الفعلي)" : ""}</strong>
+                            <strong style="color: ${p.is_guilty ? "#ff5252" : "var(--gold-glow)"}; font-size: 0.95rem;">
+                                ${escapeHtml(p.playerName)}: ${escapeHtml(p.role_name)} ${p.is_guilty ? "(🔴 الجاني الفعلي)" : ""}
+                            </strong>
                             <span style="font-weight: 800; color: #4ade80; font-size: 0.9rem;">+${score} نقطة</span>
                         </div>
-                        <div style="font-size: 0.78rem; color: #cbd5e1;"><strong>المصلحة/الجريمة الخفية:</strong> ${p.secret_interest || "لا توجد"}</div>
+                        <div style="font-size: 0.78rem; color: #cbd5e1;"><strong>المصلحة/الجريمة الخفية:</strong> ${escapeHtml(p.secret_interest || "لا توجد")}</div>
                     `;
-                    table.appendChild(card);
+                    scoresTable.appendChild(card);
                 });
             }
 
-            // إعادة المحاكمة
             document.getElementById("btn-play-again").addEventListener("click", () => {
+                clearOfflineSession();
                 document.getElementById("step-results").style.display = "none";
-                document.getElementById("step-choose-case").style.display = "flex";
+                document.getElementById("step-setup-players").style.display = "flex";
+                initPlayersSetup();
             });
 
+            // بدء التشغيل
             init();
         </script>
     </body>
